@@ -1,0 +1,95 @@
+const bcrypt       = require('bcryptjs');
+const { sendMail } = require('../config/mailer');
+const userRepo     = require('../repositories/user.repository');
+const { generateOTP, hashOTP } = require('../utils/otp.util');
+require('dotenv').config();
+
+const otpCache = new Map();
+const OTP_EXPIRE = parseInt(process.env.OTP_EXPIRE_MINUTES || 5) * 60; // giây
+
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+exports.register = async ({ name, email, password }) => {
+  // 1. Kiểm tra email đã tồn tại chưa
+  const existing = await userRepo.findByEmail(email);
+  if (existing) {
+    throw { status: 409, message: 'Email đã được đăng ký' };
+  }
+
+  // 2. Hash mật khẩu
+  const hashed = await bcrypt.hash(password, 12);
+
+  // 3. Tạo user (chưa kích hoạt)
+  await userRepo.createUser({ name, email, password: hashed });
+
+  // 4. Tạo OTP và lưu vào bộ nhớ tạm (Map)
+  const otp    = generateOTP();
+  const hOtp   = hashOTP(otp);
+  
+  otpCache.set(email, {
+    otp: hOtp,
+    expiresAt: Date.now() + (OTP_EXPIRE * 1000)
+  });
+
+  // 5. Gửi mail
+  await sendMail({
+    to:      email,
+    subject: '🔐 Kích hoạt tài khoản của bạn',
+    html: `
+      <h2>Xin chào ${name}!</h2>
+      <p>Mã OTP kích hoạt tài khoản của bạn là:</p>
+      <h1 style="color:#2563eb;letter-spacing:8px">${otp}</h1>
+      <p>Mã có hiệu lực trong <strong>${OTP_EXPIRE / 60} phút</strong>.</p>
+      <p>Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+    `,
+  });
+
+  return { message: 'Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP kích hoạt.' };
+};
+
+// ─── VERIFY OTP ──────────────────────────────────────────────────────────────
+exports.verifyRegisterOtp = async ({ email, otp }) => {
+  const cached = otpCache.get(email);
+
+  if (!cached || Date.now() > cached.expiresAt) {
+    if (cached) otpCache.delete(email); // Xóa nếu hết hạn
+    throw { status: 400, message: 'OTP đã hết hạn hoặc không tồn tại' };
+  }
+
+  const hOtp = hashOTP(otp);
+  if (cached.otp !== hOtp) {
+    throw { status: 400, message: 'OTP không chính xác' };
+  }
+
+  // Kích hoạt tài khoản
+  await userRepo.activateUser(email);
+
+  // Xóa OTP khỏi Map
+  otpCache.delete(email);
+
+  return { message: 'Kích hoạt tài khoản thành công! Bạn có thể đăng nhập.' };
+};
+
+// ─── RESEND OTP ───────────────────────────────────────────────────────────────
+exports.resendOtp = async ({ email }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user)      throw { status: 404, message: 'Email không tồn tại' };
+  if (user.is_active) throw { status: 400, message: 'Tài khoản đã được kích hoạt' };
+
+  const otp      = generateOTP();
+  const hOtp     = hashOTP(otp);
+  
+  otpCache.set(email, {
+    otp: hOtp,
+    expiresAt: Date.now() + (OTP_EXPIRE * 1000)
+  });
+
+  await sendMail({
+    to:      email,
+    subject: '🔐 Gửi lại mã OTP kích hoạt',
+    html: `<h2>Mã OTP mới của bạn:</h2>
+           <h1 style="color:#2563eb;letter-spacing:8px">${otp}</h1>
+           <p>Hiệu lực trong <strong>${OTP_EXPIRE / 60} phút</strong>.</p>`,
+  });
+
+  return { message: 'Đã gửi lại OTP. Vui lòng kiểm tra email.' };
+};

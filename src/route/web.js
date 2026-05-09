@@ -1,5 +1,6 @@
 import express from 'express';
 import homeController from '../controller/homeController';
+const authRoutes = require('./auth.routes');
 
 let router = express.Router();
 
@@ -17,6 +18,11 @@ let initWebRoutes = (app) => {
   router.post('/put-crud', homeController.putCRUD);
   router.get('/delete-crud', homeController.deleteCRUD);
 
+  // Thêm giao diện Đăng ký / Đăng nhập
+  router.get('/login', (req, res) => res.render('auth/login.ejs'));
+  router.get('/register', (req, res) => res.render('auth/register.ejs'));
+
+  app.use('/api/auth', authRoutes);
   return app.use('/', router);
 };
 
