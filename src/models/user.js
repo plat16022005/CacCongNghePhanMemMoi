@@ -1,22 +1,44 @@
-const mongoose = require('mongoose');
+'use strict';
+const { Model } = require('sequelize');
 
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  name: { type: String },
-  firstName: { type: String },
-  lastName: { type: String },
-  address: { type: String },
-  phoneNumber: { type: String },
-  gender: { type: Boolean },
-  image: { type: String },
-  role: { type: String, default: 'user' },
-  roleId: { type: String },
-  positionId: { type: String },
-  is_active: { type: Boolean, default: false }
-}, {
-  timestamps: true
-});
-
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    static associate(models) {
+      // define association here
+    }
+  }
+  User.init({
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    name: DataTypes.STRING,
+    firstName: DataTypes.STRING,
+    lastName: DataTypes.STRING,
+    address: DataTypes.STRING,
+    phoneNumber: DataTypes.STRING,
+    gender: DataTypes.BOOLEAN,
+    image: DataTypes.STRING,
+    role: {
+      type: DataTypes.STRING,
+      defaultValue: 'user'
+    },
+    roleId: DataTypes.STRING,
+    positionId: DataTypes.STRING,
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
+  }, {
+    sequelize,
+    modelName: 'User',
+    tableName: 'Users',
+    timestamps: true,
+  });
+  return User;
+};

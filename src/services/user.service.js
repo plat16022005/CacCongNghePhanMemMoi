@@ -1,7 +1,6 @@
-const User = require('../models/user');
+const { User } = require('../models');
 
 exports.updateProfile = async (userId, updateData) => {
-  // Loại bỏ các trường không được phép cập nhật trực tiếp (như role, is_active, password...)
   const allowedFields = ['name', 'firstName', 'lastName', 'address', 'phoneNumber', 'gender'];
   const dataToUpdate = {};
   
@@ -11,14 +10,22 @@ exports.updateProfile = async (userId, updateData) => {
     }
   }
 
-  const updatedUser = await User.findByIdAndUpdate(userId, dataToUpdate, {
-    new: true, // Trả về bản ghi sau khi cập nhật
-    select: '-password' // Không trả về mật khẩu
+  const [affectedRows] = await User.update(dataToUpdate, {
+    where: { id: userId }
   });
 
-  if (!updatedUser) {
-    throw { status: 404, message: 'Người dùng không tồn tại' };
+  if (affectedRows === 0) {
+    // Nếu affectedRows = 0 có thể do user không tồn tại hoặc không có data nào thay đổi
+    const userExists = await User.findByPk(userId);
+    if (!userExists) {
+      throw { status: 404, message: 'Người dùng không tồn tại' };
+    }
   }
+
+  const updatedUser = await User.findByPk(userId, {
+    attributes: { exclude: ['password'] },
+    raw: true
+  });
 
   return { message: 'Cập nhật hồ sơ thành công', user: updatedUser };
 };

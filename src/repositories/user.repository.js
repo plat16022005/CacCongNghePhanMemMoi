@@ -1,27 +1,40 @@
-const User = require('../models/user');
+const { User } = require('../models');
 
 const findByEmail = async (email) => {
-  return await User.findOne({ email }).lean();
+  return await User.findOne({ 
+    where: { email },
+    raw: true 
+  });
 };
 
 const createUser = async ({ name, email, password, role = 'user' }) => {
-  const user = new User({
+  const user = await User.create({
     name,
     email,
     password,
     role,
     is_active: false
   });
-  await user.save();
-  return user._id;
+  return user.id;
 };
 
 const activateUser = async (email) => {
-  await User.updateOne({ email }, { is_active: true });
+  await User.update({ is_active: true }, { 
+    where: { email } 
+  });
 };
 
 const findById = async (id) => {
-  return await User.findById(id).select('-password').lean();
+  return await User.findByPk(id, {
+    attributes: { exclude: ['password'] },
+    raw: true
+  });
 };
 
-module.exports = { findByEmail, createUser, activateUser, findById };
+const updatePassword = async (email, password) => {
+  await User.update({ password }, {
+    where: { email }
+  });
+};
+
+module.exports = { findByEmail, createUser, activateUser, findById, updatePassword };

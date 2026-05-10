@@ -1,9 +1,11 @@
-import mongoose from 'mongoose';
+const db = require('../models');
 
 let connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/node_fulltask');
-    console.log('Connection to MongoDB has been established successfully.');
+    await db.sequelize.authenticate();
+    // Tự động tạo bảng nếu chưa có (không đồng bộ dữ liệu)
+    await db.sequelize.sync({ alter: true });
+    console.log('Connection to MySQL has been established successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }

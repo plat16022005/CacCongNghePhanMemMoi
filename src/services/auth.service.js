@@ -141,8 +141,7 @@ exports.resetPassword = async ({ email, otp, newPassword }) => {
   if (!user) throw { status: 404, message: 'Tài khoản không tồn tại' };
 
   const hashed = await bcrypt.hash(newPassword, 12);
-  user.password = hashed;
-  await user.save();
+  await userRepo.updatePassword(email, hashed);
 
   // Xóa OTP khỏi Map
   otpCache.delete(cacheKey);
