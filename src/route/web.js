@@ -1,6 +1,7 @@
 import express from 'express';
 import homeController from '../controller/homeController';
 const authRoutes = require('./auth.routes');
+const userRoutes = require('./user.routes');
 
 let router = express.Router();
 
@@ -23,6 +24,7 @@ let initWebRoutes = (app) => {
   router.get('/register', (req, res) => res.render('auth/register.ejs'));
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/user', userRoutes);
   return app.use('/', router);
 };
 

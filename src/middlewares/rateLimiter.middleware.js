@@ -15,3 +15,17 @@ exports.resendOtpLimiter = rateLimit({
   max: 3,
   message: { message: 'Quá nhiều yêu cầu gửi OTP, thử lại sau 10 phút' },
 });
+
+// Giới hạn quên mật khẩu: 3 lần / 15 phút
+exports.forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  message: { message: 'Quá nhiều yêu cầu quên mật khẩu, thử lại sau 15 phút' },
+});
+
+// Giới hạn đổi mật khẩu (nhập sai OTP nhiều lần): 5 lần / 15 phút
+exports.resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: 'Quá nhiều yêu cầu đổi mật khẩu, thử lại sau 15 phút' },
+});

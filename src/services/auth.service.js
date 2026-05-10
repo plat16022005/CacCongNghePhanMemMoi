@@ -93,3 +93,59 @@ exports.resendOtp = async ({ email }) => {
 
   return { message: 'Đã gửi lại OTP. Vui lòng kiểm tra email.' };
 };
+
+// ─── FORGOT PASSWORD ─────────────────────────────────────────────────────────
+exports.forgotPassword = async ({ email }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw { status: 404, message: 'Email không tồn tại trong hệ thống' };
+
+  const otp    = generateOTP();
+  const hOtp   = hashOTP(otp);
+  
+  otpCache.set(email + '_reset', {
+    otp: hOtp,
+    expiresAt: Date.now() + (OTP_EXPIRE * 1000)
+  });
+
+  await sendMail({
+    to:      email,
+    subject: '🔐 Lấy lại mật khẩu',
+    html: `
+      <h2>Xin chào ${user.name || 'bạn'}!</h2>
+      <p>Mã OTP để đặt lại mật khẩu của bạn là:</p>
+      <h1 style="color:#2563eb;letter-spacing:8px">${otp}</h1>
+      <p>Mã có hiệu lực trong <strong>${OTP_EXPIRE / 60} phút</strong>.</p>
+      <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+    `,
+  });
+
+  return { message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email.' };
+};
+
+// ─── RESET PASSWORD ──────────────────────────────────────────────────────────
+exports.resetPassword = async ({ email, otp, newPassword }) => {
+  const cacheKey = email + '_reset';
+  const cached = otpCache.get(cacheKey);
+
+  if (!cached || Date.now() > cached.expiresAt) {
+    if (cached) otpCache.delete(cacheKey);
+    throw { status: 400, message: 'Mã OTP đã hết hạn hoặc không tồn tại' };
+  }
+
+  const hOtp = hashOTP(otp);
+  if (cached.otp !== hOtp) {
+    throw { status: 400, message: 'Mã OTP không chính xác' };
+  }
+
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw { status: 404, message: 'Tài khoản không tồn tại' };
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  user.password = hashed;
+  await user.save();
+
+  // Xóa OTP khỏi Map
+  otpCache.delete(cacheKey);
+
+  return { message: 'Đặt lại mật khẩu thành công!' };
+};
