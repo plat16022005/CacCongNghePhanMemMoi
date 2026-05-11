@@ -1,8 +1,8 @@
 {
   "development": {
     "username": "root",
-    "password": "@Tuan16022005",
-    "database": "node_fulltask",
+    "password": "Luu14122005",
+    "database": "node_fullstack",
     "host": "127.0.0.1",
     "dialect": "mysql",
     "logging": false
