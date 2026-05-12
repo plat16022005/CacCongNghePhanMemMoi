@@ -3,13 +3,17 @@ const router = express.Router();
 const userCtrl = require("../controllers/user.controller");
 const { editProfileRules } = require("../validations/user.validation");
 const { validate } = require("../middlewares/validate.middleware");
-const { verifyToken, authorize } = require("../middlewares/auth.middleware");
+const {
+  verifyToken,
+  authorize,
+  verifyTokenLogin,
+} = require("../middlewares/auth.middleware");
 
 // PUT /api/user/profile
 router.put(
   "/profile",
-  verifyToken, // Lớp bảo mật: Authentication
-  editProfileRules, // Lớp bảo mật: Input Validation
+  verifyTokenLogin,
+  editProfileRules,
   validate,
   userCtrl.editProfile,
 );
@@ -17,7 +21,7 @@ router.put(
 // GET /api/user/profile
 router.get(
   "/profile",
-  verifyToken,
+  verifyTokenLogin,
   authorize("user", "admin"),
   userCtrl.getUserProfile,
 );
@@ -25,7 +29,7 @@ router.get(
 // GET /api/admin/profile
 router.get(
   "/admin/profile",
-  verifyToken,
+  verifyTokenLogin,
   authorize("admin"),
   userCtrl.getAdminProfile,
 );

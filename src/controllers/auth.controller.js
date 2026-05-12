@@ -60,6 +60,7 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
+// Lưu token ở Cookie
 // Cấu hình cookie
 const cookieOptions = {
   httpOnly: true,

@@ -160,8 +160,6 @@ const {
   verifyRefreshToken,
 } = require("../utils/jwt.util");
 
-// ...existing code...
-
 // ─── LOGIN ───────────────────────────────────────────────────────────────────
 exports.login = async ({ email, password }) => {
   const user = await userRepo.findByEmail(email);

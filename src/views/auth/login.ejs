@@ -226,7 +226,6 @@
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({ email, password }),
-              credentials: "include",
             });
 
             const data = await response.json();
@@ -237,8 +236,6 @@
             }
 
             alert("✅ " + data.message);
-
-    
             setTimeout(() => {
               window.location.href = "/dashboard";
             }, 1500);

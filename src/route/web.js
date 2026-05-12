@@ -24,7 +24,6 @@ let initWebRoutes = (app) => {
   router.get("/login", (req, res) => res.render("auth/login.ejs"));
   router.get("/register", (req, res) => res.render("auth/register.ejs"));
 
-  // Dashboard cho user
   router.get(
     "/dashboard",
     verifyTokenLogin,
@@ -37,7 +36,7 @@ let initWebRoutes = (app) => {
   // GET /admin/dashboard - Dashboard admin
   router.get(
     "/admin/dashboard",
-    verifyToken,
+    verifyTokenLogin,
     authorize("admin"),
     (req, res) => {
       res.render("admin/dashboard", { user: req.user });

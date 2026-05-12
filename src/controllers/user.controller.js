@@ -18,6 +18,7 @@ exports.editProfile = async (req, res, next) => {
 exports.getUserProfile = async (req, res, next) => {
   try {
     const user = await userService.getProfile(req.user.id);
+    console.log("Cookies nhận được từ Browser:", req.cookies);
     res.status(200).json({
       message: "User Profile",
       data: user,
