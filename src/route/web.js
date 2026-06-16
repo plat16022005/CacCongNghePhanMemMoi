@@ -1,6 +1,11 @@
 import express from "express";
 import homeController from "../controller/homeController";
-import { verifyTokenLogin, verifyToken } from "../middlewares/auth.middleware";
+import { 
+  verifyTokenLogin, 
+  verifyToken, 
+  verifyTokenLoginView, 
+  authorizeView 
+} from "../middlewares/auth.middleware";
 const authRoutes = require("./auth.routes");
 const userRoutes = require("./user.routes");
 const authorize = require("../middlewares/auth.middleware").authorize;
@@ -26,9 +31,13 @@ let initWebRoutes = (app) => {
 
   router.get(
     "/dashboard",
-    verifyTokenLogin,
-    authorize("user", "admin"),
+    verifyTokenLoginView,
+    authorizeView("user", "admin"),
     (req, res) => {
+      if (req.user && req.user.role === "admin") {
+        console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
+        return res.redirect("/admin/dashboard");
+      }
       res.render("users/profile", { user: req.user });
     },
   );
@@ -36,15 +45,20 @@ let initWebRoutes = (app) => {
   // GET /admin/dashboard - Dashboard admin
   router.get(
     "/admin/dashboard",
-    verifyTokenLogin,
-    authorize("admin"),
+    verifyTokenLoginView,
+    authorizeView("admin"),
     (req, res) => {
+      if (req.user && req.user.role !== "admin") {
+        console.log("Cư dân truy cập /admin/dashboard, tự động chuyển hướng sang /dashboard");
+        return res.redirect("/dashboard");
+      }
       res.render("admin/dashboard", { user: req.user });
     },
   );
 
   app.use("/api/auth", authRoutes);
   app.use("/api/user", userRoutes);
+  app.use("/api/rooms", require("./room.routes"));
   return app.use("/", router);
 };
 

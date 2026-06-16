@@ -382,6 +382,45 @@
           </form>
         </div>
       </div>
+
+      <!-- Thông tin phòng & Hóa đơn của tôi -->
+      <div class="profile-card" style="margin-top: 24px;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">🏠 Thông tin phòng & Hóa đơn của tôi</h2>
+        
+        <!-- Nếu chưa được gán phòng -->
+        <div id="noRoomSection" style="display: none; padding: 20px; background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); border-radius: 12px; color: var(--text-muted); text-align: center;">
+          <p>⚠️ Bạn chưa được gán phòng trọ nào trong hệ thống. Vui lòng liên hệ với Ban quản lý (Admin) để đăng ký phòng.</p>
+        </div>
+
+        <!-- Nếu đã được gán phòng -->
+        <div id="hasRoomSection" style="display: none;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px;">
+            <div>Số phòng thuê: <strong id="myRoomNumber" style="font-size: 18px; color: var(--primary);">--</strong></div>
+            <div>Giá phòng cơ bản: <strong id="myRoomPrice" style="font-size: 18px;">--</strong> VND</div>
+            <div>Trạng thái phòng: <strong id="myRoomStatus">--</strong></div>
+            <div>Liên hệ Ban quản lý: <strong>admin@example.com</strong></div>
+          </div>
+
+          <h3 style="margin-bottom: 12px; font-size: 18px;">🧾 Lịch sử hóa đơn hàng tháng</h3>
+          <table style="width: 100%; border-collapse: collapse; color: var(--text-main); font-size: 14px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                <th style="padding: 10px; color: var(--text-muted);">Tháng</th>
+                <th style="padding: 10px; color: var(--text-muted);">Điện nước tiêu thụ</th>
+                <th style="padding: 10px; color: var(--text-muted);">Phí dịch vụ + Xe</th>
+                <th style="padding: 10px; color: var(--text-muted);">Phạt / Khấu trừ</th>
+                <th style="padding: 10px; color: var(--text-muted);">Tổng hóa đơn</th>
+                <th style="padding: 10px; color: var(--text-muted);">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="myInvoicesTableBody">
+              <tr>
+                <td colspan="6" style="padding: 20px; text-align: center; color: var(--text-muted);">Đang tải danh sách hóa đơn...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -435,9 +474,86 @@
           document.getElementById("editPhone").value = user.phoneNumber || "";
           document.getElementById("editAddress").value = user.address || "";
           document.getElementById("editGender").value = user.gender || "";
+
+          // Tải thêm thông tin phòng và hóa đơn của chính mình
+          loadMyRoom();
+          loadMyInvoices();
         } catch (error) {
           console.error("Load profile error:", error);
           showStatus("Lỗi khi tải hồ sơ!", "error");
+        }
+      }
+
+      async function loadMyRoom() {
+        try {
+          const res = await fetch("/api/rooms/my-room", { credentials: "include" });
+          if (!res.ok) throw new Error("Không thể tải thông tin phòng");
+          const result = await res.json();
+          const room = result.data;
+
+          if (!room) {
+            document.getElementById("noRoomSection").style.display = "block";
+            document.getElementById("hasRoomSection").style.display = "none";
+            return;
+          }
+
+          document.getElementById("noRoomSection").style.display = "none";
+          document.getElementById("hasRoomSection").style.display = "block";
+          
+          document.getElementById("myRoomNumber").textContent = room.roomNumber;
+          document.getElementById("myRoomPrice").textContent = Number(room.basePrice).toLocaleString();
+          
+          let statusText = "Hoạt động";
+          if (room.status === "maintenance") statusText = "Đang bảo trì";
+          document.getElementById("myRoomStatus").textContent = statusText;
+        } catch (error) {
+          console.error("Load my room error:", error);
+        }
+      }
+
+      async function loadMyInvoices() {
+        try {
+          const res = await fetch("/api/rooms/my-invoices", { credentials: "include" });
+          if (!res.ok) throw new Error("Không thể tải lịch sử hóa đơn");
+          const result = await res.json();
+          const invoices = result.data;
+
+          const tbody = document.getElementById("myInvoicesTableBody");
+          tbody.innerHTML = "";
+
+          if (!invoices || invoices.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-muted);">Bạn chưa có hóa đơn nào. Hóa đơn sẽ được Admin kết xuất hàng tháng.</td></tr>`;
+            return;
+          }
+
+          invoices.forEach(inv => {
+            const tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid var(--border)";
+            
+            const elecWaterUsage = `Điện: ${inv.oldElec} → ${inv.newElec} kWh (${(inv.newElec - inv.oldElec)} kWh)<br>Nước: ${inv.oldWater} → ${inv.newWater} m³ (${(inv.newWater - inv.oldWater)} m³)`;
+            
+            const fees = `Dịch vụ: ${Number(inv.serviceFee).toLocaleString()}đ<br>Xe máy: ${Number(inv.vehicleFee).toLocaleString()}đ`;
+            
+            const adjust = `Phạt trễ: ${Number(inv.penalty).toLocaleString()}đ<br>Khấu trừ: -${Number(inv.discount).toLocaleString()}đ`;
+            
+            const statusBadge = inv.status === "paid" 
+              ? `<span style="color: var(--success); background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Đã thanh toán</span>`
+              : `<span style="color: var(--danger); background: rgba(239,68,68,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Chưa thanh toán</span>`;
+
+            tr.innerHTML = `
+              <td style="padding: 10px; font-weight: 600; vertical-align: top;">Tháng ${inv.month}</td>
+              <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${elecWaterUsage}</td>
+              <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${fees}</td>
+              <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${adjust}</td>
+              <td style="padding: 10px; vertical-align: top; font-weight: 700; color: var(--primary);">${Number(inv.totalBill).toLocaleString()} VND</td>
+              <td style="padding: 10px; vertical-align: top;">${statusBadge}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (error) {
+          console.error("Load invoices error:", error);
+          const tbody = document.getElementById("myInvoicesTableBody");
+          tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--danger);">Không thể tải dữ liệu hóa đơn</td></tr>`;
         }
       }
 

@@ -52,3 +52,31 @@ exports.authorize =
     }
     next();
   };
+
+exports.verifyTokenLoginView = (req, res, next) => {
+  try {
+    const token = req.cookies.accessToken;
+
+    if (!token) {
+      console.log("Không tìm thấy accessToken trong Cookie, chuyển hướng về /login");
+      return res.redirect("/login");
+    }
+
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error("JWT Verify Error in View:", err.message);
+    return res.redirect("/login");
+  }
+};
+
+exports.authorizeView =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      console.log("Quyền truy cập không hợp lệ, chuyển hướng về /login");
+      return res.redirect("/login");
+    }
+    next();
+  };

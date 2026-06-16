@@ -15,8 +15,10 @@ let createNewUser = (data) => {
         lastName: data.lastName,
         address: data.address,
         phoneNumber: data.phoneNumber,
-        gender: data.gender === '1' ? true : false,
-        roleId: data.roleId
+        gender: data.gender === '1' ? 'female' : 'male',
+        roleId: data.roleId,
+        role: data.roleId === '1' ? 'admin' : 'user', // Set role based on roleId
+        is_active: true // Auto activate users created via admin panel
       });
       resolve('OK create a new user successfull');
     } catch (e) {
@@ -42,6 +44,7 @@ let getAllUser = () => {
   return new Promise(async (resolve, reject) => {
     try {
       let users = await User.find().lean();
+      users = users.map(u => ({ ...u, id: u._id.toString() }));
       resolve(users);
     } catch (e) {
       reject(e);
@@ -54,7 +57,10 @@ let getUserInfoById = (userId) => {
   return new Promise(async (resolve, reject) => {
     try {
       let user = await User.findOne({ _id: userId }).lean();
-      if (user) resolve(user);
+      if (user) {
+        user.id = user._id.toString();
+        resolve(user);
+      }
       else resolve([]);
     } catch (e) {
       reject(e);
@@ -73,6 +79,7 @@ let updateUser = (data) => {
         user.address = data.address;
         await user.save();
         let allusers = await User.find().lean();
+        allusers = allusers.map(u => ({ ...u, id: u._id.toString() }));
         resolve(allusers);
       } else {
         resolve();

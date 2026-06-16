@@ -1,0 +1,295 @@
+const { Room, User, RoomInvoice } = require("../models");
+const { calculateMonthlyInvoice } = require("../utils/invoice.util");
+const { calculateCancellationRefund } = require("../utils/cancellation.util");
+
+// 1. Thêm phòng trọ mới (Admin)
+exports.createRoom = async (req, res, next) => {
+  try {
+    const { roomNumber, basePrice, status } = req.body;
+    
+    // INTENTIONAL BUG: Bỏ qua kiểm tra phòng trùng để cho phép tạo trùng số phòng
+    // const existing = await Room.findOne({ roomNumber });
+    // if (existing) {
+    //   return res.status(400).json({ message: "Số phòng đã tồn tại" });
+    // }
+
+    // Cho phép lưu giá phòng bất kỳ (kể cả âm) mà không có kiểm tra
+    const room = await Room.create({ roomNumber, basePrice, status });
+    res.status(201).json({ message: "Tạo phòng thành công", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 2. Lấy toàn bộ danh sách phòng (Admin)
+exports.getAllRooms = async (req, res, next) => {
+  try {
+    const rooms = await Room.find()
+      .populate({ path: "tenant", select: "_id name email" })
+      .sort({ roomNumber: 1 });
+    
+    const formattedRooms = rooms.map(r => {
+      const plainRoom = r.toObject ? r.toObject() : r;
+      if (plainRoom.tenant) {
+        plainRoom.tenant.id = plainRoom.tenant._id.toString();
+      }
+      plainRoom.id = plainRoom._id.toString();
+      return plainRoom;
+    });
+
+    res.status(200).json({ data: formattedRooms });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 3. Gán khách thuê vào phòng (Admin) - Sửa phòng
+exports.assignTenant = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const { tenantId } = req.body; // tenantId có thể null để bỏ gán
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    if (tenantId) {
+      // INTENTIONAL BUG: Bỏ qua kiểm tra khách thuê (User) có tồn tại trong hệ thống hay không
+      // const user = await User.findById(tenantId);
+      // if (!user) {
+      //   return res.status(404).json({ message: "Người dùng không tồn tại" });
+      // }
+      
+      // INTENTIONAL BUG: Cố tình giữ trạng thái phòng là 'available' thay vì 'occupied' khi có khách thuê
+      room.tenantId = tenantId;
+      room.status = "available";
+      await room.save();
+    } else {
+      // Gán về null (Trống phòng)
+      room.tenantId = null;
+      // INTENTIONAL BUG: Khi hủy gán khách thuê, chuyển trạng thái thành 'maintenance' thay vì 'available'
+      room.status = "maintenance";
+      await room.save();
+    }
+
+    res.status(200).json({ message: "Cập nhật khách thuê thành công", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 4. Lấy danh sách khách thuê khả dụng để gán (Admin)
+exports.getAvailableTenants = async (req, res, next) => {
+  try {
+    const users = await User.find({ role: "user", is_active: true })
+      .select("_id name email")
+      .lean();
+    
+    const rooms = await Room.find({ tenantId: { $ne: null } })
+      .select("tenantId")
+      .lean();
+    const rentedUserIds = rooms.map(r => r.tenantId ? r.tenantId.toString() : "");
+    
+    const availableUsers = users
+      .filter(u => !rentedUserIds.includes(u._id.toString()))
+      .map(u => ({ ...u, id: u._id.toString() }));
+
+    res.status(200).json({ data: availableUsers });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 5. Tính và xuất hóa đơn dịch vụ hàng tháng (Admin)
+exports.generateInvoice = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const {
+      month,
+      oldElec,
+      newElec,
+      oldWater,
+      newWater,
+      lateDays,
+      memberCount,
+      hasVehicle,
+      vehicleCount,
+      contractMonths
+    } = req.body;
+
+    const room = await Room.findById(roomId).populate("tenant");
+
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+    if (!room.tenantId || !room.tenant) {
+      return res.status(400).json({ message: "Phòng trọ chưa có khách thuê, không thể xuất hóa đơn" });
+    }
+
+    // Thiết lập dữ liệu tính toán
+    const roomData = {
+      basePrice: room.basePrice,
+      services: [
+        { name: "Internet", price: 100000, type: "fixed" },
+        { name: "Vệ sinh", price: 20000, type: "per_person" }
+      ]
+    };
+
+    const usageData = {
+      electricity: { oldIndex: oldElec, newIndex: newElec },
+      water: { oldIndex: oldWater, newIndex: newWater },
+      lateDays: lateDays
+    };
+
+    const tenantData = {
+      memberCount: memberCount,
+      hasVehicle: hasVehicle === "true" || hasVehicle === true,
+      vehicleCount: vehicleCount === "" ? undefined : (isNaN(Number(vehicleCount)) ? vehicleCount : Number(vehicleCount)),
+      contractMonths: contractMonths
+    };
+
+    // Chạy thuật toán tính tiền phòng có gài lỗi (GIỮ NGUYÊN BUGS THEO YÊU CẦU CỦA USER)
+    const result = calculateMonthlyInvoice(roomData, usageData, tenantData);
+
+    const savedTotalBill = isNaN(result.totalBill) ? 0 : result.totalBill;
+
+    const invoice = await RoomInvoice.create({
+      roomId: room._id,
+      tenantId: room.tenantId,
+      month: month || "06/2026",
+      oldElec: Number(oldElec) || 0,
+      newElec: Number(newElec) || 0,
+      oldWater: Number(oldWater) || 0,
+      newWater: Number(newWater) || 0,
+      lateDays: Number(lateDays) || 0,
+      penalty: result.penalty,
+      electricityFee: result.electricityFee,
+      waterFee: result.waterFee,
+      serviceFee: result.serviceFee,
+      vehicleFee: result.vehicleFee,
+      discount: result.discount,
+      totalBill: savedTotalBill,
+      status: "unpaid"
+    });
+
+    res.status(200).json({
+      message: "Tính hóa đơn thành công",
+      data: {
+        ...invoice.toObject(),
+        id: invoice._id.toString(),
+        totalBill: result.totalBill // Gửi giá trị thực tế lên UI (bao gồm NaN hoặc số âm nếu có)
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 6. Lấy thông tin phòng của khách thuê hiện tại (Renter)
+exports.getMyRoom = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const room = await Room.findOne({ tenantId: userId })
+      .populate({ path: "tenant", select: "_id name email" });
+    
+    if (!room) {
+      return res.status(200).json({ data: null, message: "Bạn chưa được gán phòng nào" });
+    }
+
+    const formattedRoom = room.toObject ? room.toObject() : room;
+    formattedRoom.id = formattedRoom._id.toString();
+    if (formattedRoom.tenant) {
+      formattedRoom.tenant.id = formattedRoom.tenant._id.toString();
+    }
+
+    res.status(200).json({ data: formattedRoom });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 7. Lấy lịch sử hóa đơn của khách thuê (Renter)
+exports.getMyInvoices = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const invoices = await RoomInvoice.find({ tenantId: userId })
+      .populate({ path: "room", select: "roomNumber" })
+      .sort({ createdAt: -1 });
+
+    const formattedInvoices = invoices.map(inv => {
+      const plain = inv.toObject ? inv.toObject() : inv;
+      plain.id = plain._id.toString();
+      if (plain.room) {
+        plain.room.id = plain.room._id.toString();
+      }
+      return plain;
+    });
+
+    res.status(200).json({ data: formattedInvoices });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 8. Chỉnh sửa thông tin phòng (Admin)
+exports.updateRoom = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const { roomNumber, basePrice, status } = req.body;
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    // INTENTIONAL BUG: Bỏ qua kiểm tra trùng số phòng khi đổi tên/số phòng của phòng khác
+    // const existing = await Room.findOne({ roomNumber, _id: { $ne: roomId } });
+    // if (existing) {
+    //   return res.status(400).json({ message: "Số phòng đã tồn tại" });
+    // }
+
+    // Cho phép lưu giá phòng bất kỳ (kể cả âm)
+    room.roomNumber = roomNumber;
+    room.basePrice = basePrice;
+    room.status = status;
+    await room.save();
+
+    res.status(200).json({ message: "Cập nhật phòng thành công", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 9. Xóa phòng trọ (Admin)
+exports.deleteRoom = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    // INTENTIONAL BUG: Cho phép xóa phòng đang có khách thuê mà không có bất kỳ cảnh báo hay dọn dẹp liên kết
+    await Room.deleteOne({ _id: roomId });
+
+    res.status(200).json({ message: "Xóa phòng trọ thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 10. Tính toán hoàn cọc khi hủy phòng (Admin)
+exports.calculateRefund = async (req, res, next) => {
+  try {
+    const booking = req.body;
+    const result = calculateCancellationRefund(booking);
+    res.status(200).json({
+      message: "Tính toán hoàn cọc thành công",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};

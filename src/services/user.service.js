@@ -18,22 +18,17 @@ exports.updateProfile = async (userId, updateData) => {
     }
   }
 
-  const [affectedRows] = await User.update(dataToUpdate, {
-    where: { id: userId },
-  });
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: dataToUpdate },
+    { new: true, runValidators: true }
+  ).select("-password").lean();
 
-  if (affectedRows === 0) {
-    // Nếu affectedRows = 0 có thể do user không tồn tại hoặc không có data nào thay đổi
-    const userExists = await User.findByPk(userId);
-    if (!userExists) {
-      throw { status: 404, message: "Người dùng không tồn tại" };
-    }
+  if (!updatedUser) {
+    throw { status: 404, message: "Người dùng không tồn tại" };
   }
 
-  const updatedUser = await User.findByPk(userId, {
-    attributes: { exclude: ["password"] },
-    raw: true,
-  });
+  updatedUser.id = updatedUser._id.toString();
 
   return { message: "Cập nhật hồ sơ thành công", user: updatedUser };
 };

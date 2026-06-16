@@ -1,44 +1,58 @@
-'use strict';
-const { Model } = require('sequelize');
+const mongoose = require("mongoose");
 
-module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
-    static associate(models) {
-      // define association here
-    }
-  }
-  User.init({
+const userSchema = new mongoose.Schema(
+  {
     email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
     },
     password: {
-      type: DataTypes.STRING,
-      allowNull: false
+      type: String,
+      required: true
     },
-    name: DataTypes.STRING,
-    firstName: DataTypes.STRING,
-    lastName: DataTypes.STRING,
-    address: DataTypes.STRING,
-    phoneNumber: DataTypes.STRING,
-    gender: DataTypes.BOOLEAN,
-    image: DataTypes.STRING,
+    name: String,
+    firstName: String,
+    lastName: String,
+    address: String,
+    phoneNumber: String,
+    gender: String,
+    image: String,
     role: {
-      type: DataTypes.STRING,
-      defaultValue: 'user'
+      type: String,
+      default: "user"
     },
-    roleId: DataTypes.STRING,
-    positionId: DataTypes.STRING,
+    roleId: String,
+    positionId: String,
     is_active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
+      type: Boolean,
+      default: false
     }
-  }, {
-    sequelize,
-    modelName: 'User',
-    tableName: 'Users',
+  },
+  {
     timestamps: true,
-  });
-  return User;
-};
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
+
+// Virtual relation to Room
+userSchema.virtual("room", {
+  ref: "Room",
+  localField: "_id",
+  foreignField: "tenantId",
+  justOne: true
+});
+
+// Virtual relation to RoomInvoices
+userSchema.virtual("invoices", {
+  ref: "RoomInvoice",
+  localField: "_id",
+  foreignField: "tenantId"
+});
+
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+
+module.exports = User;

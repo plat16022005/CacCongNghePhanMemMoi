@@ -1,10 +1,11 @@
 const { User } = require('../models');
 
 const findByEmail = async (email) => {
-  return await User.findOne({ 
-    where: { email },
-    raw: true 
-  });
+  const user = await User.findOne({ email }).lean();
+  if (user) {
+    user.id = user._id.toString();
+  }
+  return user;
 };
 
 const createUser = async ({ name, email, password, role = 'user' }) => {
@@ -15,26 +16,27 @@ const createUser = async ({ name, email, password, role = 'user' }) => {
     role,
     is_active: false
   });
-  return user.id;
+  return user._id.toString();
 };
 
 const activateUser = async (email) => {
-  await User.update({ is_active: true }, { 
-    where: { email } 
-  });
+  await User.updateOne({ email }, { $set: { is_active: true } });
 };
 
 const findById = async (id) => {
-  return await User.findByPk(id, {
-    attributes: { exclude: ['password'] },
-    raw: true
-  });
+  try {
+    const user = await User.findById(id).select("-password").lean();
+    if (user) {
+      user.id = user._id.toString();
+    }
+    return user;
+  } catch (error) {
+    return null;
+  }
 };
 
 const updatePassword = async (email, password) => {
-  await User.update({ password }, {
-    where: { email }
-  });
+  await User.updateOne({ email }, { $set: { password } });
 };
 
 module.exports = { findByEmail, createUser, activateUser, findById, updatePassword };

@@ -60,8 +60,6 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-// Lưu token ở Cookie
-// Cấu hình cookie
 const cookieOptions = {
   httpOnly: true,
   sameSite: "strict",
@@ -71,7 +69,7 @@ const cookieOptions = {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const { accessToken, refreshToken } = await authService.login({
+    const { accessToken, refreshToken, role } = await authService.login({
       email,
       password,
     });
@@ -85,7 +83,7 @@ exports.login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ message: "Đăng nhập thành công" });
+    res.status(200).json({ message: "Đăng nhập thành công", role });
   } catch (err) {
     if (err.status)
       return res.status(err.status).json({ message: err.message });

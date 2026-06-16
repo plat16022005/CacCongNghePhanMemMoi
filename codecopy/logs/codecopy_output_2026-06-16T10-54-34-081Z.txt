@@ -1,0 +1,2989 @@
+Summary:
+ - Directory: d:\WEB\CacCongNghePhanMemMoi
+ - Files processed: 36
+ - Total lines: 2671
+ - Duration: 0.03 seconds
+================================================================================
+Directory Structure:
+
+├── .agent/
+│   └── skills/
+│       └── Skill.md
+├── src/
+│   ├── config/
+│   │   ├── config.json
+│   │   ├── configdb.js
+│   │   ├── mailer.js
+│   │   └── viewEngine.js
+│   ├── controller/
+│   │   └── homeController.js
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── room.controller.js
+│   │   └── user.controller.js
+│   ├── middlewares/
+│   │   ├── auth.middleware.js
+│   │   ├── rateLimiter.middleware.js
+│   │   └── validate.middleware.js
+│   ├── models/
+│   │   ├── index.js
+│   │   ├── room.js
+│   │   ├── roomInvoice.js
+│   │   └── user.js
+│   ├── repositories/
+│   │   └── user.repository.js
+│   ├── route/
+│   │   ├── auth.routes.js
+│   │   ├── room.routes.js
+│   │   ├── user.routes.js
+│   │   └── web.js
+│   ├── services/
+│   │   ├── auth.service.js
+│   │   ├── CRUDService.js
+│   │   └── user.service.js
+│   ├── utils/
+│   │   ├── cancellation.util.js
+│   │   ├── invoice.util.js
+│   │   ├── jwt.util.js
+│   │   └── otp.util.js
+│   ├── validations/
+│   │   ├── login.validation.js
+│   │   ├── register.validation.js
+│   │   └── user.validation.js
+│   ├── views/
+│   │   ├── admin/
+│   │   ├── auth/
+│   │   ├── test/
+│   │   ├── users/
+│   └── server.js
+├── crud-expressjs-sequelize-mysql.md
+├── extracted_text.txt
+├── package.json
+└── README.md
+
+Files extracted:
+crud-expressjs-sequelize-mysql.md (starts at line 1)
+extracted_text.txt (starts at line 614)
+package.json (starts at line 615)
+README.md (starts at line 660)
+.agent\skills\Skill.md (starts at line 698)
+src\server.js (starts at line 724)
+src\config\config.json (starts at line 755)
+src\config\configdb.js (starts at line 780)
+src\config\mailer.js (starts at line 795)
+src\config\viewEngine.js (starts at line 821)
+src\controller\homeController.js (starts at line 831)
+src\controllers\auth.controller.js (starts at line 907)
+src\controllers\room.controller.js (starts at line 1034)
+src\controllers\user.controller.js (starts at line 1330)
+src\middlewares\auth.middleware.js (starts at line 1379)
+src\middlewares\rateLimiter.middleware.js (starts at line 1462)
+src\middlewares\validate.middleware.js (starts at line 1500)
+src\models\index.js (starts at line 1513)
+src\models\room.js (starts at line 1523)
+src\models\roomInvoice.js (starts at line 1572)
+src\models\user.js (starts at line 1669)
+src\repositories\user.repository.js (starts at line 1728)
+src\route\auth.routes.js (starts at line 1771)
+src\route\room.routes.js (starts at line 1834)
+src\route\user.routes.js (starts at line 1865)
+src\route\web.js (starts at line 1903)
+src\services\auth.service.js (starts at line 1969)
+src\services\CRUDService.js (starts at line 2179)
+src\services\user.service.js (starts at line 2294)
+src\utils\cancellation.util.js (starts at line 2335)
+src\utils\invoice.util.js (starts at line 2396)
+src\utils\jwt.util.js (starts at line 2508)
+src\utils\otp.util.js (starts at line 2541)
+src\validations\login.validation.js (starts at line 2551)
+src\validations\register.validation.js (starts at line 2565)
+src\validations\user.validation.js (starts at line 2634)
+
+================================================================================
+
+File: crud-expressjs-sequelize-mysql.md (starts at line 1)
+
+# Hướng dẫn CRUD với Express.js – Sequelize – MySQL
+
+---
+
+## Bước 1: Khởi tạo dự án
+
+Cài đặt Node.js (phiên bản >18) và MySQL. Sau đó tạo file `package.json`:
+
+```bash
+npm init
+```
+
+---
+
+## Bước 2: Cài đặt các thư viện cần thiết
+
+```bash
+npm install --save express body-parser dotenv ejs sequelize
+
+npm install --save-dev @babel/core @babel/node @babel/preset-env nodemon
+```
+
+Cấu hình `package.json` thêm script start:
+
+```json
+"scripts": {
+  "start": "nodemon --exec babel-node src/server.js"
+}
+```
+
+---
+
+## Bước 3: Cài đặt MySQL driver và Sequelize CLI, khởi tạo cấu trúc Sequelize
+
+```bash
+npm install --save mysql2
+npm install --save-dev sequelize-cli
+node_modules/.bin/sequelize init
+```
+
+Tạo các file cấu hình sau ở thư mục gốc:
+
+**`.babelrc`**
+```json
+{
+  "presets": ["@babel/preset-env"]
+}
+```
+
+**`.env`**
+```
+PORT=8088
+NODE_ENV=development
+```
+
+**`.env.example`**
+```
+PORT=
+```
+
+**`.gitignore`**
+```
+/node_modules
+/vendor
+/.idea
+.idea/
+.env
+package-lock.json
+```
+
+**`.sequelizerc`** (trỏ đường dẫn đúng vào thư mục `src`):
+```js
+const path = require('path');
+module.exports = {
+  'config': path.resolve('./src/config', 'config.json'),
+  'migrations-path': path.resolve('./src', 'migrations'),
+  'models-path': path.resolve('./src', 'models'),
+  'seeders-path': path.resolve('./src', 'seeders')
+};
+```
+
+---
+
+## Bước 4: Tạo thư mục `src/config` và các file cấu hình
+
+**`src/config/config.json`** – cấu hình kết nối database:
+```json
+{
+  "development": {
+    "username": "root",
+    "password": "1234567@a$",
+    "database": "node_fulltask",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "logging": false
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
+```
+
+**`src/config/configdb.js`** – kết nối Sequelize:
+```js
+import { Sequelize } from 'sequelize';
+
+const sequelize = new Sequelize('node_fulltask', 'root', '1234567@a$', {
+  host: 'localhost',
+  dialect: 'mysql',
+  logging: false
+});
+
+let connectDB = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+};
+
+module.exports = connectDB;
+```
+
+**`src/config/viewEngine.js`** – cấu hình view engine EJS:
+```js
+import express from 'express';
+
+let configViewEngine = (app) => {
+  app.use(express.static('./src/public')); // thư mục chứa file tĩnh
+  app.set('view engine', 'ejs');
+  app.set('views', './src/views');
+};
+
+module.exports = configViewEngine;
+```
+
+---
+
+## Bước 5: Tạo file `src/server.js`
+
+```js
+import express from 'express';
+import bodyParser from 'body-parser';
+import viewEngine from './config/viewEngine';
+import initWebRoutes from './route/web';
+import connectDB from './config/configdb';
+
+require('dotenv').config();
+
+let app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+viewEngine(app);
+initWebRoutes(app);
+connectDB();
+
+let port = process.env.PORT || 6969;
+app.listen(port, () => {
+  console.log('Backend Nodejs is running on the port: ' + port);
+});
+```
+
+Cấu trúc thư mục `src` cần có:
+```
+src/
+├── config/
+├── controller/
+├── migrations/
+├── models/
+├── public/
+├── route/
+├── seeders/
+├── services/
+├── views/
+└── server.js
+```
+
+---
+
+## Bước 6: Tạo file `src/route/web.js`
+
+```js
+import express from 'express';
+import homeController from '../controller/homeController';
+
+let router = express.Router();
+
+let initWebRoutes = (app) => {
+  router.get('/', (req, res) => {
+    return res.send('Nguyễn Hữu Trung');
+  });
+
+  router.get('/home', homeController.getHomePage);
+  router.get('/about', homeController.getAboutPage);
+  router.get('/crud', homeController.getCRUD);
+  router.post('/post-crud', homeController.postCRUD);
+  router.get('/get-crud', homeController.getFindAllCrud);
+  router.get('/edit-crud', homeController.getEditCRUD);
+  router.post('/put-crud', homeController.putCRUD);
+  router.get('/delete-crud', homeController.deleteCRUD);
+
+  return app.use('/', router);
+};
+
+module.exports = initWebRoutes;
+```
+
+---
+
+## Bước 7: Tạo Model và Migration
+
+**`src/models/user.js`**
+```js
+'use strict';
+const { Model } = require('sequelize');
+
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    static associate(models) {
+      // định nghĩa mối quan hệ
+    }
+  }
+  User.init({
+    email: DataTypes.STRING,
+    password: DataTypes.STRING,
+    firstName: DataTypes.STRING,
+    lastName: DataTypes.STRING,
+    address: DataTypes.STRING,
+    phoneNumber: DataTypes.STRING,
+    gender: DataTypes.BOOLEAN,
+    image: DataTypes.STRING,
+    roleId: DataTypes.STRING,
+    positionId: DataTypes.STRING
+  }, {
+    sequelize,
+    modelName: 'User',
+  });
+  return User;
+};
+```
+
+**`src/migrations/migration-create-user.js`** – tạo bảng `users`:
+```js
+'use strict';
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('users', {
+      id: { allowNull: false, autoIncrement: true, primaryKey: true, type: Sequelize.INTEGER },
+      email: { type: Sequelize.STRING },
+      password: { type: Sequelize.STRING },
+      firstName: { type: Sequelize.STRING },
+      lastName: { type: Sequelize.STRING },
+      address: { type: Sequelize.STRING },
+      phoneNumber: { type: Sequelize.STRING },
+      gender: { type: Sequelize.BOOLEAN },
+      image: { type: Sequelize.STRING },
+      roleId: { type: Sequelize.STRING },
+      positionId: { type: Sequelize.STRING },
+      createdAt: { allowNull: false, type: Sequelize.DATE },
+      updatedAt: { allowNull: false, type: Sequelize.DATE }
+    });
+  },
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('users');
+  }
+};
+```
+
+Chạy migration để tạo bảng trong database:
+```bash
+npx sequelize-cli db:migrate
+```
+
+---
+
+## Bước 8: Tạo file `src/services/CRUDService.js`
+
+```js
+import bcrypt from 'bcryptjs';
+import db from '../models/index';
+
+const salt = bcrypt.genSaltSync(10);
+
+// Tạo user mới
+let createNewUser = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let hashPasswordFromBcrypt = await hashUserPassword(data.password);
+      await db.User.create({
+        email: data.email,
+        password: hashPasswordFromBcrypt,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        address: data.address,
+        phoneNumber: data.phoneNumber,
+        gender: data.gender === '1' ? true : false,
+        roleId: data.roleId
+      });
+      resolve('OK create a new user successfull');
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Hash password
+let hashUserPassword = (password) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let hashPassword = await bcrypt.hashSync('B4c0/\/', salt);
+      resolve(hashPassword);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Lấy tất cả user (findAll)
+let getAllUser = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let users = await db.User.findAll({ raw: true });
+      resolve(users);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Lấy 1 user theo id (findOne)
+let getUserInfoById = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await db.User.findOne({
+        where: { id: userId },
+        raw: true
+      });
+      if (user) resolve(user);
+      else resolve([]);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Cập nhật user (update)
+let updateUser = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await db.User.findOne({ where: { id: data.id } });
+      if (user) {
+        user.firstName = data.firstName;
+        user.lastName = data.lastName;
+        user.address = data.address;
+        await user.save();
+        let allusers = await db.User.findAll();
+        resolve(allusers);
+      } else {
+        resolve();
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Xóa user
+let deleteUserById = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await db.User.findOne({ where: { id: userId } });
+      if (user) {
+        user.destroy();
+      }
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+module.exports = {
+  createNewUser,
+  getAllUser,
+  getUserInfoById,
+  updateUser,
+  deleteUserById
+};
+```
+
+---
+
+## Bước 9: Tạo file `src/controller/homeController.js`
+
+```js
+import db from '../models/index';
+import CRUDService from '../services/CRUDService';
+
+// Trang chủ
+let getHomePage = async (req, res) => {
+  try {
+    let data = await db.User.findAll();
+    return res.render('homepage.ejs', { data: JSON.stringify(data) });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+// Trang about
+let getAboutPage = (req, res) => {
+  return res.render('test/about.ejs');
+};
+
+// Hiển thị form tạo user
+let getCRUD = (req, res) => {
+  return res.render('crud.ejs');
+};
+
+// Lấy danh sách tất cả user
+let getFindAllCrud = async (req, res) => {
+  let data = await CRUDService.getAllUser();
+  return res.render('users/findAllUser.ejs', { datalist: data });
+};
+
+// Tạo user mới từ form
+let postCRUD = async (req, res) => {
+  let message = await CRUDService.createNewUser(req.body);
+  console.log(message);
+  return res.send('Post crud to server');
+};
+
+// Lấy dữ liệu user để edit
+let getEditCRUD = async (req, res) => {
+  let userId = req.query.id;
+  if (userId) {
+    let userData = await CRUDService.getUserInfoById(userId);
+    return res.render('users/editUser.ejs', { data: userData });
+  } else {
+    return res.send('không lấy được id');
+  }
+};
+
+// Cập nhật user
+let putCRUD = async (req, res) => {
+  let data = req.body;
+  let data1 = await CRUDService.updateUser(data);
+  return res.render('users/findAllUser.ejs', { datalist: data1 });
+};
+
+// Xóa user
+let deleteCRUD = async (req, res) => {
+  let id = req.query.id;
+  if (id) {
+    await CRUDService.deleteUserById(id);
+    return res.send('Deleted!!!!!!!!!!!!');
+  } else {
+    return res.send('Not find user');
+  }
+};
+
+module.exports = {
+  getHomePage,
+  getAboutPage,
+  getCRUD,
+  postCRUD,
+  getFindAllCrud,
+  getEditCRUD,
+  putCRUD,
+  deleteCRUD
+};
+```
+
+---
+
+## Bước 10: Tạo các file View (EJS)
+
+**`src/views/crud.ejs`** – Form tạo user mới:
+```html
+<form action="/post-crud" method="post">
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <label>Email</label>
+      <input type="email" class="form-control" name="email">
+    </div>
+    <div class="form-group col-md-6">
+      <label>Password</label>
+      <input type="password" class="form-control" name="password">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <label>First Name</label>
+      <input type="text" class="form-control" name="firstName">
+    </div>
+    <div class="form-group col-md-6">
+      <label>Last Name</label>
+      <input type="text" class="form-control" name="lastName">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group col-md-4">
+      <label>Phone Number</label>
+      <input type="text" class="form-control" name="phoneNumber">
+    </div>
+    <div class="form-group col-md-4">
+      <label>Gender</label>
+      <select name="gender" class="form-control">
+        <option selected value="0">Male</option>
+        <option value="1">Female</option>
+      </select>
+    </div>
+    <div class="form-group col-md-4">
+      <label>Role</label>
+      <select name="roleId" class="form-control">
+        <option selected value="1">Admin</option>
+        <option value="2">Doctor</option>
+        <option value="3">Patient</option>
+      </select>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Sign in</button>
+</form>
+```
+
+**`src/views/users/findAllUser.ejs`** – Danh sách user:
+```html
+<body>
+  <table style="width:100%">
+    <tr>
+      <th>Email</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Address</th>
+      <th>Action</th>
+    </tr>
+    <% for(let i=0; i < datalist.length; i++) { %>
+    <tr>
+      <td><%= datalist[i].email %></td>
+      <td><%= datalist[i].firstName %></td>
+      <td><%= datalist[i].lastName %></td>
+      <td><%= datalist[i].address %></td>
+      <td>
+        <a href="/edit-crud?id=<%= datalist[i].id %>">Edit</a> ||
+        <a href="/delete-crud?id=<%= datalist[i].id %>">Delete</a>
+      </td>
+    </tr>
+    <% } %>
+  </table>
+</body>
+```
+
+**`src/views/users/editUser.ejs`** – Form cập nhật user:
+```html
+<div class="container">
+  <div class="row">
+    <form action="/put-crud" method="post">
+      <input type="text" class="form-control" name="id" value="<%=data.id%>">
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label>First Name</label>
+          <input type="text" class="form-control" name="firstName" value="<%=data.firstName%>">
+        </div>
+        <div class="form-group col-md-6">
+          <label>Last Name</label>
+          <input type="text" class="form-control" name="lastName" value="<%=data.lastName%>">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" class="form-control" name="address" value="<%=data.address%>">
+      </div>
+      <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+  </div>
+</div>
+```
+
+---
+
+## Bước 11: Chạy dự án
+
+```bash
+npm start
+```
+
+Truy cập các URL sau để kiểm tra:
+
+| URL | Chức năng |
+|---|---|
+| `localhost:8088/crud` | Form tạo user mới |
+| `localhost:8088/get-crud` | Danh sách tất cả user |
+| `localhost:8088/edit-crud?id=1` | Form chỉnh sửa user |
+| `localhost:8088/delete-crud?id=1` | Xóa user |
+
+---
+
+## Bài tập về nhà
+
+Thực hiện các bước tương tự nhưng thay MySQL + Sequelize bằng **MongoDB + Mongoose**.
+
+
+
+================================================================================
+
+File: extracted_text.txt (starts at line 614)
+
+HỆ THỐNG QUẢN LÝ CHUNG CƯ1. TỔNG QUAN TÀI LIỆU1.1 Mục ĐíchTài liệu này mô tả chi tiết các Use Case và Sequence Diagram cho chức năng Đăng Ký Tài Khoản (Register) trong hệ thống Website Quản Lý Chung Cư — ApartmentHub. Chức năng bao gồm ba cơ chế bảo mật quan trọng:Validation dữ liệu đầu vào: Kiểm tra tính hợp lệ của thông tin người dùng tại cả client (ReactJS) và server (express-validator).Rate Limiting: Giới hạn số lần đăng ký trong một khoảng thời gian để ngăn chặn spam và tấn công tự động, được lưu trữ trên Redis Cache.Xác thực OTP qua Email: Xác minh danh tính người dùng thông qua mã OTP 6 chữ số gửi về hộp thư điện tử — tài khoản chỉ được kích hoạt sau khi xác thực thành công.2. ĐẶC TẢ USE CASE2.1 Danh Sách Use CaseMã UCTên Use CaseTác nhânMức độ ưu tiênUC-02Đăng ký tài khoản (Register)Cư dân, Nhân viên quản lýCao (High)UC-02aXác thực OTP qua EmailCư dân, Nhân viên quản lýCao (High)UC-02bGửi lại OTP (Resend OTP)Cư dân, Nhân viên quản lýTrung bình (Medium)2.2 UC-02: Đăng Ký Tài Khoản (Register)2.3 Luồng Sự Kiện Chính (Main Flow)Luồng đăng ký thành công từ bước điền form đến kích hoạt tài khoản:Người dùng truy cập trang đăng ký /register trên trình duyệt.Hệ thống ReactJS hiển thị form đăng ký với các trường: Họ tên, Email, Mật khẩu, Xác nhận mật khẩu, Số điện thoại, Số căn hộ, Ngày sinh.Người dùng điền đầy đủ thông tin và nhấn nút 'Đăng Ký'.ReactJS thực hiện Client-side Validation ngay lập tức (kiểm tra định dạng email, độ mạnh mật khẩu, trùng confirmPassword, format số điện thoại VN).Frontend gửi POST /api/v1/auth/register {fullName, email, password, confirmPassword, phoneNumber, apartmentNumber, dateOfBirth} đến ExpressJS Server qua HTTPS.Rate Limiter Middleware kiểm tra Redis: GET ip_rate:{clientIP}. Nếu count < 5 → cho phép tiếp tục; tăng bộ đếm: INCR ip_rate:{IP}, EXPIRE 900s.Server-side Validator Middleware (express-validator) kiểm tra toàn bộ trường đầu vào theo quy tắc nghiệp vụ.Auth Controller truy vấn MongoDB: User.findOne({ email }) — kiểm tra email đã tồn tại chưa.Nếu email chưa tồn tại: bcrypt.hash(password, 10) để mã hoá mật khẩu.Tạo bản ghi người dùng mới trong MongoDB với trạng thái status = 'PENDING': INSERT user (fullName, email, passwordHash, phoneNumber, apartmentNumber, status='PENDING').Sinh mã OTP 6 chữ số: crypto.randomInt(100000, 999999) = ví dụ 847291.Lưu hash OTP vào Redis: SET otp:{userId} bcrypt(OTP) EX 300 (TTL 5 phút; one-time use).Gửi email OTP qua SMTP Server: SendMail({ to: email, subject: '[ApartmentHub] Mã xác thực OTP', html_body }).API trả về HTTP 202 Accepted: { success: true, message: 'OTP đã được gửi đến email', data: { userId, email (masked), otpExpiresAt } }.ReactJS chuyển sang màn hình nhập OTP, hiển thị đồng hồ đếm ngược 5 phút.Người dùng nhập mã OTP nhận được trong email và nhấn 'Xác nhận'.Frontend gửi POST /api/v1/auth/verify-otp { userId, otp }.Server lấy hash OTP từ Redis: GET otp:{userId}. Kiểm tra TTL còn hạn.bcrypt.compare(otp, hashOTP) = true — OTP hợp lệ.Xóa OTP khỏi Redis: DEL otp:{userId} (đảm bảo one-time use).Cập nhật trạng thái tài khoản trong MongoDB: UPDATE user SET status='ACTIVE' WHERE id={userId}.Sinh JWT Access Token + Refresh Token với payload { userId, email, role }.Trả về HTTP 200: { token, refreshToken, user: {id, name, role} } với HttpOnly Cookie.ReactJS redirect người dùng đến /dashboard — Đăng ký và kích hoạt tài khoản thành công.2.4 Luồng Sự Kiện Thay Thế (Alternative Flows)2.4.1 Client-side Validation Thất BạiEmail sai định dạng → hiển thị lỗi inline: 'Email không hợp lệ', không gửi request.Mật khẩu không đủ 8 ký tự hoặc thiếu chữ hoa/số/ký tự đặc biệt → thông báo yêu cầu độ phức tạp.confirmPassword không trùng password → 'Mật khẩu xác nhận không khớp'.Số điện thoại sai format VN (không phải 10 chữ số bắt đầu bằng 0) → báo lỗi định dạng.Trường bắt buộc bỏ trống → highlight viền đỏ và thông báo 'Trường này là bắt buộc'.2.4.2 Rate Limiting Bị Kích Hoạt (HTTP 429)Người dùng (hoặc bot) gửi request đăng ký lần thứ 6+ trong 15 phút từ cùng một IP.Rate Limiter phát hiện count = 5, TTL còn 720s → chặn ngay, không chuyển sang controller.Ghi nhật ký bảo mật: LOG RateLimitExceeded { IP, timestamp, userAgent }.Trả về HTTP 429 Too Many Requests với header Retry-After: 720 và X-RateLimit-*.ReactJS hiển thị: 'Quá nhiều yêu cầu. Vui lòng thử lại sau 12 phút', đếm ngược trực tiếp.2.4.3 Email Đã Tồn Tại (HTTP 409)Controller truy vấn MongoDB tìm thấy user với email đã nhập.Không tạo tài khoản mới; không gửi email.Trả về HTTP 409 Conflict: { error: 'Email đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.' }.ReactJS hiển thị thông báo lỗi inline tại trường Email.2.4.4 Server-side Validation Thất Bại (HTTP 422)express-validator phát hiện vi phạm quy tắc nghiệp vụ (dù client đã validate).Trả về HTTP 422 Unprocessable Entity: { errors: [{ field, message }] } — danh sách lỗi chi tiết từng trường.ReactJS ánh xạ lỗi và hiển thị bên dưới trường tương ứng.2.4.5 OTP Sai (HTTP 400)bcrypt.compare(otp, hash) = false → OTP không khớp.INCR otp_attempts:{userId} → đếm số lần sai.Trả về HTTP 400: { error: 'OTP không hợp lệ', remaining: X lần còn lại }.Sau 3 lần sai: DEL otp:{userId}, DELETE user PENDING → HTTP 403, yêu cầu đăng ký lại.2.4.6 OTP Hết HạnTTL Redis của key otp:{userId} đã về 0 — key không còn tồn tại.Server trả về HTTP 400: { error: 'OTP đã hết hạn. Vui lòng yêu cầu gửi lại.' }.ReactJS hiển thị nút 'Gửi lại OTP' (nếu chưa hết lượt gửi lại).2.4.7 Gửi Lại OTP (Resend OTP)Người dùng nhấn 'Gửi lại OTP' sau 60 giây cooldown.Server kiểm tra Redis: resend_cooldown:{userId} = null → cho phép.Kiểm tra otp_resend_count:{userId} < 3 → cho phép tối đa 3 lần gửi lại.Vô hiệu hóa OTP cũ, sinh OTP mới, cập nhật Redis TTL 5 phút, gửi email lại.Đặt cooldown mới: SET resend_cooldown:{userId} EX 60.3. SEQUENCE DIAGRAM3.1 Luồng Đăng Ký Thành Công (Happy Path)Mô tả luồng hoàn chỉnh từ khi người dùng truy cập form đến khi tài khoản được kích hoạt.3.2 Luồng Rate Limiting Bị Kích HoạtMô tả luồng khi người dùng hoặc bot vượt quá giới hạn số lần đăng ký cho phép.3.3 Luồng OTP Sai / Hết HạnMô tả luồng xử lý khi người dùng nhập OTP không đúng hoặc OTP đã hết hạn.3.4 Luồng Gửi Lại OTP (Resend OTP)Mô tả luồng khi người dùng yêu cầu gửi lại OTP do không nhận được email hoặc OTP đã hết hạn.Chức năng LoginNgười phụ trách : Trình Văn Lưu - 23110260Tác nhân (Actors)1.1. User (Cư dân)Là cư dân sinh sống trong khu chung cưĐăng nhập với tài khoản có vai trò role = 'user'Sau khi đăng nhập thành công, được chuyển hướng đến: /user/profile1.2. Admin (Quản trị viên)Là nhân viên ban quản lý chung cưĐăng nhập với tài khoản có vai trò role = 'admin'Sau khi đăng nhập thành công, được chuyển hướng đến: /admin/profileĐặc tả Chức năng Đăng nhập 2.1. Luồng sự kiện chính (Main Flow)Người dùng truy cập trang đăng nhập của hệ thốngHệ thống hiển thị form đăng nhập với các trường: Email, Mật khẩuNgười dùng nhập thông tin đăng nhập và nhấn nút 'Đăng nhập'ReactJS thực hiện Validation phía client (kiểm tra định dạng email, độ dài mật khẩu)Frontend gửi POST request đến API: POST /api/auth/loginRate Limiter middleware kiểm tra số lần request từ IP trong khoảng thời gian quy địnhValidation middleware phía server kiểm tra dữ liệu đầu vào (express-validator)Controller truy vấn MongoDB qua Mongoose để tìm tài khoản theo emailHệ thống so sánh mật khẩu với hash đã lưu (bcrypt.compare)JWT Service tạo Access Token chứa payload: { userId, email, role }Server trả về JSON: { token, user: { id, name, role }, redirectUrl }ReactJS lưu token vào localStorage/sessionStorageFrontend kiểm tra role và chuyển hướng: User → /user/profile | Admin → /admin/profile2.2. Luồng sự kiện thay thế (Alternative Flows)2.2.1 Validation thất bại (Client-side)Email không đúng định dạng → hiển thị lỗi inline bên dưới trường nhậpMật khẩu ít hơn 6 ký tự → hiển thị thông báo yêu cầuBỏ trống trường bắt buộc → highlight border đỏ và thông báo lỗi2.2.2 Rate Limiting bị kích hoạtVượt quá 5 lần đăng nhập sai trong 15 phút → Server trả về HTTP 429Hiển thị thông báo: ‘Nhập sai quá nhiều lần. Vui lòng thử lại sau  60 giây'Đếm ngược thời gian chờ hiển thị trên giao diện2.2.3 Thông tin đăng nhập saiEmail không tồn tại hoặc mật khẩu sai → Server trả về HTTP 401Thông báo chung (không tiết lộ trường nào sai để bảo mật): 'Email hoặc mật khẩu không đúng'Ghi log attempt thất bại (IP, thời gian, email)2.2.4 Tài khoản bị khóaTài khoản có trạng thái isActive = false → Server trả về HTTP 403Thông báo: 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ ban quản lý'SEQUENCE DIAGRAM: CHỨC NĂNG ĐĂNG NHẬPChức năng  ForgetPassword 1. CHỨC NĂNG QUÊN MẬT KHẨU (FORGOT PASSWORD - OTP EMAIL)1.1 Đặc tả Use Case – Dạng văn bảnTên Use CaseQuên mật khẩu (Forgot Password)Mã Use CaseUC-001Tác nhân chínhCư dân / Quản trị viên (người dùng đã đăng ký hệ thống)Tác nhân phụHệ thống gửi Email (SMTP / Nodemailer), Database (MongoDB)Mục tiêuCho phép người dùng đặt lại mật khẩu khi quên thông qua mã OTP được gửi đến email đã đăng ký trong hệ thống.Tiền điều kiệnNgười dùng đã có tài khoản trong hệ thống Email đăng ký vẫn còn hoạt động Hệ thống gửi mail (Nodemailer) hoạt động bình thường Hậu điều kiệnMật khẩu mới được cập nhật thành công trong cơ sở dữ liệu OTP đã sử dụng bị vô hiệu hóa Người dùng có thể đăng nhập bằng mật khẩu mới Mức độ ưu tiênCao (High)Tần suất sử dụngTrung bìnhGhi chúOTP có thời hạn sử dụng 5 phút và chỉ được dùng 1 lần. Để tăng tính bảo mật, OTP nên được mã hóa trước khi lưu vào database bằng bcrypt. Việc gửi OTP cần được giới hạn số lần bằng Rate Limiting để chống brute-force và spam mail. Điều này phù hợp với nguyên tắc bảo mật nhiều lớp trong API .Luồng sự kiện chính (Main Flow)Bước 1:Người dùng nhấn vào liên kết “Quên mật khẩu” tại trang đăng nhập.Bước 2:Hệ thống hiển thị form nhập địa chỉ email.Bước 3:Người dùng nhập email đã đăng ký và nhấn nút “Gửi mã OTP”.Bước 4:Hệ thống kiểm tra email có tồn tại trong database hay không.Bước 5:Middleware thực hiện Input Validation để kiểm tra email hợp lệ, tránh dữ liệu giả mạo từ frontend .Bước 6:Rate Limit Middleware kiểm tra số lần gửi OTP nhằm ngăn chặn spam mail và brute-force attack.Bước 7:Nếu hợp lệ, hệ thống tạo mã OTP ngẫu nhiên gồm 6 chữ số và lưu vào database cùng thời gian hết hạn là 5 phút.Bước 8:Hệ thống gửi email chứa mã OTP đến địa chỉ email của người dùng bằng Nodemailer.Bước 9:Hệ thống hiển thị form nhập mã OTP và thông báo yêu cầu kiểm tra email.Bước 10:Người dùng mở email, sao chép mã OTP và nhập vào form xác thực.Bước 11:Hệ thống kiểm tra OTP có đúng, còn thời hạn và chưa được sử dụng hay không.Bước 12:Nếu OTP hợp lệ, hệ thống hiển thị form đặt mật khẩu mới gồm New Password và Confirm Password.Bước 13:Người dùng nhập mật khẩu mới hai lần và nhấn “Xác nhận”.Bước 14:Hệ thống kiểm tra mật khẩu đủ độ mạnh và hai lần nhập phải khớp nhau.Bước 15:Hệ thống hash mật khẩu mới bằng bcrypt và cập nhật vào database.Bước 16:Hệ thống xóa hoặc vô hiệu hóa OTP đã sử dụng.Bước 17:Hệ thống hiển thị thông báo “Đặt lại mật khẩu thành công” và chuyển người dùng về trang đăng nhập.Luồng thay thế (Alternative Flow)Trường hợp 1: Email không tồn tạiNếu email người dùng nhập không tồn tại trong hệ thống, hệ thống hiển thị thông báo “Email không tồn tại trong hệ thống” và quay lại form nhập email.Trường hợp 2: OTP không chính xácNếu mã OTP người dùng nhập không khớp với mã đã lưu trong database, hệ thống hiển thị lỗi “Mã OTP không chính xác”, ghi nhận số lần nhập sai và cho phép thử lại tối đa 5 lần.Trường hợp 3: OTP hết hạnNếu OTP đã quá thời gian 5 phút, hệ thống hiển thị thông báo “Mã OTP đã hết hạn” và cung cấp nút “Gửi lại OTP”.Trường hợp 4: Mật khẩu không hợp lệNếu mật khẩu quá yếu hoặc hai lần nhập không khớp, hệ thống hiển thị lỗi cụ thể như “Mật khẩu phải từ 8 ký tự trở lên” và giữ nguyên form để người dùng chỉnh sửa.Trường hợp 5: Không nhận được EmailNếu người dùng không nhận được email sau một khoảng thời gian nhất định, hệ thống cho phép gửi lại OTP nhưng giới hạn tối đa 3 lần mỗi phiên.Trường hợp 6: Lỗi gửi EmailNếu hệ thống gửi mail gặp lỗi kết nối SMTP hoặc lỗi server, hệ thống hiển thị thông báo “Không thể gửi email lúc này, vui lòng thử lại sau” và ghi log lỗi phía backend.1.2. Sequence Diagram - Quên Mật Khẩu2. CHỨC NĂNG CHỈNH SỬA HỒ SƠ CÁ NHÂN (EDIT PROFILE)2.1 Đặc tả Use Case – Dạng văn bảnTên Use CaseChỉnh sửa hồ sơ cá nhân (Edit Profile)Mã Use CaseUC-002Tác nhân chínhCư dân / Quản trị viên (người dùng đã đăng nhập)Tác nhân phụDatabase (MongoDB), Hệ thống lưu trữ file (Multer / Cloudinary)Mục tiêuCho phép người dùng cập nhật thông tin cá nhân như họ tên, số điện thoại, địa chỉ, avatar và các thông tin liên hệ khác.Tiền điều kiệnNgười dùng đã đăng nhập thành công Có JWT Token hợp lệ Token chưa hết hạn Database hoạt động ổn định Hậu điều kiệnThông tin cá nhân được cập nhật thành công trong database Nếu thay đổi avatar, file ảnh mới được lưu thành công Giao diện hiển thị ngay thông tin mới sau khi cập nhật Mức độ ưu tiênTrung bình (Medium)Tần suất sử dụngThấp đến Trung bìnhGhi chúChức năng này bắt buộc phải sử dụng JWT Authentication để xác thực người dùng trước khi truy cập route bảo vệ. Authorization Middleware cần đảm bảo người dùng chỉ được sửa hồ sơ của chính mình. Đây là nguyên tắc xác thực và phân quyền quan trọng trong JWT .Luồng sự kiện chính (Main Flow)Bước 1:Người dùng nhấn vào menu “Hồ sơ” hoặc biểu tượng avatar cá nhân.Bước 2:Hệ thống kiểm tra JWT token trong cookie hoặc Authorization Header thông qua Auth Middleware.Bước 3:JWT Middleware xác thực token hợp lệ và giải mã thông tin userId từ token .Bước 4:Hệ thống truy xuất thông tin hồ sơ hiện tại từ database theo userId.Bước 5:Hệ thống hiển thị trang Profile với form đã điền sẵn thông tin hiện tại.Bước 6:Người dùng chỉnh sửa các trường như họ tên, số điện thoại, địa chỉ và có thể chọn ảnh avatar mới.Bước 7:Người dùng nhấn nút “Lưu thay đổi”.Bước 8:Frontend thực hiện validate dữ liệu cơ bản như định dạng số điện thoại, trường bắt buộc và dung lượng ảnh.Bước 9:Dữ liệu được gửi đến API backend bằng request PUT hoặc POST.Bước 10:Backend tiếp tục thực hiện Input Validation bằng express-validator để đảm bảo dữ liệu hợp lệ từ phía server .Bước 11:Authorization Middleware kiểm tra quyền truy cập, chỉ cho phép user chỉnh sửa profile của chính mình.Bước 12:Nếu có ảnh mới, Multer xử lý upload và lưu file vào hệ thống lưu trữ.Bước 13:Hệ thống cập nhật thông tin mới vào MongoDB.Bước 14:Hệ thống trả về response thành công cùng thông tin profile đã cập nhật.Bước 15:Frontend cập nhật lại giao diện và hiển thị thông báo “Cập nhật hồ sơ thành công”.Luồng thay thế (Alternative Flow)Trường hợp 1: Token hết hạnNếu JWT token đã hết hạn, Middleware trả về lỗi 401 Unauthorized. Frontend sẽ yêu cầu đăng nhập lại hoặc sử dụng Refresh Token nếu hệ thống có hỗ trợ.Trường hợp 2: Token không hợp lệNếu token không đúng hoặc bị giả mạo, hệ thống trả về thông báo “Không có quyền truy cập”.Trường hợp 3: Dữ liệu không hợp lệNếu số điện thoại sai định dạng, tên để trống hoặc dữ liệu không hợp lệ, hệ thống hiển thị lỗi tại trường tương ứng và không cho phép cập nhật.Trường hợp 4: File ảnh không hợp lệNếu file upload không phải ảnh hoặc vượt quá dung lượng cho phép, Multer trả về lỗi và hiển thị thông báo “File không hợp lệ hoặc vượt quá dung lượng cho phép”.Trường hợp 5: Lỗi DatabaseNếu MongoDB gặp lỗi kết nối hoặc timeout, hệ thống trả về lỗi server và thông báo “Có lỗi xảy ra, vui lòng thử lại sau”.Trường hợp 6: Không có thay đổiNếu người dùng nhấn “Lưu” nhưng không thay đổi bất kỳ thông tin nào, frontend sẽ phát hiện và hiển thị thông báo “Không có thông tin nào thay đổi”.2.2. Sequence Diagram - Edit Profile
+
+
+================================================================================
+
+File: package.json (starts at line 615)
+
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --exec babel-node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vothnha26/CongNghePhanMemMoi.git"
+  },
+  "keywords": [],
+  "author": "Nguyen Phuoc Tai",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vothnha26/CongNghePhanMemMoi/issues"
+  },
+  "homepage": "https://github.com/vothnha26/CongNghePhanMemMoi#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.2",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.1",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.2",
+    "mysql2": "^3.22.3",
+    "nodemailer": "^8.0.7",
+    "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/node": "^7.29.0",
+    "@babel/preset-env": "^7.29.3",
+    "nodemon": "^3.1.14",
+    "sequelize-cli": "^6.6.5"
+  }
+}
+
+
+
+================================================================================
+
+File: README.md (starts at line 660)
+
+# CNPMM_API - Chức Năng Đăng Ký (Task 1)
+
+Dự án này tập trung xây dựng API hoàn chỉnh cho chức năng Đăng ký tài khoản (Register) với các tính năng bảo mật và xác thực thực tế.
+
+## 🌟 Các chức năng đã hoàn thành trong Task 1
+
+- **API Đăng ký (`/api/auth/register`)**: Nhận dữ liệu đầu vào, mã hóa mật khẩu và tạo tài khoản ở trạng thái chờ kích hoạt.
+- **Xác thực dữ liệu (Validation)**: Sử dụng `express-validator` để kiểm tra định dạng email, độ dài mật khẩu, mật khẩu phải chứa chữ và số, xác nhận mật khẩu khớp nhau.
+- **Chống Spam (Rate Limiting)**: Sử dụng `express-rate-limit` để giới hạn số lần gọi API đăng ký (5 lần/15 phút) và gửi OTP (3 lần/10 phút) trên cùng một địa chỉ IP.
+- **Bảo mật mật khẩu**: Sử dụng `bcryptjs` để mã hóa (hash) mật khẩu trước khi lưu vào cơ sở dữ liệu.
+- **Gửi OTP qua Email**: Tích hợp `nodemailer` tự động gửi email chứa 6 mã số OTP cực kỳ chuyên nghiệp ngay sau khi điền form đăng ký.
+- **Xác thực OTP (`/api/auth/verify-otp`)**: Nhận mã OTP từ người dùng và so sánh. OTP có thời gian sống (TTL) là 5 phút. Lưu trữ OTP được tối ưu bằng bộ nhớ trong (`Map` Object) giúp hệ thống chạy nhanh, nhẹ và không bị phụ thuộc vào Redis.
+- **Giao diện trực quan (UI)**: Hỗ trợ 2 trang giao diện Dark Mode + Glassmorphism tại `/register` và `/login` để test trải nghiệm mượt mà không cần dùng Postman.
+
+## 🛠 Công nghệ sử dụng
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB (sử dụng Mongoose)
+- **Bảo mật & Tiện ích:** bcryptjs, express-validator, express-rate-limit, nodemailer
+
+## 🚀 Hướng dẫn cài đặt và chạy dự án
+
+1. Clone repository về máy:
+   ```bash
+   git clone https://github.com/Tainguyen273/CNPMM_API.git
+   ```
+2. Cài đặt các gói thư viện Node.js:
+   ```bash
+   npm install
+   ```
+3. Đảm bảo bạn đang mở MongoDB Server trên máy (`mongodb://localhost:27017`).
+4. Chạy lệnh khởi động Server:
+   ```bash
+   npm start
+   ```
+5. Mở trình duyệt và truy cập để trải nghiệm:
+   - Giao diện Đăng ký: `http://localhost:6969/register`
+   - Giao diện Đăng nhập: `http://localhost:6969/login`
+
+
+
+================================================================================
+
+File: .agent\skills\Skill.md (starts at line 698)
+
+# Role and Goal
+Bạn là một trợ lý ảo chuyên gia về Kỹ nghệ phần mềm và Đảm bảo chất lượng (QA/Testing). Nhiệm vụ của bạn là hỗ trợ người dùng tạo ra một chức năng mới cho đồ án môn học, đáp ứng chính xác các tiêu chí kỹ thuật dưới đây để phục vụ cho việc thực hành kiểm thử hộp trắng (White-box) và hộp đen (Black-box).
+
+# Instructions & Constraints
+
+## 1. Yêu cầu về Chức năng mới
+- Tạo ra một chức năng hoàn chỉnh, có ý nghĩa logic trong một hệ thống (Ví dụ: Hệ thống quản lý, Game RPG, E-commerce...).
+- Mã nguồn phải hoạt động được về mặt logic tổng thể (không bị lỗi cú pháp làm chết chương trình ngay lập tức).
+- Cấu trúc code phải rõ ràng, áp dụng các nguyên lý thiết kế (như SOLID hoặc Design Patterns phù hợp) để dễ theo dõi.
+
+## 2. Tiêu chí cho Kiểm thử Hộp trắng (White-box Testing)
+- Chức năng **bắt buộc phải có cấu trúc rẽ nhánh** phức tạp vừa đủ (sử dụng `if-else`, `switch-case`, hoặc vòng lặp `while/for` lồng nhau).
+- Mục đích: Để người dùng có thể vẽ sơ đồ dòng dữ liệu/dòng điều khiển (Control Flow Graph) và thực hiện các kỹ thuật phủ quét: Phủ câu lệnh (Statement Coverage), Phủ nhánh (Branch Coverage), Phủ điều kiện (Condition Coverage).
+
+## 3. Tiêu chí cho Kiểm thử Hộp đen (Black-box Testing) & Bug Reports
+- **Bắt buộc phải gài sẵn lỗi (Bugs):** Hãy cố tình viết sai logic ở một số chỗ cố định.
+- **Vị trí lỗi:** Lỗi phải xuất hiện ở **nhiều nơi/nhiều phân đoạn** khác nhau trong luồng xử lý (ví dụ: lỗi ở điều kiện biên đầu vào, lỗi khi tính toán ở giữa luồng, lỗi khi định dạng dữ liệu đầu ra).
+- **Tính chất lỗi:** Lỗi không được làm sập chương trình (Crash) ngay từ đầu, mà phải để chương trình chạy qua, sinh ra kết quả sai hoặc hành vi không mong muốn khi gặp các Test Case đặc biệt (Boundary Value, Equivalence Partitioning).
+- Mục đích: Để người dùng tìm ra lỗi và có đủ tư liệu viết các **Bug Reports** chi tiết.
+
+# Output Format
+Khi người dùng yêu cầu, hãy xuất ra kết quả theo cấu trúc sau:
+1. **Tên chức năng & Ngôn ngữ sử dụng** (C#, Python, Java,... theo yêu cầu của người dùng).
+2. **Mô tả ngắn gọn** về nghiệp vụ của chức năng.
+3. **Đoạn mã nguồn (Source Code):** Chứa đầy đủ cấu trúc rẽ nhánh và các lỗi đã gài sẵn.
+4. **Gợi ý ẩn cho Người dùng (Cheat-sheet - Đặt trong thẻ blockquote hoặc spoiler):** Liệt kê danh sách các lỗi đã gài (Bugs gài ở dòng nào, hành vi sai là gì) để người dùng đối chiếu khi làm Bug Report.
+
+
+================================================================================
+
+File: src\server.js (starts at line 724)
+
+import express from "express";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import viewEngine from "./config/viewEngine";
+import initWebRoutes from "./route/web";
+import connectDB from "./config/configdb";
+require("dotenv").config();
+
+let app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+viewEngine(app);
+initWebRoutes(app);
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Global Error Handler caught an error:", err);
+  const status = err.status || 500;
+  const message = err.message || "Có lỗi xảy ra trên máy chủ!";
+  res.status(status).json({ message });
+});
+
+connectDB();
+
+let port = process.env.PORT || 6969;
+app.listen(port, () => {
+  console.log("Backend Nodejs is running on the port: " + port);
+});
+
+
+
+================================================================================
+
+File: src\config\config.json (starts at line 755)
+
+{
+  "development": {
+    "username": "root",
+    "password": "Luu14122005",
+    "database": "node_fullstack",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "logging": false
+  },
+  "test": {
+    "username": "root",
+    "password": "2732500",
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
+
+
+
+================================================================================
+
+File: src\config\configdb.js (starts at line 780)
+
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+let connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/node_fullstack";
+    await mongoose.connect(mongoURI);
+    console.log("Connection to MongoDB has been established successfully.");
+  } catch (error) {
+    console.error("Unable to connect to the MongoDB database:", error);
+  }
+};
+
+module.exports = connectDB;
+
+
+
+================================================================================
+
+File: src\config\mailer.js (starts at line 795)
+
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'nguyenphuoctai3717@gmail.com',
+    pass: 'dfjc dssk iwkp zfxe'
+  }
+});
+
+exports.sendMail = async ({ to, subject, html }) => {
+  try {
+    const info = await transporter.sendMail({
+      from: '"CacCongNghePhanMemMoi" <nguyenphuoctai3717@gmail.com>',
+      to,
+      subject,
+      html
+    });
+    console.log('Email sent: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Lỗi khi gửi email:', error);
+    throw error;
+  }
+};
+
+
+
+================================================================================
+
+File: src\config\viewEngine.js (starts at line 821)
+
+import express from 'express';
+
+let configViewEngine = (app) => {
+  app.use(express.static('./src/public')); // thư mục chứa file tĩnh
+  app.set('view engine', 'ejs');
+  app.set('views', './src/views');
+};
+
+module.exports = configViewEngine;
+
+
+
+================================================================================
+
+File: src\controller\homeController.js (starts at line 831)
+
+import User from '../models/user';
+import CRUDService from '../services/CRUDService';
+
+// Trang chủ
+let getHomePage = async (req, res) => {
+  try {
+    let data = await User.find().lean();
+    return res.render('homepage.ejs', { data: JSON.stringify(data) });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+// Trang about
+let getAboutPage = (req, res) => {
+  return res.render('test/about.ejs');
+};
+
+// Hiển thị form tạo user
+let getCRUD = (req, res) => {
+  return res.render('crud.ejs');
+};
+
+// Lấy danh sách tất cả user
+let getFindAllCrud = async (req, res) => {
+  let data = await CRUDService.getAllUser();
+  return res.render('users/findAllUser.ejs', { datalist: data });
+};
+
+// Tạo user mới từ form
+let postCRUD = async (req, res) => {
+  let message = await CRUDService.createNewUser(req.body);
+  console.log(message);
+  return res.send('Post crud to server');
+};
+
+// Lấy dữ liệu user để edit
+let getEditCRUD = async (req, res) => {
+  let userId = req.query.id;
+  if (userId) {
+    let userData = await CRUDService.getUserInfoById(userId);
+    return res.render('users/editUser.ejs', { data: userData });
+  } else {
+    return res.send('không lấy được id');
+  }
+};
+
+// Cập nhật user
+let putCRUD = async (req, res) => {
+  let data = req.body;
+  let data1 = await CRUDService.updateUser(data);
+  return res.render('users/findAllUser.ejs', { datalist: data1 });
+};
+
+// Xóa user
+let deleteCRUD = async (req, res) => {
+  let id = req.query.id;
+  if (id) {
+    await CRUDService.deleteUserById(id);
+    return res.send('Deleted!!!!!!!!!!!!');
+  } else {
+    return res.send('Not find user');
+  }
+};
+
+module.exports = {
+  getHomePage,
+  getAboutPage,
+  getCRUD,
+  postCRUD,
+  getFindAllCrud,
+  getEditCRUD,
+  putCRUD,
+  deleteCRUD
+};
+
+
+
+================================================================================
+
+File: src\controllers\auth.controller.js (starts at line 907)
+
+const authService = require("../services/auth.service");
+
+exports.register = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+    const result = await authService.register({ name, email, password });
+    res.status(201).json(result);
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    const result = await authService.verifyRegisterOtp({ email, otp });
+    res.status(200).json(result);
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.resendOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.resendOtp({ email });
+    res.status(200).json(result);
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.forgotPassword({ email });
+    res.status(200).json(result);
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const result = await authService.resetPassword({ email, otp, newPassword });
+    res.status(200).json(result);
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: "strict",
+  secure: process.env.NODE_ENV === "production",
+};
+
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const { accessToken, refreshToken, role } = await authService.login({
+      email,
+      password,
+    });
+
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({ message: "Đăng nhập thành công", role });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.refresh = async (req, res, next) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    const { newAccess, newRefresh } =
+      await authService.refreshToken(refreshToken);
+
+    res.cookie("accessToken", newAccess, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+    res.cookie("refreshToken", newRefresh, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({ message: "Token đã được làm mới" });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  try {
+    // Không cần thao tác gì với refreshToken
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.status(200).json({ message: "Đăng xuất thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+================================================================================
+
+File: src\controllers\room.controller.js (starts at line 1034)
+
+const { Room, User, RoomInvoice } = require("../models");
+const { calculateMonthlyInvoice } = require("../utils/invoice.util");
+const { calculateCancellationRefund } = require("../utils/cancellation.util");
+
+// 1. Thêm phòng trọ mới (Admin)
+exports.createRoom = async (req, res, next) => {
+  try {
+    const { roomNumber, basePrice, status } = req.body;
+    
+    // INTENTIONAL BUG: Bỏ qua kiểm tra phòng trùng để cho phép tạo trùng số phòng
+    // const existing = await Room.findOne({ roomNumber });
+    // if (existing) {
+    //   return res.status(400).json({ message: "Số phòng đã tồn tại" });
+    // }
+
+    // Cho phép lưu giá phòng bất kỳ (kể cả âm) mà không có kiểm tra
+    const room = await Room.create({ roomNumber, basePrice, status });
+    res.status(201).json({ message: "Tạo phòng thành công", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 2. Lấy toàn bộ danh sách phòng (Admin)
+exports.getAllRooms = async (req, res, next) => {
+  try {
+    const rooms = await Room.find()
+      .populate({ path: "tenant", select: "_id name email" })
+      .sort({ roomNumber: 1 });
+    
+    const formattedRooms = rooms.map(r => {
+      const plainRoom = r.toObject ? r.toObject() : r;
+      if (plainRoom.tenant) {
+        plainRoom.tenant.id = plainRoom.tenant._id.toString();
+      }
+      plainRoom.id = plainRoom._id.toString();
+      return plainRoom;
+    });
+
+    res.status(200).json({ data: formattedRooms });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 3. Gán khách thuê vào phòng (Admin) - Sửa phòng
+exports.assignTenant = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const { tenantId } = req.body; // tenantId có thể null để bỏ gán
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    if (tenantId) {
+      // INTENTIONAL BUG: Bỏ qua kiểm tra khách thuê (User) có tồn tại trong hệ thống hay không
+      // const user = await User.findById(tenantId);
+      // if (!user) {
+      //   return res.status(404).json({ message: "Người dùng không tồn tại" });
+      // }
+      
+      // INTENTIONAL BUG: Cố tình giữ trạng thái phòng là 'available' thay vì 'occupied' khi có khách thuê
+      room.tenantId = tenantId;
+      room.status = "available";
+      await room.save();
+    } else {
+      // Gán về null (Trống phòng)
+      room.tenantId = null;
+      // INTENTIONAL BUG: Khi hủy gán khách thuê, chuyển trạng thái thành 'maintenance' thay vì 'available'
+      room.status = "maintenance";
+      await room.save();
+    }
+
+    res.status(200).json({ message: "Cập nhật khách thuê thành công", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 4. Lấy danh sách khách thuê khả dụng để gán (Admin)
+exports.getAvailableTenants = async (req, res, next) => {
+  try {
+    const users = await User.find({ role: "user", is_active: true })
+      .select("_id name email")
+      .lean();
+    
+    const rooms = await Room.find({ tenantId: { $ne: null } })
+      .select("tenantId")
+      .lean();
+    const rentedUserIds = rooms.map(r => r.tenantId ? r.tenantId.toString() : "");
+    
+    const availableUsers = users
+      .filter(u => !rentedUserIds.includes(u._id.toString()))
+      .map(u => ({ ...u, id: u._id.toString() }));
+
+    res.status(200).json({ data: availableUsers });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 5. Tính và xuất hóa đơn dịch vụ hàng tháng (Admin)
+exports.generateInvoice = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const {
+      month,
+      oldElec,
+      newElec,
+      oldWater,
+      newWater,
+      lateDays,
+      memberCount,
+      hasVehicle,
+      vehicleCount,
+      contractMonths
+    } = req.body;
+
+    const room = await Room.findById(roomId).populate("tenant");
+
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+    if (!room.tenantId || !room.tenant) {
+      return res.status(400).json({ message: "Phòng trọ chưa có khách thuê, không thể xuất hóa đơn" });
+    }
+
+    // Thiết lập dữ liệu tính toán
+    const roomData = {
+      basePrice: room.basePrice,
+      services: [
+        { name: "Internet", price: 100000, type: "fixed" },
+        { name: "Vệ sinh", price: 20000, type: "per_person" }
+      ]
+    };
+
+    const usageData = {
+      electricity: { oldIndex: oldElec, newIndex: newElec },
+      water: { oldIndex: oldWater, newIndex: newWater },
+      lateDays: lateDays
+    };
+
+    const tenantData = {
+      memberCount: memberCount,
+      hasVehicle: hasVehicle === "true" || hasVehicle === true,
+      vehicleCount: vehicleCount === "" ? undefined : (isNaN(Number(vehicleCount)) ? vehicleCount : Number(vehicleCount)),
+      contractMonths: contractMonths
+    };
+
+    // Chạy thuật toán tính tiền phòng có gài lỗi (GIỮ NGUYÊN BUGS THEO YÊU CẦU CỦA USER)
+    const result = calculateMonthlyInvoice(roomData, usageData, tenantData);
+
+    const savedTotalBill = isNaN(result.totalBill) ? 0 : result.totalBill;
+
+    const invoice = await RoomInvoice.create({
+      roomId: room._id,
+      tenantId: room.tenantId,
+      month: month || "06/2026",
+      oldElec: Number(oldElec) || 0,
+      newElec: Number(newElec) || 0,
+      oldWater: Number(oldWater) || 0,
+      newWater: Number(newWater) || 0,
+      lateDays: Number(lateDays) || 0,
+      penalty: result.penalty,
+      electricityFee: result.electricityFee,
+      waterFee: result.waterFee,
+      serviceFee: result.serviceFee,
+      vehicleFee: result.vehicleFee,
+      discount: result.discount,
+      totalBill: savedTotalBill,
+      status: "unpaid"
+    });
+
+    res.status(200).json({
+      message: "Tính hóa đơn thành công",
+      data: {
+        ...invoice.toObject(),
+        id: invoice._id.toString(),
+        totalBill: result.totalBill // Gửi giá trị thực tế lên UI (bao gồm NaN hoặc số âm nếu có)
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 6. Lấy thông tin phòng của khách thuê hiện tại (Renter)
+exports.getMyRoom = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const room = await Room.findOne({ tenantId: userId })
+      .populate({ path: "tenant", select: "_id name email" });
+    
+    if (!room) {
+      return res.status(200).json({ data: null, message: "Bạn chưa được gán phòng nào" });
+    }
+
+    const formattedRoom = room.toObject ? room.toObject() : room;
+    formattedRoom.id = formattedRoom._id.toString();
+    if (formattedRoom.tenant) {
+      formattedRoom.tenant.id = formattedRoom.tenant._id.toString();
+    }
+
+    res.status(200).json({ data: formattedRoom });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 7. Lấy lịch sử hóa đơn của khách thuê (Renter)
+exports.getMyInvoices = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const invoices = await RoomInvoice.find({ tenantId: userId })
+      .populate({ path: "room", select: "roomNumber" })
+      .sort({ createdAt: -1 });
+
+    const formattedInvoices = invoices.map(inv => {
+      const plain = inv.toObject ? inv.toObject() : inv;
+      plain.id = plain._id.toString();
+      if (plain.room) {
+        plain.room.id = plain.room._id.toString();
+      }
+      return plain;
+    });
+
+    res.status(200).json({ data: formattedInvoices });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 8. Chỉnh sửa thông tin phòng (Admin)
+exports.updateRoom = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const { roomNumber, basePrice, status } = req.body;
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    // INTENTIONAL BUG: Bỏ qua kiểm tra trùng số phòng khi đổi tên/số phòng của phòng khác
+    // const existing = await Room.findOne({ roomNumber, _id: { $ne: roomId } });
+    // if (existing) {
+    //   return res.status(400).json({ message: "Số phòng đã tồn tại" });
+    // }
+
+    // Cho phép lưu giá phòng bất kỳ (kể cả âm)
+    room.roomNumber = roomNumber;
+    room.basePrice = basePrice;
+    room.status = status;
+    await room.save();
+
+    res.status(200).json({ message: "Cập nhật phòng thành công", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 9. Xóa phòng trọ (Admin)
+exports.deleteRoom = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    // INTENTIONAL BUG: Cho phép xóa phòng đang có khách thuê mà không có bất kỳ cảnh báo hay dọn dẹp liên kết
+    await Room.deleteOne({ _id: roomId });
+
+    res.status(200).json({ message: "Xóa phòng trọ thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 10. Tính toán hoàn cọc khi hủy phòng (Admin)
+exports.calculateRefund = async (req, res, next) => {
+  try {
+    const booking = req.body;
+    const result = calculateCancellationRefund(booking);
+    res.status(200).json({
+      message: "Tính toán hoàn cọc thành công",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+================================================================================
+
+File: src\controllers\user.controller.js (starts at line 1330)
+
+const userService = require("../services/user.service");
+
+exports.editProfile = async (req, res, next) => {
+  try {
+    // req.user được gán từ auth.middleware sau khi xác thực JWT
+    const userId = req.user.id;
+    const updateData = req.body;
+
+    const result = await userService.updateProfile(userId, updateData);
+    res.status(200).json(result);
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.getUserProfile = async (req, res, next) => {
+  try {
+    const user = await userService.getProfile(req.user.id);
+    console.log("Cookies nhận được từ Browser:", req.cookies);
+    res.status(200).json({
+      message: "User Profile",
+      data: user,
+      redirectUrl: "/user/profile",
+    });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+exports.getAdminProfile = async (req, res, next) => {
+  try {
+    const user = await userService.getProfile(req.user.id);
+    res.status(200).json({
+      message: "Admin Dashboard Profile",
+      data: user,
+      redirectUrl: "/admin/profile",
+      adminFeatures: ["manage_users", "view_logs", "settings"],
+    });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+};
+
+
+
+================================================================================
+
+File: src\middlewares\auth.middleware.js (starts at line 1379)
+
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
+exports.verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        return res
+          .status(403)
+          .json({ message: "Token không hợp lệ hoặc đã hết hạn" });
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    console.log("Không tìm thấy token xác thực trong header");
+    res.status(401).json({ message: "Không tìm thấy token xác thực" });
+  }
+};
+
+exports.verifyTokenLogin = (req, res, next) => {
+  try {
+    // 1. Kiểm tra xem cookie-parser có hoạt động không
+    const token = req.cookies.accessToken;
+
+    if (!token) {
+      console.log("Không tìm thấy accessToken trong Cookie");
+      return res.status(401).json({ message: "❌ Phiên đăng nhập hết hạn" });
+    }
+
+    // 2. Dùng thư viện jwt để verify
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    // 3. Gán user vào request
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error("JWT Verify Error:", err.message);
+    return res.status(401).json({ message: "❌ Token không hợp lệ" }); // Trả về 401 để khớp với logic Frontend
+  }
+};
+
+exports.authorize =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Bạn không có quyền truy cập" });
+    }
+    next();
+  };
+
+exports.verifyTokenLoginView = (req, res, next) => {
+  try {
+    const token = req.cookies.accessToken;
+
+    if (!token) {
+      console.log("Không tìm thấy accessToken trong Cookie, chuyển hướng về /login");
+      return res.redirect("/login");
+    }
+
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error("JWT Verify Error in View:", err.message);
+    return res.redirect("/login");
+  }
+};
+
+exports.authorizeView =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      console.log("Quyền truy cập không hợp lệ, chuyển hướng về /login");
+      return res.redirect("/login");
+    }
+    next();
+  };
+
+
+
+================================================================================
+
+File: src\middlewares\rateLimiter.middleware.js (starts at line 1462)
+
+const rateLimit = require("express-rate-limit");
+
+// Giới hạn 5 lần đăng ký trong 15 phút từ cùng IP
+exports.registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: "Quá nhiều yêu cầu, vui lòng thử lại sau 15 phút" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+exports.loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: "Quá nhiều yêu cầu đăng nhập, thử lại sau 15 phút" },
+});
+
+// Giới hạn gửi lại OTP: 3 lần / 10 phút
+exports.resendOtpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 3,
+  message: { message: "Quá nhiều yêu cầu gửi OTP, thử lại sau 10 phút" },
+});
+
+// Giới hạn quên mật khẩu: 3 lần / 15 phút
+exports.forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  message: { message: "Quá nhiều yêu cầu quên mật khẩu, thử lại sau 15 phút" },
+});
+
+// Giới hạn đổi mật khẩu (nhập sai OTP nhiều lần): 5 lần / 15 phút
+exports.resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: "Quá nhiều yêu cầu đổi mật khẩu, thử lại sau 15 phút" },
+});
+
+
+
+================================================================================
+
+File: src\middlewares\validate.middleware.js (starts at line 1500)
+
+const { validationResult } = require('express-validator');
+
+exports.validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      message: 'Dữ liệu không hợp lệ',
+      errors: errors.array().map(e => ({ field: e.path, msg: e.msg })),
+    });
+  }
+  next();
+};
+
+
+
+================================================================================
+
+File: src\models\index.js (starts at line 1513)
+
+const User = require("./user");
+const Room = require("./room");
+const RoomInvoice = require("./roomInvoice");
+
+module.exports = {
+  User,
+  Room,
+  RoomInvoice,
+};
+
+
+
+================================================================================
+
+File: src\models\room.js (starts at line 1523)
+
+const mongoose = require("mongoose");
+
+const roomSchema = new mongoose.Schema(
+  {
+    roomNumber: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    basePrice: {
+      type: Number,
+      required: true
+    },
+    status: {
+      type: String,
+      default: "available"
+    },
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
+
+// Virtual relation to tenant
+roomSchema.virtual("tenant", {
+  ref: "User",
+  localField: "tenantId",
+  foreignField: "_id",
+  justOne: true
+});
+
+// Virtual relation to invoices
+roomSchema.virtual("invoices", {
+  ref: "RoomInvoice",
+  localField: "_id",
+  foreignField: "roomId"
+});
+
+const Room = mongoose.models.Room || mongoose.model("Room", roomSchema);
+
+module.exports = Room;
+
+
+
+================================================================================
+
+File: src\models\roomInvoice.js (starts at line 1572)
+
+const mongoose = require("mongoose");
+
+const roomInvoiceSchema = new mongoose.Schema(
+  {
+    roomId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
+      required: true
+    },
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+    month: {
+      type: String,
+      required: true
+    },
+    oldElec: {
+      type: Number,
+      default: 0
+    },
+    newElec: {
+      type: Number,
+      default: 0
+    },
+    oldWater: {
+      type: Number,
+      default: 0
+    },
+    newWater: {
+      type: Number,
+      default: 0
+    },
+    lateDays: {
+      type: Number,
+      default: 0
+    },
+    penalty: {
+      type: Number,
+      default: 0
+    },
+    electricityFee: {
+      type: Number,
+      default: 0
+    },
+    waterFee: {
+      type: Number,
+      default: 0
+    },
+    serviceFee: {
+      type: Number,
+      default: 0
+    },
+    vehicleFee: {
+      type: Number,
+      default: 0
+    },
+    discount: {
+      type: Number,
+      default: 0
+    },
+    totalBill: {
+      type: Number,
+      required: true
+    },
+    status: {
+      type: String,
+      default: "unpaid"
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
+
+// Virtual relations
+roomInvoiceSchema.virtual("room", {
+  ref: "Room",
+  localField: "roomId",
+  foreignField: "_id",
+  justOne: true
+});
+
+roomInvoiceSchema.virtual("tenant", {
+  ref: "User",
+  localField: "tenantId",
+  foreignField: "_id",
+  justOne: true
+});
+
+const RoomInvoice = mongoose.models.RoomInvoice || mongoose.model("RoomInvoice", roomInvoiceSchema);
+
+module.exports = RoomInvoice;
+
+
+
+================================================================================
+
+File: src\models\user.js (starts at line 1669)
+
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+    password: {
+      type: String,
+      required: true
+    },
+    name: String,
+    firstName: String,
+    lastName: String,
+    address: String,
+    phoneNumber: String,
+    gender: String,
+    image: String,
+    role: {
+      type: String,
+      default: "user"
+    },
+    roleId: String,
+    positionId: String,
+    is_active: {
+      type: Boolean,
+      default: false
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
+
+// Virtual relation to Room
+userSchema.virtual("room", {
+  ref: "Room",
+  localField: "_id",
+  foreignField: "tenantId",
+  justOne: true
+});
+
+// Virtual relation to RoomInvoices
+userSchema.virtual("invoices", {
+  ref: "RoomInvoice",
+  localField: "_id",
+  foreignField: "tenantId"
+});
+
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+
+module.exports = User;
+
+
+
+================================================================================
+
+File: src\repositories\user.repository.js (starts at line 1728)
+
+const { User } = require('../models');
+
+const findByEmail = async (email) => {
+  const user = await User.findOne({ email }).lean();
+  if (user) {
+    user.id = user._id.toString();
+  }
+  return user;
+};
+
+const createUser = async ({ name, email, password, role = 'user' }) => {
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role,
+    is_active: false
+  });
+  return user._id.toString();
+};
+
+const activateUser = async (email) => {
+  await User.updateOne({ email }, { $set: { is_active: true } });
+};
+
+const findById = async (id) => {
+  try {
+    const user = await User.findById(id).select("-password").lean();
+    if (user) {
+      user.id = user._id.toString();
+    }
+    return user;
+  } catch (error) {
+    return null;
+  }
+};
+
+const updatePassword = async (email, password) => {
+  await User.updateOne({ email }, { $set: { password } });
+};
+
+module.exports = { findByEmail, createUser, activateUser, findById, updatePassword };
+
+
+
+================================================================================
+
+File: src\route\auth.routes.js (starts at line 1771)
+
+const express = require("express");
+const router = express.Router();
+const authCtrl = require("../controllers/auth.controller");
+const {
+  registerRules,
+  verifyOtpRules,
+  forgotPasswordRules,
+  resetPasswordRules,
+} = require("../validations/register.validation");
+const { validate } = require("../middlewares/validate.middleware");
+const {
+  registerLimiter,
+  resendOtpLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
+  loginLimiter,
+} = require("../middlewares/rateLimiter.middleware");
+const { loginRules } = require("../validations/login.validation");
+
+// POST /api/auth/register
+router.post(
+  "/register",
+  registerLimiter,
+  registerRules,
+  validate,
+  authCtrl.register,
+);
+
+// POST /api/auth/verify-otp
+router.post("/verify-otp", verifyOtpRules, validate, authCtrl.verifyOtp);
+
+// POST /api/auth/resend-otp
+router.post("/resend-otp", resendOtpLimiter, authCtrl.resendOtp);
+
+// POST /api/auth/forgot-password
+router.post(
+  "/forgot-password",
+  forgotPasswordLimiter,
+  forgotPasswordRules,
+  validate,
+  authCtrl.forgotPassword,
+);
+
+// POST /api/auth/reset-password
+router.post(
+  "/reset-password",
+  resetPasswordLimiter,
+  resetPasswordRules,
+  validate,
+  authCtrl.resetPassword,
+);
+
+// POST /api/auth/login
+router.post("/login", loginLimiter, loginRules, validate, authCtrl.login);
+
+// POST /api/auth/refresh
+router.post("/refresh", authCtrl.refresh);
+
+// POST /api/auth/logout
+router.post("/logout", authCtrl.logout);
+
+module.exports = router;
+
+
+
+================================================================================
+
+File: src\route\room.routes.js (starts at line 1834)
+
+const express = require("express");
+const router = express.Router();
+const roomCtrl = require("../controllers/room.controller");
+const { verifyTokenLogin, authorize } = require("../middlewares/auth.middleware");
+
+// --- API CHO RENTER (KHÁCH TRỌ) ---
+// Xem phòng của mình
+router.get("/my-room", verifyTokenLogin, authorize("user"), roomCtrl.getMyRoom);
+// Xem hóa đơn của mình
+router.get("/my-invoices", verifyTokenLogin, authorize("user"), roomCtrl.getMyInvoices);
+
+// --- API CHO ADMIN ---
+// Thêm phòng mới
+router.post("/", verifyTokenLogin, authorize("admin"), roomCtrl.createRoom);
+// Lấy danh sách toàn bộ phòng
+router.get("/", verifyTokenLogin, authorize("admin"), roomCtrl.getAllRooms);
+// Lấy danh sách khách thuê chưa được gán phòng
+router.get("/available-tenants", verifyTokenLogin, authorize("admin"), roomCtrl.getAvailableTenants);
+// Gán khách thuê vào phòng
+router.put("/:id/assign", verifyTokenLogin, authorize("admin"), roomCtrl.assignTenant);
+// Cập nhật thông tin phòng (Sửa phòng)
+router.put("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.updateRoom);
+// Xóa phòng trọ
+router.delete("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.deleteRoom);
+// Tính toán hoàn cọc khi hủy đặt phòng
+router.post("/cancel-refund", verifyTokenLogin, authorize("admin"), roomCtrl.calculateRefund);
+// Nhập số liệu tiêu thụ và kết xuất hóa đơn tháng
+router.post("/:id/invoice", verifyTokenLogin, authorize("admin"), roomCtrl.generateInvoice);
+
+module.exports = router;
+
+
+
+================================================================================
+
+File: src\route\user.routes.js (starts at line 1865)
+
+const express = require("express");
+const router = express.Router();
+const userCtrl = require("../controllers/user.controller");
+const { editProfileRules } = require("../validations/user.validation");
+const { validate } = require("../middlewares/validate.middleware");
+const {
+  verifyToken,
+  authorize,
+  verifyTokenLogin,
+} = require("../middlewares/auth.middleware");
+
+// PUT /api/user/profile
+router.put(
+  "/profile",
+  verifyTokenLogin,
+  editProfileRules,
+  validate,
+  userCtrl.editProfile,
+);
+
+// GET /api/user/profile
+router.get(
+  "/profile",
+  verifyTokenLogin,
+  authorize("user", "admin"),
+  userCtrl.getUserProfile,
+);
+
+// GET /api/admin/profile
+router.get(
+  "/admin/profile",
+  verifyTokenLogin,
+  authorize("admin"),
+  userCtrl.getAdminProfile,
+);
+
+module.exports = router;
+
+
+
+================================================================================
+
+File: src\route\web.js (starts at line 1903)
+
+import express from "express";
+import homeController from "../controller/homeController";
+import { 
+  verifyTokenLogin, 
+  verifyToken, 
+  verifyTokenLoginView, 
+  authorizeView 
+} from "../middlewares/auth.middleware";
+const authRoutes = require("./auth.routes");
+const userRoutes = require("./user.routes");
+const authorize = require("../middlewares/auth.middleware").authorize;
+let router = express.Router();
+
+let initWebRoutes = (app) => {
+  router.get("/", (req, res) => {
+    return res.send("Chung cư Neet Paradise - Trang chủ");
+  });
+
+  router.get("/home", homeController.getHomePage);
+  router.get("/about", homeController.getAboutPage);
+  router.get("/crud", homeController.getCRUD);
+  router.post("/post-crud", homeController.postCRUD);
+  router.get("/get-crud", homeController.getFindAllCrud);
+  router.get("/edit-crud", homeController.getEditCRUD);
+  router.post("/put-crud", homeController.putCRUD);
+  router.get("/delete-crud", homeController.deleteCRUD);
+
+  // Thêm giao diện Đăng ký / Đăng nhập
+  router.get("/login", (req, res) => res.render("auth/login.ejs"));
+  router.get("/register", (req, res) => res.render("auth/register.ejs"));
+
+  router.get(
+    "/dashboard",
+    verifyTokenLoginView,
+    authorizeView("user", "admin"),
+    (req, res) => {
+      if (req.user && req.user.role === "admin") {
+        console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
+        return res.redirect("/admin/dashboard");
+      }
+      res.render("users/profile", { user: req.user });
+    },
+  );
+
+  // GET /admin/dashboard - Dashboard admin
+  router.get(
+    "/admin/dashboard",
+    verifyTokenLoginView,
+    authorizeView("admin"),
+    (req, res) => {
+      if (req.user && req.user.role !== "admin") {
+        console.log("Cư dân truy cập /admin/dashboard, tự động chuyển hướng sang /dashboard");
+        return res.redirect("/dashboard");
+      }
+      res.render("admin/dashboard", { user: req.user });
+    },
+  );
+
+  app.use("/api/auth", authRoutes);
+  app.use("/api/user", userRoutes);
+  app.use("/api/rooms", require("./room.routes"));
+  return app.use("/", router);
+};
+
+module.exports = initWebRoutes;
+
+
+
+================================================================================
+
+File: src\services\auth.service.js (starts at line 1969)
+
+const bcrypt = require("bcryptjs");
+const { sendMail } = require("../config/mailer");
+const userRepo = require("../repositories/user.repository");
+const { generateOTP, hashOTP } = require("../utils/otp.util");
+require("dotenv").config();
+
+const otpCache = new Map();
+const OTP_EXPIRE = parseInt(process.env.OTP_EXPIRE_MINUTES || 5) * 60; // giây
+
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+exports.register = async ({ name, email, password }) => {
+  // 1. Kiểm tra email đã tồn tại chưa
+  const existing = await userRepo.findByEmail(email);
+  if (existing) {
+    throw { status: 409, message: "Email đã được đăng ký" };
+  }
+
+  // 2. Hash mật khẩu
+  const hashed = await bcrypt.hash(password, 12);
+
+  // 3. Tạo user (chưa kích hoạt)
+  await userRepo.createUser({ name, email, password: hashed });
+
+  // 4. Tạo OTP và lưu vào bộ nhớ tạm (Map)
+  const otp = generateOTP();
+  const hOtp = hashOTP(otp);
+
+  otpCache.set(email, {
+    otp: hOtp,
+    expiresAt: Date.now() + OTP_EXPIRE * 1000,
+  });
+
+  // 5. Gửi mail
+  await sendMail({
+    to: email,
+    subject: "🔐 Kích hoạt tài khoản của bạn",
+    html: `
+      <h2>Xin chào ${name}!</h2>
+      <p>Mã OTP kích hoạt tài khoản của bạn là:</p>
+      <h1 style="color:#2563eb;letter-spacing:8px">${otp}</h1>
+      <p>Mã có hiệu lực trong <strong>${OTP_EXPIRE / 60} phút</strong>.</p>
+      <p>Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+    `,
+  });
+
+  return {
+    message:
+      "Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP kích hoạt.",
+  };
+};
+
+// ─── VERIFY OTP ──────────────────────────────────────────────────────────────
+exports.verifyRegisterOtp = async ({ email, otp }) => {
+  const cached = otpCache.get(email);
+
+  if (!cached || Date.now() > cached.expiresAt) {
+    if (cached) otpCache.delete(email); // Xóa nếu hết hạn
+    throw { status: 400, message: "OTP đã hết hạn hoặc không tồn tại" };
+  }
+
+  const hOtp = hashOTP(otp);
+  if (cached.otp !== hOtp) {
+    throw { status: 400, message: "OTP không chính xác" };
+  }
+
+  // Kích hoạt tài khoản
+  await userRepo.activateUser(email);
+
+  // Xóa OTP khỏi Map
+  otpCache.delete(email);
+
+  return { message: "Kích hoạt tài khoản thành công! Bạn có thể đăng nhập." };
+};
+
+// ─── RESEND OTP ───────────────────────────────────────────────────────────────
+exports.resendOtp = async ({ email }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw { status: 404, message: "Email không tồn tại" };
+  if (user.is_active)
+    throw { status: 400, message: "Tài khoản đã được kích hoạt" };
+
+  const otp = generateOTP();
+  const hOtp = hashOTP(otp);
+
+  otpCache.set(email, {
+    otp: hOtp,
+    expiresAt: Date.now() + OTP_EXPIRE * 1000,
+  });
+
+  await sendMail({
+    to: email,
+    subject: "🔐 Gửi lại mã OTP kích hoạt",
+    html: `<h2>Mã OTP mới của bạn:</h2>
+           <h1 style="color:#2563eb;letter-spacing:8px">${otp}</h1>
+           <p>Hiệu lực trong <strong>${OTP_EXPIRE / 60} phút</strong>.</p>`,
+  });
+
+  return { message: "Đã gửi lại OTP. Vui lòng kiểm tra email." };
+};
+
+// ─── FORGOT PASSWORD ─────────────────────────────────────────────────────────
+exports.forgotPassword = async ({ email }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user)
+    throw { status: 404, message: "Email không tồn tại trong hệ thống" };
+
+  const otp = generateOTP();
+  const hOtp = hashOTP(otp);
+
+  otpCache.set(email + "_reset", {
+    otp: hOtp,
+    expiresAt: Date.now() + OTP_EXPIRE * 1000,
+  });
+
+  await sendMail({
+    to: email,
+    subject: "🔐 Lấy lại mật khẩu",
+    html: `
+      <h2>Xin chào ${user.name || "bạn"}!</h2>
+      <p>Mã OTP để đặt lại mật khẩu của bạn là:</p>
+      <h1 style="color:#2563eb;letter-spacing:8px">${otp}</h1>
+      <p>Mã có hiệu lực trong <strong>${OTP_EXPIRE / 60} phút</strong>.</p>
+      <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+    `,
+  });
+
+  return { message: "Mã OTP đặt lại mật khẩu đã được gửi đến email." };
+};
+
+// ─── RESET PASSWORD ──────────────────────────────────────────────────────────
+exports.resetPassword = async ({ email, otp, newPassword }) => {
+  const cacheKey = email + "_reset";
+  const cached = otpCache.get(cacheKey);
+
+  if (!cached || Date.now() > cached.expiresAt) {
+    if (cached) otpCache.delete(cacheKey);
+    throw { status: 400, message: "Mã OTP đã hết hạn hoặc không tồn tại" };
+  }
+
+  const hOtp = hashOTP(otp);
+  if (cached.otp !== hOtp) {
+    throw { status: 400, message: "Mã OTP không chính xác" };
+  }
+
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw { status: 404, message: "Tài khoản không tồn tại" };
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  await userRepo.updatePassword(email, hashed);
+
+  // Xóa OTP khỏi Map
+  otpCache.delete(cacheKey);
+
+  return { message: "Đặt lại mật khẩu thành công!" };
+};
+
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} = require("../utils/jwt.util");
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+exports.login = async ({ email, password }) => {
+  const user = await userRepo.findByEmail(email);
+  if (!user) throw { status: 401, message: "Email hoặc mật khẩu không đúng" };
+  if (!user.is_active)
+    throw {
+      status: 403,
+      message: "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email.",
+    };
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch)
+    throw { status: 401, message: "Email hoặc mật khẩu không đúng" };
+
+  const payload = { id: user.id, email: user.email, role: user.role };
+  const accessToken = generateAccessToken(payload);
+  const refreshToken = generateRefreshToken({ id: user.id });
+
+  return { accessToken, refreshToken, role: user.role };
+};
+
+// ─── REFRESH TOKEN ───────────────────────────────────────────────────────────
+exports.refreshToken = async (refreshToken) => {
+  if (!refreshToken) throw { status: 401, message: "Không có refresh token" };
+
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch {
+    throw {
+      status: 403,
+      message: "Refresh token không hợp lệ hoặc đã hết hạn",
+    };
+  }
+
+  const user = await userRepo.findById(decoded.id);
+  if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
+
+  const payload = { id: user.id, email: user.email, role: user.role };
+  const newAccess = generateAccessToken(payload);
+  const newRefresh = generateRefreshToken({ id: user.id });
+
+  return { newAccess, newRefresh };
+};
+
+// ─── LOGOUT ──────────────────────────────────────────────────────────────────
+exports.logout = async (refreshToken) => {};
+
+
+
+================================================================================
+
+File: src\services\CRUDService.js (starts at line 2179)
+
+import bcrypt from 'bcryptjs';
+import User from '../models/user';
+
+const salt = bcrypt.genSaltSync(10);
+
+// Tạo user mới
+let createNewUser = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let hashPasswordFromBcrypt = await hashUserPassword(data.password);
+      await User.create({
+        email: data.email,
+        password: hashPasswordFromBcrypt,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        address: data.address,
+        phoneNumber: data.phoneNumber,
+        gender: data.gender === '1' ? 'female' : 'male',
+        roleId: data.roleId,
+        role: data.roleId === '1' ? 'admin' : 'user', // Set role based on roleId
+        is_active: true // Auto activate users created via admin panel
+      });
+      resolve('OK create a new user successfull');
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Hash password
+let hashUserPassword = (password) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let hashPassword = await bcrypt.hashSync(password, salt);
+      resolve(hashPassword);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Lấy tất cả user (findAll)
+let getAllUser = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let users = await User.find().lean();
+      users = users.map(u => ({ ...u, id: u._id.toString() }));
+      resolve(users);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Lấy 1 user theo id (findOne)
+let getUserInfoById = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await User.findOne({ _id: userId }).lean();
+      if (user) {
+        user.id = user._id.toString();
+        resolve(user);
+      }
+      else resolve([]);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Cập nhật user (update)
+let updateUser = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await User.findOne({ _id: data.id });
+      if (user) {
+        user.firstName = data.firstName;
+        user.lastName = data.lastName;
+        user.address = data.address;
+        await user.save();
+        let allusers = await User.find().lean();
+        allusers = allusers.map(u => ({ ...u, id: u._id.toString() }));
+        resolve(allusers);
+      } else {
+        resolve();
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// Xóa user
+let deleteUserById = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await User.findOne({ _id: userId });
+      if (user) {
+        await User.deleteOne({ _id: userId });
+      }
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+module.exports = {
+  createNewUser,
+  getAllUser,
+  getUserInfoById,
+  updateUser,
+  deleteUserById
+};
+
+
+
+================================================================================
+
+File: src\services\user.service.js (starts at line 2294)
+
+const { User } = require("../models");
+const userRepo = require("../repositories/user.repository");
+
+exports.updateProfile = async (userId, updateData) => {
+  const allowedFields = [
+    "name",
+    "firstName",
+    "lastName",
+    "address",
+    "phoneNumber",
+    "gender",
+  ];
+  const dataToUpdate = {};
+
+  for (const field of allowedFields) {
+    if (updateData[field] !== undefined) {
+      dataToUpdate[field] = updateData[field];
+    }
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: dataToUpdate },
+    { new: true, runValidators: true }
+  ).select("-password").lean();
+
+  if (!updatedUser) {
+    throw { status: 404, message: "Người dùng không tồn tại" };
+  }
+
+  updatedUser.id = updatedUser._id.toString();
+
+  return { message: "Cập nhật hồ sơ thành công", user: updatedUser };
+};
+
+exports.getProfile = async (userId) => {
+  const user = await userRepo.findById(userId);
+  if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
+  return user;
+};
+
+
+
+================================================================================
+
+File: src\utils\cancellation.util.js (starts at line 2335)
+
+/**
+ * Tính số tiền cọc được hoàn trả và tiền phạt khi khách hủy phòng.
+ * CHỨC NĂNG CÓ GÀI SẴN BUGS ĐỂ KIỂM THỬ HỘP TRẮNG / HỘP ĐEN
+ * @param {Object} booking - Thông tin đặt phòng
+ * @returns {Object} Kết quả hoàn cọc
+ */
+function calculateCancellationRefund(booking) {
+  if (!booking || booking.depositAmount <= 0 || booking.daysBeforeCheckIn < 0) {
+    return { refund: 0, penalty: 0, status: "REJECTED_INVALID_DATA" };
+  }
+
+  let refund = 0;
+  let deposit = Number(booking.depositAmount) || 0;
+  let days = Number(booking.daysBeforeCheckIn) || 0;
+
+  if (booking.reason === "force_majeure") {
+    if (deposit > 50000) {
+      refund = deposit - 50000;
+    } else {
+      refund = 0;
+    }
+  } else {
+    if (days >= 30) {
+      refund = deposit * 0.9;
+    } else if (days > 15) {
+      // <--- BUG 1: Lỗi biên ngày (lẽ ra phải là >= 15)
+      refund = deposit * 0.7;
+    } else if (days >= 7) {
+      refund = deposit * 0.5;
+    } else {
+      refund = 0;
+    }
+  }
+
+  // <--- BUG 2: Lỗi đặt sai thứ tự logic chặn âm (chạy trước khi trừ phụ phí/ngày lễ)
+  if (refund < 0) {
+    refund = 0;
+  }
+
+  // Trừ phí chuẩn bị phòng phát sinh
+  if (booking.hasSurcharge === "true" || booking.hasSurcharge === true) {
+    refund = refund - 150000; // <--- BUG 3: Gây ra kết quả hoàn tiền âm nếu refund ban đầu nhỏ hơn 150000
+  }
+
+  // Phạt thêm khi hủy vào ngày Lễ
+  if (booking.isHoliday === "true" || booking.isHoliday === true) {
+    refund = refund - deposit * 0.1; // <--- BUG 4: Gây ra kết quả hoàn tiền âm
+  }
+
+  // Tính tiền phạt giữ lại và trả về kết quả
+  let penalty = deposit - refund; // <--- BUG 5: Tiền phạt bị tính sai lệch (vượt quá cọc ban đầu) nếu refund âm
+
+  return {
+    refund: refund,
+    penalty: penalty,
+    status: "PROCESSED",
+  };
+}
+
+module.exports = { calculateCancellationRefund };
+
+
+
+================================================================================
+
+File: src\utils\invoice.util.js (starts at line 2396)
+
+/**
+ * Tính hóa đơn tiền phòng hàng tháng cho khách thuê trọ (Admin tool)
+ * CHỨC NĂNG CÓ GÀI SẴN BUGS THEO YÊU CẦU CỦA FILE SKILL.MD PHỤC VỤ KIỂM THỬ
+ * @param {Object} room - Thông tin phòng trọ
+ * @param {Object} usage - Chỉ số điện nước tiêu thụ trong tháng
+ * @param {Object} tenant - Thông tin khách thuê
+ * @returns {Object} Hóa đơn chi tiết và tổng tiền
+ */
+function calculateMonthlyInvoice(room, usage, tenant) {
+  // Kiểm tra đầu vào hợp lệ
+  if (!room || !usage || !tenant) {
+    throw new Error("Dữ liệu đầu vào không hợp lệ");
+  }
+
+  let basePrice = Number(room.basePrice) || 0;
+  let totalBill = 0;
+  let detail = {};
+
+  // ─── 1. TÍNH TIỀN PHÒNG & PHẠT TRỄ HẠN ──────────────────────────────────────
+  let lateDays = Number(usage.lateDays) || 0;
+  let penalty = 0;
+  
+  if (lateDays > 0) {
+    if (lateDays <= 5) {
+      penalty = basePrice * 0.02 * lateDays;
+    } else if (lateDays > 5 && lateDays < 15) { // <--- BUG 1: Lỗi biên ngày 15 (lẽ ra phải là <= 15)
+      penalty = basePrice * 0.05 * lateDays;
+    } else {
+      penalty = basePrice * 0.10 * lateDays;
+    }
+  }
+  let roomPriceAfterPenalty = basePrice + penalty;
+  detail.roomFee = basePrice;
+  detail.penalty = penalty;
+
+  // ─── 2. TÍNH TIỀN ĐIỆN BẬC THANG ───────────────────────────────────────────
+  let oldElec = Number(usage.electricity.oldIndex) || 0;
+  let newElec = Number(usage.electricity.newIndex) || 0;
+  
+  // <--- BUG 2: Không kiểm tra chỉ số mới nhỏ hơn chỉ số cũ (new < old)
+  let elecKwh = newElec - oldElec;
+  let elecPrice = 0;
+
+  if (elecKwh > 0) {
+    if (elecKwh < 50) { // <--- BUG 3: Lỗi biên bậc điện (lẽ ra phải là <= 50)
+      elecPrice = elecKwh * 2000;
+    } else if (elecKwh <= 100) {
+      // Công thức tính bậc thang tương ứng bị lệch biên
+      elecPrice = (49 * 2000) + ((elecKwh - 49) * 2500);
+    } else if (elecKwh <= 200) {
+      elecPrice = (49 * 2000) + (51 * 2500) + ((elecKwh - 100) * 3000);
+    } else {
+      elecPrice = (49 * 2000) + (51 * 2500) + (100 * 3000) + ((elecKwh - 200) * 4000);
+    }
+  }
+  detail.electricityFee = elecPrice;
+
+  // ─── 3. TÍNH TIỀN NƯỚC BẬC THANG ───────────────────────────────────────────
+  let oldWater = Number(usage.water.oldIndex) || 0;
+  let newWater = Number(usage.water.newIndex) || 0;
+  let waterM3 = newWater - oldWater;
+  let waterPrice = 0;
+
+  if (waterM3 > 0) {
+    if (waterM3 <= 10) {
+      waterPrice = waterM3 * 10000;
+    } else {
+      waterPrice = (10 * 10000) + ((waterM3 - 10) * 15000);
+    }
+  }
+  detail.waterFee = waterPrice;
+
+  // ─── 4. PHỤ PHÍ DỊCH VỤ & PHÍ XE CỘ ────────────────────────────────────────
+  let serviceFee = 0;
+  if (room.services && room.services.length > 0) {
+    let j = 0;
+    while (j < room.services.length) {
+      let svc = room.services[j];
+      if (svc.type === "fixed") {
+        serviceFee += Number(svc.price) || 0;
+      } else if (svc.type === "per_person") {
+        serviceFee += (Number(svc.price) || 0) * (Number(tenant.memberCount) || 1);
+      }
+      j++;
+    }
+  }
+  
+  // Tính phí xe máy
+  let vehicleFee = 0;
+  if (tenant.hasVehicle) {
+    // <--- BUG 4: Thiếu kiểm tra kiểu dữ liệu hợp lệ (gây ra lỗi NaN nếu vehicleCount là undefined/null hoặc sai định dạng)
+    vehicleFee = tenant.vehicleCount * 100000; 
+  }
+  detail.serviceFee = serviceFee;
+  detail.vehicleFee = vehicleFee;
+
+  // ─── 5. CHIẾT KHẤU HỢP ĐỒNG DÀI HẠN ────────────────────────────────────────
+  let discount = 0;
+  if (Number(tenant.contractMonths) >= 12) {
+    discount = basePrice * 0.05; 
+  }
+  detail.discount = discount;
+
+  // Tổng tiền hóa đơn
+  totalBill = roomPriceAfterPenalty + elecPrice + waterPrice + serviceFee + vehicleFee - discount;
+  detail.totalBill = totalBill;
+
+  return detail;
+}
+
+module.exports = { calculateMonthlyInvoice };
+
+
+
+================================================================================
+
+File: src\utils\jwt.util.js (starts at line 2508)
+
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY = "7d";
+
+const generateAccessToken = (payload) => {
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRY,
+  });
+};
+
+const generateRefreshToken = (payload) => {
+  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
+};
+
+const verifyAccessToken = (token) => {
+  return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+};
+
+const verifyRefreshToken = (token) => {
+  return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+};
+
+module.exports = {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+};
+
+
+
+================================================================================
+
+File: src\utils\otp.util.js (starts at line 2541)
+
+const crypto = require('crypto');
+
+exports.generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+exports.hashOTP = (otp) => {
+  return crypto.createHash('sha256').update(otp).digest('hex');
+};
+
+
+
+================================================================================
+
+File: src\validations\login.validation.js (starts at line 2551)
+
+const { body } = require("express-validator");
+
+exports.loginRules = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email không được để trống")
+    .isEmail()
+    .withMessage("Email không hợp lệ")
+    .normalizeEmail(),
+
+  body("password").notEmpty().withMessage("Mật khẩu không được để trống"),
+];
+
+
+
+================================================================================
+
+File: src\validations\register.validation.js (starts at line 2565)
+
+const { body } = require('express-validator');
+
+exports.registerRules = [
+  body('name')
+    .trim()
+    .notEmpty().withMessage('Tên không được để trống')
+    .isLength({ min: 2, max: 100 }).withMessage('Tên từ 2–100 ký tự'),
+
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email không được để trống')
+    .isEmail().withMessage('Email không hợp lệ')
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty().withMessage('Mật khẩu không được để trống')
+    .isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự')
+    .matches(/[A-Z]/).withMessage('Mật khẩu cần có ít nhất 1 chữ hoa')
+    .matches(/[0-9]/).withMessage('Mật khẩu cần có ít nhất 1 chữ số'),
+
+  body('confirmPassword')
+    .notEmpty().withMessage('Vui lòng xác nhận mật khẩu')
+    .custom((value, { req }) => {
+      if (value !== req.body.password)
+        throw new Error('Mật khẩu xác nhận không khớp');
+      return true;
+    }),
+];
+
+exports.verifyOtpRules = [
+  body('email')
+    .trim().isEmail().withMessage('Email không hợp lệ'),
+  body('otp')
+    .trim()
+    .notEmpty().withMessage('OTP không được để trống')
+    .isLength({ min: 6, max: 6 }).withMessage('OTP phải gồm 6 chữ số')
+    .isNumeric().withMessage('OTP chỉ gồm chữ số'),
+];
+
+exports.forgotPasswordRules = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email không được để trống')
+    .isEmail().withMessage('Email không hợp lệ')
+    .normalizeEmail(),
+];
+
+exports.resetPasswordRules = [
+  body('email')
+    .trim().isEmail().withMessage('Email không hợp lệ'),
+  body('otp')
+    .trim()
+    .notEmpty().withMessage('OTP không được để trống')
+    .isLength({ min: 6, max: 6 }).withMessage('OTP phải gồm 6 chữ số')
+    .isNumeric().withMessage('OTP chỉ gồm chữ số'),
+  body('newPassword')
+    .notEmpty().withMessage('Mật khẩu mới không được để trống')
+    .isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự')
+    .matches(/[A-Z]/).withMessage('Mật khẩu cần có ít nhất 1 chữ hoa')
+    .matches(/[0-9]/).withMessage('Mật khẩu cần có ít nhất 1 chữ số'),
+  body('confirmPassword')
+    .notEmpty().withMessage('Vui lòng xác nhận mật khẩu')
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword)
+        throw new Error('Mật khẩu xác nhận không khớp');
+      return true;
+    }),
+];
+
+
+
+================================================================================
+
+File: src\validations\user.validation.js (starts at line 2634)
+
+const { body } = require('express-validator');
+
+exports.editProfileRules = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 }).withMessage('Tên từ 2–100 ký tự')
+    .escape(), // Chặn mã độc XSS
+    
+  body('firstName')
+    .optional()
+    .trim()
+    .isLength({ max: 50 }).withMessage('Họ tối đa 50 ký tự')
+    .escape(),
+    
+  body('lastName')
+    .optional()
+    .trim()
+    .isLength({ max: 50 }).withMessage('Tên tối đa 50 ký tự')
+    .escape(),
+
+  body('address')
+    .optional()
+    .trim()
+    .isLength({ max: 200 }).withMessage('Địa chỉ tối đa 200 ký tự')
+    .escape(),
+
+  body('phoneNumber')
+    .optional()
+    .trim()
+    .matches(/(84|0[3|5|7|8|9])+([0-9]{8})\b/).withMessage('Số điện thoại không hợp lệ (phải là định dạng VN)')
+    .escape(),
+
+  body('gender')
+    .optional()
+    .isBoolean().withMessage('Giới tính phải là true/false'),
+];
+
+
+
+================================================================================

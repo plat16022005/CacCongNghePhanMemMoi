@@ -178,7 +178,7 @@ exports.login = async ({ email, password }) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken({ id: user.id });
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken, role: user.role };
 };
 
 // ─── REFRESH TOKEN ───────────────────────────────────────────────────────────
