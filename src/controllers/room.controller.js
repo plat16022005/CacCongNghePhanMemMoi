@@ -1,6 +1,12 @@
 const { Room, User, RoomInvoice } = require("../models");
 const { calculateMonthlyInvoice } = require("../utils/invoice.util");
 const { calculateCancellationRefund } = require("../utils/cancellation.util");
+const {
+  calculateFineAndDamage,
+  evaluateTenantCredit,
+  calculateStaffPayroll,
+  estimateRenovationBudget
+} = require("../utils/testing_features.util");
 
 // 1. Thêm phòng trọ mới (Admin)
 exports.createRoom = async (req, res, next) => {
@@ -287,6 +293,58 @@ exports.calculateRefund = async (req, res, next) => {
     const result = calculateCancellationRefund(booking);
     res.status(200).json({
       message: "Tính toán hoàn cọc thành công",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 11. Tính phạt vi phạm & đền bù tài sản (Admin testing)
+exports.calculateFine = async (req, res, next) => {
+  try {
+    const result = calculateFineAndDamage(req.body);
+    res.status(200).json({
+      message: "Tính tiền phạt & đền bù thành công",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 12. Đánh giá điểm tín nhiệm & gia hạn (Admin testing)
+exports.evaluateCredit = async (req, res, next) => {
+  try {
+    const result = evaluateTenantCredit(req.body);
+    res.status(200).json({
+      message: "Đánh giá thâm niên & tín nhiệm thành công",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 13. Tính lương nhân viên (Admin testing)
+exports.calculatePayroll = async (req, res, next) => {
+  try {
+    const result = calculateStaffPayroll(req.body);
+    res.status(200).json({
+      message: "Tính lương nhân viên thành công",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 14. Dự toán sửa chữa & cải tạo phòng (Admin testing)
+exports.estimateRenovation = async (req, res, next) => {
+  try {
+    const result = estimateRenovationBudget(req.body);
+    res.status(200).json({
+      message: "Dự toán chi phí cải tạo thành công",
       data: result
     });
   } catch (err) {

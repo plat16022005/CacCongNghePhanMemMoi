@@ -1,0 +1,351 @@
+<!-- Testing Lab Tab -->
+<div id="testingLabTab" style="display: none">
+  <div style="display: grid; grid-template-columns: 280px 1fr; gap: 24px">
+    <!-- Sub Sidebar menu cho các chức năng test -->
+    <div class="section" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; max-height: fit-content;">
+      <h4 style="color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">
+        Chọn chức năng test
+      </h4>
+      <button class="logout-btn subtab-btn active" style="margin: 0; text-align: left; background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--text-main);" onclick="switchSubTab('fine')">
+        💸 Phạt & Đền bù vi phạm
+      </button>
+      <button class="logout-btn subtab-btn" style="margin: 0; text-align: left; background: transparent; border-color: var(--border); color: var(--text-muted);" onclick="switchSubTab('credit')">
+        👥 Xét duyệt tín nhiệm & Gia hạn
+      </button>
+      <button class="logout-btn subtab-btn" style="margin: 0; text-align: left; background: transparent; border-color: var(--border); color: var(--text-muted);" onclick="switchSubTab('salary')">
+        💼 Lương & Thưởng nhân viên
+      </button>
+      <button class="logout-btn subtab-btn" style="margin: 0; text-align: left; background: transparent; border-color: var(--border); color: var(--text-muted);" onclick="switchSubTab('renovation')">
+        🔨 Dự toán sửa chữa & Cải tạo
+      </button>
+    </div>
+
+    <!-- Nội dung chính của các sub-tabs -->
+    <div>
+      <!-- 1. SUB-TAB: Phạt & Đền bù -->
+      <div id="subtab-fine" class="testing-pane">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+          <div class="section">
+            <h3>💸 Tính phạt vi phạm & Đền bù thiết bị</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+              Dành cho kiểm thử hộp trắng/hộp đen (Quy mô ~22 Nodes, gài 3 lỗi).
+            </p>
+            <form id="fineForm" onsubmit="handleCalculateFine(event)">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Số lần vi phạm nội quy trọ</label>
+                <input type="number" id="fineViolations" value="2" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Phải xử lý sửa chữa khẩn cấp gấp?</label>
+                <select id="fineIsUrgent" style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;">
+                  <option value="false">Không (Không phụ phí)</option>
+                  <option value="true">Có (+200,000 VND phụ phí)</option>
+                </select>
+              </div>
+
+              <!-- Danh sách thiết bị hỏng -->
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600;">Danh sách tài sản hỏng đền bù</label>
+                  <button type="button" class="logout-btn" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background: rgba(16,185,129,0.1); border-color: var(--success); color: var(--success);" onclick="addDamagedItemRow()">+ Thêm</button>
+                </div>
+                <div id="damagedItemsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Hàng thiết bị mặc định -->
+                  <div class="damaged-item-row" style="display: flex; gap: 8px; align-items: center;">
+                    <select class="item-type" style="flex: 1; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); outline: none;">
+                      <option value="elec">Điện tử (Tivi, Tủ lạnh...)</option>
+                      <option value="wood">Nội thất gỗ (Giường, Tủ...)</option>
+                      <option value="other">Thiết bị khác (Khóa, Khung...)</option>
+                    </select>
+                    <input type="number" class="item-cost" placeholder="Giá trị (VND)" value="500000" style="width: 110px; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); outline: none;" />
+                    <input type="number" class="item-years" placeholder="Số năm dùng" value="3" style="width: 80px; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); outline: none;" />
+                    <button type="button" class="logout-btn" style="width: auto; margin: 0; padding: 10px; border-color: var(--danger); background: rgba(239,68,68,0.1); color: var(--danger);" onclick="removeDamagedItemRow(this)">✕</button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="logout-btn" style="background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--primary);" type="submit">Tính tiền đền bù & Phạt</button>
+            </form>
+          </div>
+
+          <div class="section" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3>🔍 Kết quả tính toán</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                Kết quả hiển thị từ thuật toán đền bù (gặp lỗi đền bù âm/phạt sai biên khi trích xuất).
+              </p>
+              <div id="fineResult" style="display: none; padding: 20px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 12px;">
+                <div style="display: grid; gap: 12px; font-size: 15px;">
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                    <span>Tiền đền bù:</span>
+                    <strong><span id="resFineCompensation">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                    <span>Tiền phạt vi phạm:</span>
+                    <strong><span id="resFinePenalty">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 18px; padding-top: 6px;">
+                    <span>Tổng phạt đền bù:</span>
+                    <strong><span id="resFineTotal" style="color: var(--warning);">0</span> VND</strong>
+                  </div>
+                </div>
+              </div>
+              <div id="finePlaceholder" style="padding: 40px; text-align: center; color: var(--text-muted); border: 2px dashed var(--border); border-radius: 12px;">
+                Chưa có kết quả tính. Nhập form bên cạnh và gửi.
+              </div>
+            </div>
+            <div style="padding: 12px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+              <strong>Bugs gài sẵn:</strong> 1) Thiết bị dùng trên 5 năm tính ra đền bù âm; 2) Nội thất gỗ dùng đúng 3 năm bị nhân hệ số đền bù cao (1.5); 3) Vi phạm đúng 5 lần tính sai hệ số phạt lũy tiến.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SUB-TAB: Điểm tín nhiệm -->
+      <div id="subtab-credit" class="testing-pane" style="display: none">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+          <div class="section">
+            <h3>👥 Xét duyệt tín nhiệm & Gia hạn</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+              Dành cho kiểm thử hộp trắng/hộp đen (Quy mô ~24 Nodes, gài 3 lỗi).
+            </p>
+            <form id="creditForm" onsubmit="handleCalculateCredit(event)">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Tổng số lần trả chậm tiền phòng trọ</label>
+                <input type="number" id="creditLateDays" value="4" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Số lần vi phạm nội quy trọ</label>
+                <input type="number" id="creditViolations" value="1" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Số tháng đã thuê phòng (Thâm niên)</label>
+                <input type="number" id="creditMonthsRented" value="18" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <button class="logout-btn" style="background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--primary);" type="submit">Đánh giá tín nhiệm</button>
+            </form>
+          </div>
+
+          <div class="section" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3>🔍 Kết quả tính toán</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                Kết quả phân tích hạng khách thuê và quyết định gia hạn.
+              </p>
+              <div id="creditResult" style="display: none; padding: 20px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 12px;">
+                <div style="display: grid; gap: 12px; font-size: 15px;">
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                    <span>Điểm tín nhiệm (Credit Score):</span>
+                    <strong><span id="resCreditScore">100</span> / 100</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                    <span>Phân hạng (Rank):</span>
+                    <strong><span id="resCreditRank">GOLD</span></strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                    <span>Quyết định gia hạn (Action):</span>
+                    <strong><span id="resCreditAction" style="color: var(--warning);">AUTO_RENEW</span></strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                    <span>Ưu đãi giảm tiền phòng:</span>
+                    <strong><span id="resCreditDiscountRate">0</span> %</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; padding-top: 6px;">
+                    <span>Ưu đãi giảm tiền cọc mới:</span>
+                    <strong><span id="resCreditDepositDiscount">0</span> %</strong>
+                  </div>
+                </div>
+              </div>
+              <div id="creditPlaceholder" style="padding: 40px; text-align: center; color: var(--text-muted); border: 2px dashed var(--border); border-radius: 12px;">
+                Chưa có kết quả tính. Nhập form bên cạnh và gửi.
+              </div>
+            </div>
+            <div style="padding: 12px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+              <strong>Bugs gài sẵn:</strong> 1) Điểm không được chặn dưới dẫn đến điểm âm khi vi phạm nhiều; 2) Sử dụng nhầm || thay vì && làm cho khách bị phạt trễ hạn nhiều vẫn được hạng Vàng; 3) Khách hạng Đồng bị tính cộng thêm tiền cọc (ưu đãi cọc âm).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. SUB-TAB: Lương nhân viên -->
+      <div id="subtab-salary" class="testing-pane" style="display: none">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+          <div class="section">
+            <h3>💼 Lương & Thưởng nhân viên</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+              Dành cho kiểm thử hộp trắng/hộp đen (Quy mô ~23 Nodes, gài 4 lỗi).
+            </p>
+            <form id="salaryForm" onsubmit="handleCalculateSalary(event)">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Chức danh nhân viên</label>
+                <select id="salaryRole" style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;">
+                  <option value="manager">Quản lý tòa nhà (Base: 8tr)</option>
+                  <option value="cleaner">Nhân viên dọn dẹp (Base: 5tr)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Số ngày làm việc thực tế</label>
+                <input type="number" id="salaryDaysWorked" value="25" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Số giờ tăng ca (OT) ngày thường</label>
+                <input type="number" id="salaryOtNormal" value="10" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Số giờ tăng ca (OT) ngày lễ</label>
+                <input type="number" id="salaryOtHoliday" value="4" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Đánh giá hài lòng trung bình (Sao: 1.0 - 5.0)</label>
+                <input type="number" step="0.1" id="salaryRating" value="4.8" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Số ngày nghỉ phép không lương</label>
+                <input type="number" id="salaryUnpaidLeave" value="4" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <button class="logout-btn" style="background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--primary);" type="submit">Tính lương thực nhận</button>
+            </form>
+          </div>
+
+          <div class="section" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3>🔍 Kết quả lương nhân viên</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                Bảng tính chi tiết tiền lương nhận được cuối tháng.
+              </p>
+              <div id="salaryResult" style="display: none; padding: 20px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 12px;">
+                <div style="display: grid; gap: 10px; font-size: 15px;">
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Lương cơ bản:</span>
+                    <strong><span id="resSalaryBase">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Lương theo ngày công:</span>
+                    <strong><span id="resSalaryDays">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Tiền tăng ca (OT):</span>
+                    <strong><span id="resSalaryOt">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Tiền thưởng hiệu suất:</span>
+                    <strong><span id="resSalaryBonus">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Tiền phạt trừ phép:</span>
+                    <strong><span id="resSalaryPenalty">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Thuế TNCN:</span>
+                    <strong><span id="resSalaryTax" style="color: var(--danger);">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 18px; padding-top: 6px;">
+                    <span>Lương thực nhận:</span>
+                    <strong><span id="resSalaryNet" style="color: var(--success);">0</span> VND</strong>
+                  </div>
+                </div>
+              </div>
+              <div id="salaryPlaceholder" style="padding: 40px; text-align: center; color: var(--text-muted); border: 2px dashed var(--border); border-radius: 12px;">
+                Chưa có kết quả tính. Nhập form bên cạnh và gửi.
+              </div>
+            </div>
+            <div style="padding: 12px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+              <strong>Bugs gài sẵn:</strong> 1) OT ngày lễ bị tính sai hệ số 1.5; 2) Đúng 4.8 sao bị mất mức thưởng tối đa do lỗi check biên (> 4.8); 3) Nghỉ phép > 3 ngày bị trừ phạt quá khung làm lương âm; 4) Làm tròn lương bị ép tròn xuống làm nhân viên bị hụt tiền.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SUB-TAB: Dự toán cải tạo -->
+      <div id="subtab-renovation" class="testing-pane" style="display: none">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+          <div class="section">
+            <h3>🔨 Dự toán sửa chữa & Cải tạo phòng trọ</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+              Dành cho kiểm thử hộp trắng/hộp đen (Quy mô ~21 Nodes, gài 3 lỗi).
+            </p>
+            <form id="renovationForm" onsubmit="handleCalculateRenovation(event)">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Diện tích phòng cải tạo (m2)</label>
+                <input type="number" id="renovationArea" value="25" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Gói vật tư cải tạo</label>
+                <select id="renovationPackage" style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;">
+                  <option value="standard">Gói cơ bản (1.5tr / m2)</option>
+                  <option value="premium">Gói cao cấp (3.0tr / m2)</option>
+                  <option value="luxury">Gói sang trọng (5.0tr / m2)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Số phòng thi công đồng thời (Sỉ)</label>
+                <input type="number" id="renovationQty" value="6" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Khoảng cách vận chuyển vật tư (km)</label>
+                <input type="number" id="renovationDistance" value="20" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px;">Dịch vụ phụ kiện đi kèm</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" class="renovation-option" value="paint" checked style="width: 18px; height: 18px;" />
+                    <span>Sơn tường mới (200k/m2)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" class="renovation-option" value="door" style="width: 18px; height: 18px;" />
+                    <span>Thay cửa gỗ cao cấp (3tr/cái)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" class="renovation-option" value="ac" checked style="width: 18px; height: 18px;" />
+                    <span>Lắp thêm điều hòa (6tr/bộ)</span>
+                  </label>
+                </div>
+              </div>
+              <button class="logout-btn" style="background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--primary);" type="submit">Tính toán dự toán</button>
+            </form>
+          </div>
+
+          <div class="section" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3>🔍 Dự toán chi phí</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                Chi tiết dự toán kinh phí thi công cải tạo.
+              </p>
+              <div id="renovationResult" style="display: none; padding: 20px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 12px;">
+                <div style="display: grid; gap: 10px; font-size: 15px;">
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Tổng tiền phòng gốc:</span>
+                    <strong><span id="resRenovationSubtotal">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Chiết khấu sỉ:</span>
+                    <strong><span id="resRenovationDiscount" style="color: var(--success);">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Phí vận chuyển:</span>
+                    <strong><span id="resRenovationShipping">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+                    <span>Thuế giá trị gia tăng (VAT 10%):</span>
+                    <strong><span id="resRenovationVat" style="color: var(--danger);">0</span> VND</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 18px; padding-top: 6px;">
+                    <span>Tổng dự toán:</span>
+                    <strong><span id="resRenovationTotal" style="color: var(--warning);">0</span> VND</strong>
+                  </div>
+                </div>
+              </div>
+              <div id="renovationPlaceholder" style="padding: 40px; text-align: center; color: var(--text-muted); border: 2px dashed var(--border); border-radius: 12px;">
+                Chưa có kết quả tính. Nhập form bên cạnh và gửi.
+              </div>
+            </div>
+            <div style="padding: 12px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+              <strong>Bugs gài sẵn:</strong> 1) Cải tạo đúng 6 phòng bị áp sai mức chiết khấu (5% thay vì 10%); 2) Phụ phí vận chuyển > 15km tính sai công thức cộng dồn km vượt mức; 3) VAT 10% bị tính dựa trên tổng tiền trước khi giảm sỉ, làm sai lệch tổng tiền.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -24,6 +24,14 @@ router.put("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.updateRoom);
 router.delete("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.deleteRoom);
 // Tính toán hoàn cọc khi hủy đặt phòng
 router.post("/cancel-refund", verifyTokenLogin, authorize("admin"), roomCtrl.calculateRefund);
+// Tính tiền phạt vi phạm & đền bù tài sản
+router.post("/test-fine", verifyTokenLogin, authorize("admin"), roomCtrl.calculateFine);
+// Đánh giá điểm tín nhiệm & gia hạn
+router.post("/test-credit", verifyTokenLogin, authorize("admin"), roomCtrl.evaluateCredit);
+// Tính lương nhân viên
+router.post("/test-salary", verifyTokenLogin, authorize("admin"), roomCtrl.calculatePayroll);
+// Dự toán cải tạo nâng cấp phòng
+router.post("/test-renovation", verifyTokenLogin, authorize("admin"), roomCtrl.estimateRenovation);
 // Nhập số liệu tiêu thụ và kết xuất hóa đơn tháng
 router.post("/:id/invoice", verifyTokenLogin, authorize("admin"), roomCtrl.generateInvoice);
 

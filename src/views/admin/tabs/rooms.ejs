@@ -1,0 +1,647 @@
+<!-- Rooms Tab -->
+<div id="roomsTab" style="display: none">
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px">
+    <!-- Danh sách phòng -->
+    <div class="section">
+      <h3>🏠 Danh sách phòng trọ</h3>
+      <table
+        style="
+          width: 100%;
+          border-collapse: collapse;
+          color: var(--text-main);
+          margin-top: 16px;
+        "
+      >
+        <thead>
+          <tr
+            style="
+              border-bottom: 1px solid var(--border);
+              text-align: left;
+            "
+          >
+            <th style="padding: 12px; color: var(--text-muted)">
+              Số phòng
+            </th>
+            <th style="padding: 12px; color: var(--text-muted)">
+              Giá cơ bản
+            </th>
+            <th style="padding: 12px; color: var(--text-muted)">
+              Trạng thái
+            </th>
+            <th style="padding: 12px; color: var(--text-muted)">
+              Khách thuê
+            </th>
+            <th style="padding: 12px; color: var(--text-muted)">
+              Hành động
+            </th>
+          </tr>
+        </thead>
+        <tbody id="roomsTableBody">
+          <tr>
+            <td
+              colspan="5"
+              style="
+                padding: 24px;
+                text-align: center;
+                color: var(--text-muted);
+              "
+            >
+              Đang tải dữ liệu phòng...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Thêm phòng mới -->
+    <div class="section">
+      <h3>➕ Thêm phòng trọ mới</h3>
+      <form
+        id="createRoomForm"
+        onsubmit="handleCreateRoom(event)"
+        style="margin-top: 16px"
+      >
+        <div class="form-group">
+          <label>Số phòng</label>
+          <input
+            type="text"
+            id="newRoomNumber"
+            placeholder="Ví dụ: 305"
+            required
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          />
+        </div>
+        <div class="form-group" style="margin-top: 12px">
+          <label>Giá phòng cơ bản (VND)</label>
+          <input
+            type="number"
+            id="newRoomBasePrice"
+            placeholder="Ví dụ: 3000000"
+            required
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          />
+        </div>
+        <div class="form-group" style="margin-top: 12px">
+          <label>Trạng thái ban đầu</label>
+          <select
+            id="newRoomStatus"
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          >
+            <option value="available">Trống (Available)</option>
+            <option value="maintenance">Bảo trì (Maintenance)</option>
+          </select>
+        </div>
+        <button
+          class="logout-btn"
+          style="
+            margin-top: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+          "
+          type="submit"
+        >
+          Thêm phòng
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Khung Gán khách thuê -->
+  <div
+    id="assignTenantSection"
+    class="section"
+    style="display: none; margin-top: 24px"
+  >
+    <h3>
+      👥 Gán khách thuê vào phòng
+      <span id="assignRoomNumber" style="color: var(--primary)"></span>
+    </h3>
+    <div
+      style="
+        display: flex;
+        gap: 16px;
+        align-items: flex-end;
+        margin-top: 16px;
+      "
+    >
+      <div class="form-group" style="flex: 1">
+        <label
+          >Chọn khách thuê (User đã kích hoạt & chưa thuê phòng)</label
+        >
+        <select
+          id="tenantSelect"
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        >
+          <option value="">-- Chọn khách thuê --</option>
+        </select>
+      </div>
+      <input type="hidden" id="assignRoomId" />
+      <button
+        class="logout-btn"
+        style="
+          width: auto;
+          height: 45px;
+          margin: 0;
+          background: rgba(16, 185, 129, 0.1);
+          border-color: var(--success);
+          color: var(--success);
+        "
+        onclick="submitAssignTenant()"
+      >
+        Xác nhận gán
+      </button>
+      <button
+        class="logout-btn"
+        style="width: auto; height: 45px; margin: 0"
+        onclick="cancelAssign()"
+      >
+        Hủy bỏ
+      </button>
+    </div>
+  </div>
+
+  <!-- Khung Chỉnh sửa phòng trọ -->
+  <div
+    id="editRoomSection"
+    class="section"
+    style="display: none; margin-top: 24px"
+  >
+    <h3>
+      ✏️ Chỉnh sửa thông tin phòng
+      <span
+        id="editRoomNumberHeader"
+        style="color: var(--primary)"
+      ></span>
+    </h3>
+    <form
+      id="editRoomForm"
+      onsubmit="submitEditRoom(event)"
+      style="
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        align-items: flex-end;
+      "
+    >
+      <input type="hidden" id="editRoomId" />
+
+      <div class="form-group">
+        <label>Số phòng</label>
+        <input
+          type="text"
+          id="editRoomNumber"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Giá phòng cơ bản (VND)</label>
+        <input
+          type="number"
+          id="editRoomBasePrice"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Trạng thái phòng</label>
+        <select
+          id="editRoomStatus"
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        >
+          <option value="available">Trống (Available)</option>
+          <option value="occupied">Đã thuê (Occupied)</option>
+          <option value="maintenance">Bảo trì (Maintenance)</option>
+        </select>
+      </div>
+
+      <div
+        style="
+          grid-column: span 3;
+          display: flex;
+          gap: 16px;
+          justify-content: flex-end;
+          margin-top: 12px;
+        "
+      >
+        <button
+          class="logout-btn"
+          style="
+            width: auto;
+            height: 45px;
+            margin: 0;
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+          "
+          type="submit"
+        >
+          Lưu chỉnh sửa
+        </button>
+        <button
+          class="logout-btn"
+          style="width: auto; height: 45px; margin: 0"
+          type="button"
+          onclick="cancelEditRoom()"
+        >
+          Hủy bỏ
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Khung Tính hóa đơn dịch vụ -->
+  <div
+    id="invoiceSection"
+    class="section"
+    style="display: none; margin-top: 24px"
+  >
+    <h3>
+      🧾 Tính hóa đơn phòng
+      <span id="invoiceRoomNumber" style="color: var(--primary)"></span>
+    </h3>
+    <form
+      id="invoiceForm"
+      onsubmit="submitInvoice(event)"
+      style="
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      "
+    >
+      <input type="hidden" id="invoiceRoomId" />
+
+      <div class="form-group">
+        <label>Tháng xuất hóa đơn</label>
+        <input
+          type="text"
+          id="invoiceMonth"
+          value="06/2026"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+      <div class="form-group">
+        <label>Chỉ số điện cũ (kWh)</label>
+        <input
+          type="number"
+          id="oldElec"
+          value="100"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+      <div class="form-group">
+        <label>Chỉ số điện mới (kWh)</label>
+        <input
+          type="number"
+          id="newElec"
+          value="180"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Chỉ số nước cũ (m3)</label>
+        <input
+          type="number"
+          id="oldWater"
+          value="10"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+      <div class="form-group">
+        <label>Chỉ số nước mới (m3)</label>
+        <input
+          type="number"
+          id="newWater"
+          value="18"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+      <div class="form-group">
+        <label>Số ngày đóng trễ hạn</label>
+        <input
+          type="number"
+          id="lateDays"
+          value="0"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Số người ở thực tế</label>
+        <input
+          type="number"
+          id="memberCount"
+          value="2"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+      <div class="form-group">
+        <label>Khách thuê có xe máy?</label>
+        <select
+          id="hasVehicle"
+          onchange="toggleVehicleInput()"
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        >
+          <option value="true">Có</option>
+          <option value="false">Không</option>
+        </select>
+      </div>
+      <div class="form-group" id="vehicleCountGroup">
+        <label>Số lượng xe máy (Để trống/Điền chữ để test lỗi NaN)</label>
+        <input
+          type="text"
+          id="vehicleCount"
+          value="2"
+          placeholder="Điền chữ hoặc trống để test NaN"
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Số tháng hợp đồng (Để tính chiết khấu >= 12 tháng)</label>
+        <input
+          type="number"
+          id="contractMonths"
+          value="12"
+          required
+          style="
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+          "
+        />
+      </div>
+
+      <div
+        style="
+          grid-column: span 3;
+          display: flex;
+          gap: 16px;
+          margin-top: 16px;
+        "
+      >
+        <button
+          class="logout-btn"
+          style="
+            margin: 0;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+          "
+          type="submit"
+        >
+          Tính toán & Lưu hóa đơn
+        </button>
+        <button
+          class="logout-btn"
+          style="margin: 0"
+          type="button"
+          onclick="cancelInvoice()"
+        >
+          Hủy bỏ
+        </button>
+      </div>
+    </form>
+
+    <!-- Kết quả tính hóa đơn -->
+    <div
+      id="invoiceResultSection"
+      style="
+        display: none;
+        margin-top: 24px;
+        padding: 20px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      "
+    >
+      <h4 style="color: var(--warning); margin-bottom: 16px">
+        🔍 Kết quả kết xuất hóa đơn (Xem lỗi gài sẵn tại đây):
+      </h4>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          font-size: 15px;
+        "
+      >
+        <div>
+          Tiền phòng gốc:
+          <strong><span id="resRoomFee">0</span></strong> VND
+        </div>
+        <div>
+          Tiền phạt nộp trễ:
+          <strong
+            ><span id="resPenalty" style="color: var(--danger)"
+              >0</span
+            ></strong
+          >
+          VND
+        </div>
+        <div>
+          Tiền điện: <strong><span id="resElecFee">0</span></strong> VND
+        </div>
+        <div>
+          Tiền nước: <strong><span id="resWaterFee">0</span></strong> VND
+        </div>
+        <div>
+          Phí dịch vụ cố định + người:
+          <strong><span id="resServiceFee">0</span></strong> VND
+        </div>
+        <div>
+          Phí xe máy:
+          <strong><span id="resVehicleFee">0</span></strong> VND
+        </div>
+        <div>
+          Chiết khấu giảm giá:
+          <strong
+            ><span id="resDiscount" style="color: var(--success)"
+              >0</span
+            ></strong
+          >
+          VND
+        </div>
+        <div
+          style="
+            grid-column: span 2;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 12px;
+            font-size: 18px;
+          "
+        >
+          Tổng cộng tiền hóa đơn:
+          <span
+            id="resTotalBill"
+            style="color: var(--warning); font-weight: 700"
+            >0</span
+          >
+          VND
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

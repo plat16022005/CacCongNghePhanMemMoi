@@ -1,0 +1,252 @@
+<!-- Hủy phòng & Hoàn cọc Tab -->
+<div id="cancellationTab" style="display: none">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+    <!-- Form nhập dữ liệu -->
+    <div class="section">
+      <h3>💸 Công cụ tính hủy phòng & Hoàn cọc</h3>
+      <p style="color: var(--text-muted); margin-bottom: 16px">
+        Nhập thông tin chi tiết đặt phòng để tính toán số tiền cọc được
+        hoàn trả và tiền phạt (Dùng để kiểm thử hộp trắng)
+      </p>
+      <form id="cancellationForm" onsubmit="handleCalculateCancellation(event)">
+        <div class="form-group" style="margin-bottom: 16px">
+          <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px">Tiền cọc đặt phòng (VND)</label>
+          <input
+            type="number"
+            id="cancelDepositAmount"
+            value="1000000"
+            required
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          />
+        </div>
+        <div class="form-group" style="margin-bottom: 16px">
+          <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px">Số ngày hủy trước khi check-in</label>
+          <input
+            type="number"
+            id="cancelDaysBeforeCheckIn"
+            value="20"
+            required
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          />
+        </div>
+        <div class="form-group" style="margin-bottom: 16px">
+          <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px">Lý do hủy phòng</label>
+          <select
+            id="cancelReason"
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          >
+            <option value="personal">Lý do cá nhân (Personal)</option>
+            <option value="force_majeure">Bất khả kháng (Force Majeure)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px">
+          <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px">Có phát sinh phụ phí chuẩn bị phòng?</label>
+          <select
+            id="cancelHasSurcharge"
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          >
+            <option value="false">Không (False)</option>
+            <option value="true">
+              Có (True - Phạt trừ thêm 150,000 VND)
+            </option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px">
+          <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px">Hủy phòng vào ngày Lễ?</label>
+          <select
+            id="cancelIsHoliday"
+            style="
+              width: 100%;
+              padding: 12px 16px;
+              background: rgba(15, 23, 42, 0.6);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              color: var(--text-main);
+              font-size: 15px;
+              outline: none;
+            "
+          >
+            <option value="false">Không (False)</option>
+            <option value="true">Có (True - Phạt thêm 10% tiền cọc)</option>
+          </select>
+        </div>
+        <button
+          class="logout-btn"
+          style="
+            margin-top: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+          "
+          type="submit"
+        >
+          Tính toán hoàn cọc
+        </button>
+      </form>
+    </div>
+
+    <!-- Kết quả tính hủy phòng -->
+    <div
+      class="section"
+      style="
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      "
+    >
+      <div>
+        <h3>🔍 Kết quả tính toán</h3>
+        <p style="color: var(--text-muted); margin-bottom: 24px">
+          Kết quả hiển thị từ thuật toán tính hoàn cọc (Xem các lỗi gài sẵn
+          phục vụ kiểm thử)
+        </p>
+
+        <div
+          id="cancellationResultSection"
+          style="
+            display: none;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+          "
+        >
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 16px;
+              font-size: 16px;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 8px;
+              "
+            >
+              <span style="color: var(--text-muted)">Tiền cọc gốc:</span>
+              <strong><span id="resCancelDeposit">0</span> VND</strong>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 8px;
+              "
+            >
+              <span style="color: var(--text-muted)"
+                >Tiền hoàn lại (Refund):</span
+              >
+              <strong
+                ><span id="resCancelRefund" style="color: var(--success)"
+                  >0</span
+                >
+                VND</strong
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 8px;
+              "
+            >
+              <span style="color: var(--text-muted)"
+                >Tiền phạt giữ lại (Penalty):</span
+              >
+              <strong
+                ><span id="resCancelPenalty" style="color: var(--danger)"
+                  >0</span
+                >
+                VND</strong
+              >
+            </div>
+            <div style="display: flex; justify-content: space-between; padding-bottom: 8px">
+              <span style="color: var(--text-muted)"
+                >Trạng thái xử lý:</span
+              >
+              <strong
+                ><span id="resCancelStatus" style="color: var(--warning)"
+                  >--</span
+                ></strong
+              >
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="cancellationPlaceholder"
+          style="
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+          "
+        >
+          Chưa có dữ liệu tính toán. Hãy điền form bên cạnh và nhấn nút.
+        </div>
+      </div>
+
+      <div
+        style="
+          margin-top: 24px;
+          padding: 16px;
+          background: rgba(239, 68, 68, 0.05);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 8px;
+        "
+      >
+        <h4 style="color: var(--danger); font-size: 14px; margin-bottom: 8px">
+          ⚠️ Lưu ý kiểm thử (White-box testing):
+        </h4>
+        <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5">
+          Thuật toán có gài sẵn 5 bugs logic liên quan đến biên ngày, thứ
+          tự lọc âm, trừ phụ phí và trừ phí ngày lễ. Vui lòng thiết kế các
+          ca kiểm thử theo sơ đồ khối để phát hiện đầy đủ lỗi.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

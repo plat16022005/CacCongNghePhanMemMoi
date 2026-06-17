@@ -1,6 +1,123 @@
 /**
+ * Tính số tiền phạt chậm nộp tiền phòng (BUG 1 gài sẵn ở đây)
+ * @param {number} basePrice 
+ * @param {number} lateDays 
+ * @returns {Object} { roomFee, penalty }
+ */
+function calculateRoomPriceAndPenalty(basePrice, lateDays) {
+  let penalty = 0;
+  if (lateDays > 0) {
+    if (lateDays <= 5) {
+      penalty = basePrice * 0.02 * lateDays;
+    } else if (lateDays > 5 && lateDays < 15) { // <--- BUG 1: Lỗi biên ngày 15 (lẽ ra phải là <= 15)
+      penalty = basePrice * 0.05 * lateDays;
+    } else {
+      penalty = basePrice * 0.10 * lateDays;
+    }
+  }
+  return { roomFee: basePrice, penalty: penalty };
+}
+
+/**
+ * Tính tổng phí dịch vụ điện và nước tiêu thụ bậc thang (16-20 Nodes phục vụ kiểm thử)
+ * CHỨC NĂNG CÓ GÀI BUGS 2 & 3
+ * @param {Object} electricity - { oldIndex, newIndex }
+ * @param {Object} water - { oldIndex, newIndex }
+ * @returns {Object} { electricityFee, waterFee }
+ */
+function calculateElectricityAndWaterFee(electricity, water) {
+  if (!electricity || !water) {
+    return { electricityFee: 0, waterFee: 0 };
+  }
+
+  // --- 1. TÍNH TIỀN ĐIỆN BẬC THANG ---
+  let oldElec = Number(electricity.oldIndex) || 0;
+  let newElec = Number(electricity.newIndex) || 0;
+  
+  // <--- BUG 2: Không kiểm tra chỉ số mới nhỏ hơn chỉ số cũ (new < old)
+  let elecKwh = newElec - oldElec;
+  let elecPrice = 0;
+
+  if (elecKwh > 0) {
+    if (elecKwh < 50) { // <--- BUG 3: Lỗi biên bậc điện (lẽ ra phải là <= 50)
+      elecPrice = elecKwh * 2000;
+    } else if (elecKwh <= 100) {
+      elecPrice = (49 * 2000) + ((elecKwh - 49) * 2500);
+    } else if (elecKwh <= 200) {
+      elecPrice = (49 * 2000) + (51 * 2500) + ((elecKwh - 100) * 3000);
+    } else {
+      elecPrice = (49 * 2000) + (51 * 2500) + (100 * 3000) + ((elecKwh - 200) * 4000);
+    }
+  }
+
+  // --- 2. TÍNH TIỀN NƯỚC BẬC THANG ---
+  let oldWater = Number(water.oldIndex) || 0;
+  let newWater = Number(water.newIndex) || 0;
+  let waterM3 = newWater - oldWater;
+  let waterPrice = 0;
+
+  if (waterM3 > 0) {
+    if (waterM3 <= 10) {
+      waterPrice = waterM3 * 10000;
+    } else {
+      waterPrice = (10 * 10000) + ((waterM3 - 10) * 15000);
+    }
+  }
+
+  return {
+    electricityFee: elecPrice,
+    waterFee: waterPrice
+  };
+}
+
+/**
+ * Tính phụ phí dịch vụ cố định/theo người và phí gửi xe máy (BUG 4 gài sẵn ở đây)
+ * @param {Array} services 
+ * @param {number} memberCount 
+ * @param {boolean} hasVehicle 
+ * @param {any} vehicleCount 
+ * @returns {Object} { serviceFee, vehicleFee }
+ */
+function calculateServiceAndVehicleFee(services, memberCount, hasVehicle, vehicleCount) {
+  let serviceFee = 0;
+  if (services && services.length > 0) {
+    let j = 0;
+    while (j < services.length) {
+      let svc = services[j];
+      if (svc.type === "fixed") {
+        serviceFee += Number(svc.price) || 0;
+      } else if (svc.type === "per_person") {
+        serviceFee += (Number(svc.price) || 0) * (Number(memberCount) || 1);
+      }
+      j++;
+    }
+  }
+  
+  let vehicleFee = 0;
+  if (hasVehicle) {
+    // <--- BUG 4: Thiếu kiểm tra kiểu dữ liệu hợp lệ (gây ra lỗi NaN nếu vehicleCount sai định dạng)
+    vehicleFee = vehicleCount * 100000; 
+  }
+  return { serviceFee, vehicleFee };
+}
+
+/**
+ * Tính chiết khấu hợp đồng dài hạn
+ * @param {number} basePrice 
+ * @param {number} contractMonths 
+ * @returns {number} discount
+ */
+function calculateContractDiscount(basePrice, contractMonths) {
+  let discount = 0;
+  if (Number(contractMonths) >= 12) {
+    discount = basePrice * 0.05; 
+  }
+  return discount;
+}
+
+/**
  * Tính hóa đơn tiền phòng hàng tháng cho khách thuê trọ (Admin tool)
- * CHỨC NĂNG CÓ GÀI SẴN BUGS THEO YÊU CẦU CỦA FILE SKILL.MD PHỤC VỤ KIỂM THỬ
+ * CHỨC NĂNG CÓ GÀI SẴN BUGS PHỤC VỤ KIỂM THỬ
  * @param {Object} room - Thông tin phòng trọ
  * @param {Object} usage - Chỉ số điện nước tiêu thụ trong tháng
  * @param {Object} tenant - Thông tin khách thuê
@@ -13,99 +130,46 @@ function calculateMonthlyInvoice(room, usage, tenant) {
   }
 
   let basePrice = Number(room.basePrice) || 0;
-  let totalBill = 0;
-  let detail = {};
-
-  // ─── 1. TÍNH TIỀN PHÒNG & PHẠT TRỄ HẠN ──────────────────────────────────────
   let lateDays = Number(usage.lateDays) || 0;
-  let penalty = 0;
-  
-  if (lateDays > 0) {
-    if (lateDays <= 5) {
-      penalty = basePrice * 0.02 * lateDays;
-    } else if (lateDays > 5 && lateDays < 15) { // <--- BUG 1: Lỗi biên ngày 15 (lẽ ra phải là <= 15)
-      penalty = basePrice * 0.05 * lateDays;
-    } else {
-      penalty = basePrice * 0.10 * lateDays;
-    }
-  }
-  let roomPriceAfterPenalty = basePrice + penalty;
-  detail.roomFee = basePrice;
-  detail.penalty = penalty;
 
-  // ─── 2. TÍNH TIỀN ĐIỆN BẬC THANG ───────────────────────────────────────────
-  let oldElec = Number(usage.electricity.oldIndex) || 0;
-  let newElec = Number(usage.electricity.newIndex) || 0;
-  
-  // <--- BUG 2: Không kiểm tra chỉ số mới nhỏ hơn chỉ số cũ (new < old)
-  let elecKwh = newElec - oldElec;
-  let elecPrice = 0;
+  // 1. Tiền phòng & phạt trễ hạn (Nhánh tính phạt có BUG 1)
+  let roomPenalty = calculateRoomPriceAndPenalty(basePrice, lateDays);
 
-  if (elecKwh > 0) {
-    if (elecKwh < 50) { // <--- BUG 3: Lỗi biên bậc điện (lẽ ra phải là <= 50)
-      elecPrice = elecKwh * 2000;
-    } else if (elecKwh <= 100) {
-      // Công thức tính bậc thang tương ứng bị lệch biên
-      elecPrice = (49 * 2000) + ((elecKwh - 49) * 2500);
-    } else if (elecKwh <= 200) {
-      elecPrice = (49 * 2000) + (51 * 2500) + ((elecKwh - 100) * 3000);
-    } else {
-      elecPrice = (49 * 2000) + (51 * 2500) + (100 * 3000) + ((elecKwh - 200) * 4000);
-    }
-  }
-  detail.electricityFee = elecPrice;
+  // 2 & 3. Tiền điện & nước bậc thang (Gộp chung hàm tính tiện ích có BUG 2 & BUG 3)
+  let utilFees = calculateElectricityAndWaterFee(usage.electricity, usage.water);
+  let electricityFee = utilFees.electricityFee;
+  let waterFee = utilFees.waterFee;
 
-  // ─── 3. TÍNH TIỀN NƯỚC BẬC THANG ───────────────────────────────────────────
-  let oldWater = Number(usage.water.oldIndex) || 0;
-  let newWater = Number(usage.water.newIndex) || 0;
-  let waterM3 = newWater - oldWater;
-  let waterPrice = 0;
+  // 4. Phụ phí dịch vụ & phí xe cộ (Nhánh tính xe máy có BUG 4)
+  let services = room.services || [];
+  let memberCount = tenant.memberCount;
+  let hasVehicle = tenant.hasVehicle;
+  let vehicleCount = tenant.vehicleCount;
+  let serviceVehicle = calculateServiceAndVehicleFee(services, memberCount, hasVehicle, vehicleCount);
 
-  if (waterM3 > 0) {
-    if (waterM3 <= 10) {
-      waterPrice = waterM3 * 10000;
-    } else {
-      waterPrice = (10 * 10000) + ((waterM3 - 10) * 15000);
-    }
-  }
-  detail.waterFee = waterPrice;
-
-  // ─── 4. PHỤ PHÍ DỊCH VỤ & PHÍ XE CỘ ────────────────────────────────────────
-  let serviceFee = 0;
-  if (room.services && room.services.length > 0) {
-    let j = 0;
-    while (j < room.services.length) {
-      let svc = room.services[j];
-      if (svc.type === "fixed") {
-        serviceFee += Number(svc.price) || 0;
-      } else if (svc.type === "per_person") {
-        serviceFee += (Number(svc.price) || 0) * (Number(tenant.memberCount) || 1);
-      }
-      j++;
-    }
-  }
-  
-  // Tính phí xe máy
-  let vehicleFee = 0;
-  if (tenant.hasVehicle) {
-    // <--- BUG 4: Thiếu kiểm tra kiểu dữ liệu hợp lệ (gây ra lỗi NaN nếu vehicleCount là undefined/null hoặc sai định dạng)
-    vehicleFee = tenant.vehicleCount * 100000; 
-  }
-  detail.serviceFee = serviceFee;
-  detail.vehicleFee = vehicleFee;
-
-  // ─── 5. CHIẾT KHẤU HỢP ĐỒNG DÀI HẠN ────────────────────────────────────────
-  let discount = 0;
-  if (Number(tenant.contractMonths) >= 12) {
-    discount = basePrice * 0.05; 
-  }
-  detail.discount = discount;
+  // 5. Chiết khấu hợp đồng dài hạn
+  let contractMonths = tenant.contractMonths;
+  let discount = calculateContractDiscount(basePrice, contractMonths);
 
   // Tổng tiền hóa đơn
-  totalBill = roomPriceAfterPenalty + elecPrice + waterPrice + serviceFee + vehicleFee - discount;
-  detail.totalBill = totalBill;
+  let totalBill = (basePrice + roomPenalty.penalty) + electricityFee + waterFee + serviceVehicle.serviceFee + serviceVehicle.vehicleFee - discount;
 
-  return detail;
+  return {
+    roomFee: basePrice,
+    penalty: roomPenalty.penalty,
+    electricityFee: electricityFee,
+    waterFee: waterFee,
+    serviceFee: serviceVehicle.serviceFee,
+    vehicleFee: serviceVehicle.vehicleFee,
+    discount: discount,
+    totalBill: totalBill
+  };
 }
 
-module.exports = { calculateMonthlyInvoice };
+module.exports = {
+  calculateRoomPriceAndPenalty,
+  calculateElectricityAndWaterFee,
+  calculateServiceAndVehicleFee,
+  calculateContractDiscount,
+  calculateMonthlyInvoice
+};
