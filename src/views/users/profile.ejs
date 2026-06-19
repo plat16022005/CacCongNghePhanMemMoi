@@ -3,22 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hồ sơ người dùng</title>
+    <title>Hồ sơ người dùng - Neet Paradise</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --bg-color: #0f172a;
-        --card-bg: rgba(30, 41, 59, 0.7);
-        --primary: #3b82f6;
-        --primary-hover: #2563eb;
-        --text-main: #f8fafc;
-        --text-muted: #94a3b8;
-        --border: rgba(255, 255, 255, 0.1);
-        --success: #10b981;
-        --danger: #ef4444;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+        --primary: #1e3a8a;
+        --primary-hover: #1e40af;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --border: #e2e8f0;
+        --success: #0f766e;
+        --danger: #b91c1c;
       }
 
       * {
@@ -30,17 +30,6 @@
       body {
         font-family: "Inter", sans-serif;
         background: var(--bg-color);
-        background-image:
-          radial-gradient(
-            at 100% 0%,
-            rgba(59, 130, 246, 0.15) 0px,
-            transparent 50%
-          ),
-          radial-gradient(
-            at 0% 100%,
-            rgba(139, 92, 246, 0.15) 0px,
-            transparent 50%
-          );
         color: var(--text-main);
         min-height: 100vh;
         padding: 20px;
@@ -58,9 +47,7 @@
 
       .header h1 {
         font-size: 32px;
-        background: linear-gradient(to right, #60a5fa, #a78bfa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--primary);
       }
 
       .header button {
@@ -75,7 +62,7 @@
       }
 
       .header button:hover {
-        background: #dc2626;
+        background: #991b1b;
       }
 
       .container {
@@ -85,11 +72,11 @@
 
       .profile-card {
         background: var(--card-bg);
-        backdrop-filter: blur(16px);
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 40px;
         margin-bottom: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       }
 
       .profile-header {
@@ -104,18 +91,20 @@
       .avatar {
         width: 100px;
         height: 100px;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        background: linear-gradient(135deg, #1e3a8a, #0f766e);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 40px;
         font-weight: 700;
+        color: white;
       }
 
       .profile-info h2 {
         font-size: 24px;
         margin-bottom: 4px;
+        color: var(--text-main);
       }
 
       .profile-info p {
@@ -127,7 +116,7 @@
       .role-badge {
         display: inline-block;
         padding: 4px 12px;
-        background: rgba(59, 130, 246, 0.2);
+        background: rgba(30, 58, 138, 0.1);
         border: 1px solid var(--primary);
         border-radius: 20px;
         color: var(--primary);
@@ -171,7 +160,7 @@
       .form-group select {
         width: 100%;
         padding: 12px 16px;
-        background: rgba(15, 23, 42, 0.6);
+        background: #ffffff;
         border: 1px solid var(--border);
         border-radius: 12px;
         color: var(--text-main);
@@ -183,7 +172,7 @@
       .form-group input:focus,
       .form-group select:focus {
         border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
       }
 
       .form-actions {
@@ -200,26 +189,27 @@
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s ease, background 0.2s;
       }
 
       .btn-save {
-        background: linear-gradient(to right, var(--primary), #8b5cf6);
+        background: var(--primary);
         color: white;
       }
 
       .btn-save:hover {
+        background: var(--primary-hover);
         transform: translateY(-2px);
       }
 
       .btn-cancel {
-        background: rgba(148, 163, 184, 0.1);
+        background: #f1f5f9;
         border: 1px solid var(--border);
         color: var(--text-main);
       }
 
       .btn-cancel:hover {
-        background: rgba(148, 163, 184, 0.2);
+        background: #e2e8f0;
       }
 
       .edit-mode-hidden {
@@ -239,13 +229,13 @@
       }
 
       .status-message.success {
-        background: rgba(16, 185, 129, 0.1);
+        background: rgba(15, 118, 110, 0.1);
         border: 1px solid var(--success);
         color: var(--success);
       }
 
       .status-message.error {
-        background: rgba(239, 68, 68, 0.1);
+        background: rgba(185, 28, 28, 0.1);
         border: 1px solid var(--danger);
         color: var(--danger);
       }
@@ -388,13 +378,13 @@
         <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">🏠 Thông tin phòng & Hóa đơn của tôi</h2>
         
         <!-- Nếu chưa được gán phòng -->
-        <div id="noRoomSection" style="display: none; padding: 20px; background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); border-radius: 12px; color: var(--text-muted); text-align: center;">
+        <div id="noRoomSection" style="display: none; padding: 20px; background: rgba(185, 28, 28, 0.05); border: 1px dashed var(--danger); border-radius: 12px; color: var(--text-muted); text-align: center;">
           <p>⚠️ Bạn chưa được gán phòng trọ nào trong hệ thống. Vui lòng liên hệ với Ban quản lý (Admin) để đăng ký phòng.</p>
         </div>
 
         <!-- Nếu đã được gán phòng -->
         <div id="hasRoomSection" style="display: none;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; background: rgba(30, 58, 138, 0.05); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px;">
             <div>Số phòng thuê: <strong id="myRoomNumber" style="font-size: 18px; color: var(--primary);">--</strong></div>
             <div>Giá phòng cơ bản: <strong id="myRoomPrice" style="font-size: 18px;">--</strong> VND</div>
             <div>Trạng thái phòng: <strong id="myRoomStatus">--</strong></div>
@@ -537,8 +527,8 @@
             const adjust = `Phạt trễ: ${Number(inv.penalty).toLocaleString()}đ<br>Khấu trừ: -${Number(inv.discount).toLocaleString()}đ`;
             
             const statusBadge = inv.status === "paid" 
-              ? `<span style="color: var(--success); background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Đã thanh toán</span>`
-              : `<span style="color: var(--danger); background: rgba(239,68,68,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Chưa thanh toán</span>`;
+              ? `<span style="color: var(--success); background: rgba(15,118,110,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Đã thanh toán</span>`
+              : `<span style="color: var(--danger); background: rgba(185,28,28,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Chưa thanh toán</span>`;
 
             tr.innerHTML = `
               <td style="padding: 10px; font-weight: 600; vertical-align: top;">Tháng ${inv.month}</td>

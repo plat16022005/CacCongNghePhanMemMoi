@@ -1,14 +1,14 @@
 :root {
-  --bg-color: #0f172a;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.1);
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --primary: #1e3a8a;
+  --primary-hover: #1e40af;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border: #e2e8f0;
+  --success: #0f766e;
+  --danger: #b91c1c;
+  --warning: #d97706;
 }
 
 * {
@@ -20,17 +20,6 @@
 body {
   font-family: "Inter", sans-serif;
   background: var(--bg-color);
-  background-image:
-    radial-gradient(
-      at 100% 0%,
-      rgba(59, 130, 246, 0.15) 0px,
-      transparent 50%
-    ),
-    radial-gradient(
-      at 0% 100%,
-      rgba(139, 92, 246, 0.15) 0px,
-      transparent 50%
-    );
   color: var(--text-main);
   min-height: 100vh;
   padding: 20px;
@@ -343,3 +332,33 @@ body {
     text-align: center;
   }
 }
+
+/* ============================
+   Global Form Input Overrides
+   (covers inline-styled inputs inside tab partials)
+   ============================ */
+
+/* Override ALL inputs/selects across admin dashboard */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select,
+textarea {
+  background: #ffffff !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border) !important;
+  font-family: "Inter", sans-serif;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.08) !important;
+  outline: none !important;
+}
+

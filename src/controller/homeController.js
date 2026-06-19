@@ -1,11 +1,19 @@
 import User from '../models/user';
 import CRUDService from '../services/CRUDService';
 
+import jwt from "jsonwebtoken";
+
 // Trang chủ
 let getHomePage = async (req, res) => {
   try {
-    let data = await User.find().lean();
-    return res.render('homepage.ejs', { data: JSON.stringify(data) });
+    let user = null;
+    if (req.cookies && req.cookies.accessToken) {
+      try {
+        user = jwt.verify(req.cookies.accessToken, process.env.ACCESS_TOKEN_SECRET);
+      } catch (err) {}
+    }
+    
+    return res.render('homepage.ejs', { user: user });
   } catch (e) {
     console.log(e);
   }

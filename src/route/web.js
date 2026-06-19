@@ -12,9 +12,7 @@ const authorize = require("../middlewares/auth.middleware").authorize;
 let router = express.Router();
 
 let initWebRoutes = (app) => {
-  router.get("/", (req, res) => {
-    return res.send("Chung cư Neet Paradise - Trang chủ");
-  });
+  router.get("/", homeController.getHomePage);
 
   router.get("/home", homeController.getHomePage);
   router.get("/about", homeController.getAboutPage);
