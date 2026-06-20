@@ -36,7 +36,7 @@ let initWebRoutes = (app) => {
         console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
         return res.redirect("/admin/dashboard");
       }
-      res.render("users/profile", { user: req.user });
+      res.render("users/dashboard", { user: req.user });
     },
   );
 

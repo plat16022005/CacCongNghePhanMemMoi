@@ -22,9 +22,19 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
-connectDB();
+const startServer = async () => {
+  try {
+    // Chờ kết nối MongoDB trước khi nhận request
+    await connectDB();
 
-let port = process.env.PORT || 6969;
-app.listen(port, () => {
-  console.log("Backend Nodejs is running on the port: " + port);
-});
+    let port = process.env.PORT || 6969;
+    app.listen(port, () => {
+      console.log("Backend Nodejs is running on the port: " + port);
+    });
+  } catch (error) {
+    console.error("❌ Không thể kết nối MongoDB. Server dừng lại:", error.message);
+    process.exit(1); // ✅ Dừng server nếu không kết nối được DB
+  }
+};
+
+startServer();

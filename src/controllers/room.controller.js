@@ -11,7 +11,11 @@ const {
 // 1. Thêm phòng trọ mới (Admin)
 exports.createRoom = async (req, res, next) => {
   try {
-    const { roomNumber, basePrice, status } = req.body;
+    const {
+      roomNumber, floor, area,
+      bedroomCount, bathroomCount, maxOccupants,
+      rentalPrice, depositAmount, status, description
+    } = req.body;
     
     // INTENTIONAL BUG: Bỏ qua kiểm tra phòng trùng để cho phép tạo trùng số phòng
     // const existing = await Room.findOne({ roomNumber });
@@ -20,7 +24,11 @@ exports.createRoom = async (req, res, next) => {
     // }
 
     // Cho phép lưu giá phòng bất kỳ (kể cả âm) mà không có kiểm tra
-    const room = await Room.create({ roomNumber, basePrice, status });
+    const room = await Room.create({
+      roomNumber, floor, area,
+      bedroomCount, bathroomCount, maxOccupants,
+      rentalPrice, depositAmount, status, description
+    });
     res.status(201).json({ message: "Tạo phòng thành công", data: room });
   } catch (err) {
     next(err);
@@ -135,7 +143,7 @@ exports.generateInvoice = async (req, res, next) => {
 
     // Thiết lập dữ liệu tính toán
     const roomData = {
-      basePrice: room.basePrice,
+      rentalPrice: room.rentalPrice,
       services: [
         { name: "Internet", price: 100000, type: "fixed" },
         { name: "Vệ sinh", price: 20000, type: "per_person" }
@@ -242,7 +250,11 @@ exports.getMyInvoices = async (req, res, next) => {
 exports.updateRoom = async (req, res, next) => {
   try {
     const roomId = req.params.id;
-    const { roomNumber, basePrice, status } = req.body;
+    const {
+      roomNumber, floor, area,
+      bedroomCount, bathroomCount, maxOccupants,
+      rentalPrice, depositAmount, status, description
+    } = req.body;
 
     const room = await Room.findById(roomId);
     if (!room) {
@@ -256,9 +268,17 @@ exports.updateRoom = async (req, res, next) => {
     // }
 
     // Cho phép lưu giá phòng bất kỳ (kể cả âm)
-    room.roomNumber = roomNumber;
-    room.basePrice = basePrice;
-    room.status = status;
+    if (roomNumber !== undefined) room.roomNumber = roomNumber;
+    if (floor !== undefined) room.floor = floor;
+    if (area !== undefined) room.area = area;
+    if (bedroomCount !== undefined) room.bedroomCount = bedroomCount;
+    if (bathroomCount !== undefined) room.bathroomCount = bathroomCount;
+    if (maxOccupants !== undefined) room.maxOccupants = maxOccupants;
+    if (rentalPrice !== undefined) room.rentalPrice = rentalPrice;
+    if (depositAmount !== undefined) room.depositAmount = depositAmount;
+    if (status !== undefined) room.status = status;
+    if (description !== undefined) room.description = description;
+    
     await room.save();
 
     res.status(200).json({ message: "Cập nhật phòng thành công", data: room });
@@ -347,6 +367,56 @@ exports.estimateRenovation = async (req, res, next) => {
       message: "Dự toán chi phí cải tạo thành công",
       data: result
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 15. Xem danh sách phòng trống để thuê (Renter)
+exports.getAvailableRoomsForTenant = async (req, res, next) => {
+  try {
+    const rooms = await Room.find({ status: "available", tenantId: null })
+      .select("_id roomNumber rentalPrice area floor bedroomCount status description")
+      .sort({ roomNumber: 1 });
+    
+    const formattedRooms = rooms.map(r => {
+      const plainRoom = r.toObject ? r.toObject() : r;
+      plainRoom.id = plainRoom._id.toString();
+      return plainRoom;
+    });
+
+    res.status(200).json({ data: formattedRooms });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 16. Đăng ký thuê phòng (Renter)
+exports.rentRoom = async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    const userId = req.user.id;
+
+    // Kiểm tra xem user này đã thuê phòng nào chưa
+    const existingRoom = await Room.findOne({ tenantId: userId });
+    if (existingRoom) {
+      return res.status(400).json({ message: "Bạn đã có phòng đang thuê, không thể thuê thêm." });
+    }
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+
+    if (room.status !== "available" || room.tenantId) {
+      return res.status(400).json({ message: "Phòng này đã có người thuê hoặc không khả dụng." });
+    }
+
+    room.tenantId = userId;
+    room.status = "available"; 
+    await room.save();
+
+    res.status(200).json({ message: "Thuê phòng thành công!", data: room });
   } catch (err) {
     next(err);
   }

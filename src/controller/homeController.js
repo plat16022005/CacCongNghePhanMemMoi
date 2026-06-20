@@ -7,10 +7,36 @@ import jwt from "jsonwebtoken";
 let getHomePage = async (req, res) => {
   try {
     let user = null;
-    if (req.cookies && req.cookies.accessToken) {
+    if (req.cookies && (req.cookies.accessToken || req.cookies.refreshToken)) {
       try {
-        user = jwt.verify(req.cookies.accessToken, process.env.ACCESS_TOKEN_SECRET);
-      } catch (err) {}
+        let token = req.cookies.accessToken;
+        if (!token) {
+           const authService = require('../services/auth.service');
+           const { newAccess, newRefresh } = await authService.refreshToken(req.cookies.refreshToken);
+           res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 15 * 60 * 1000 });
+           res.cookie("refreshToken", newRefresh, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+           token = newAccess;
+        }
+        user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      } catch (err) {
+         if (err.name === 'TokenExpiredError' && req.cookies.refreshToken) {
+           try {
+              const authService = require('../services/auth.service');
+              const { newAccess, newRefresh } = await authService.refreshToken(req.cookies.refreshToken);
+              res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 15 * 60 * 1000 });
+              res.cookie("refreshToken", newRefresh, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+              user = jwt.verify(newAccess, process.env.ACCESS_TOKEN_SECRET);
+           } catch(e) {}
+         }
+      }
+    }
+    
+    if (user) {
+      if (user.role === "admin") {
+        return res.redirect("/admin/dashboard");
+      } else {
+        return res.render("users/dashboard", { user: user });
+      }
     }
     
     return res.render('homepage.ejs', { user: user });

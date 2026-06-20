@@ -4,6 +4,10 @@ const roomCtrl = require("../controllers/room.controller");
 const { verifyTokenLogin, authorize } = require("../middlewares/auth.middleware");
 
 // --- API CHO RENTER (KHÁCH TRỌ) ---
+// Xem danh sách phòng trống
+router.get("/available", verifyTokenLogin, authorize("user"), roomCtrl.getAvailableRoomsForTenant);
+// Đăng ký thuê phòng
+router.post("/:id/rent", verifyTokenLogin, authorize("user"), roomCtrl.rentRoom);
 // Xem phòng của mình
 router.get("/my-room", verifyTokenLogin, authorize("user"), roomCtrl.getMyRoom);
 // Xem hóa đơn của mình

@@ -1,5 +1,31 @@
 const jwt = require("jsonwebtoken");
+const authService = require("../services/auth.service");
 require("dotenv").config();
+
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: "strict",
+  secure: process.env.NODE_ENV === "production",
+};
+
+// Hàm hỗ trợ tự động refresh token
+const handleAutoRefresh = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) throw new Error("No refresh token");
+
+  const { newAccess, newRefresh } = await authService.refreshToken(refreshToken);
+  
+  res.cookie("accessToken", newAccess, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000,
+  });
+  res.cookie("refreshToken", newRefresh, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return jwt.verify(newAccess, process.env.ACCESS_TOKEN_SECRET);
+};
 
 exports.verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -22,25 +48,34 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
-exports.verifyTokenLogin = (req, res, next) => {
+exports.verifyTokenLogin = async (req, res, next) => {
   try {
-    // 1. Kiểm tra xem cookie-parser có hoạt động không
-    const token = req.cookies.accessToken;
+    let token = req.cookies.accessToken;
 
     if (!token) {
-      console.log("Không tìm thấy accessToken trong Cookie");
-      return res.status(401).json({ message: "❌ Phiên đăng nhập hết hạn" });
+      console.log("Không tìm thấy accessToken trong Cookie, đang thử auto-refresh...");
+      const decoded = await handleAutoRefresh(req, res);
+      req.user = decoded;
+      return next();
     }
 
-    // 2. Dùng thư viện jwt để verify
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-    // 3. Gán user vào request
-    req.user = decoded;
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      req.user = decoded;
+      next();
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        console.log("AccessToken hết hạn, đang thử auto-refresh...");
+        const decoded = await handleAutoRefresh(req, res);
+        req.user = decoded;
+        return next();
+      } else {
+        throw err;
+      }
+    }
   } catch (err) {
     console.error("JWT Verify Error:", err.message);
-    return res.status(401).json({ message: "❌ Token không hợp lệ" }); // Trả về 401 để khớp với logic Frontend
+    return res.status(401).json({ message: "❌ Phiên đăng nhập hết hạn" });
   }
 };
 
@@ -53,18 +88,31 @@ exports.authorize =
     next();
   };
 
-exports.verifyTokenLoginView = (req, res, next) => {
+exports.verifyTokenLoginView = async (req, res, next) => {
   try {
-    const token = req.cookies.accessToken;
+    let token = req.cookies.accessToken;
 
     if (!token) {
-      console.log("Không tìm thấy accessToken trong Cookie, chuyển hướng về /login");
-      return res.redirect("/login");
+      console.log("Không tìm thấy accessToken trong Cookie, đang thử auto-refresh...");
+      const decoded = await handleAutoRefresh(req, res);
+      req.user = decoded;
+      return next();
     }
 
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    req.user = decoded;
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      req.user = decoded;
+      next();
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        console.log("AccessToken hết hạn, đang thử auto-refresh...");
+        const decoded = await handleAutoRefresh(req, res);
+        req.user = decoded;
+        return next();
+      } else {
+        throw err;
+      }
+    }
   } catch (err) {
     console.error("JWT Verify Error in View:", err.message);
     return res.redirect("/login");

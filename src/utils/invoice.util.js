@@ -129,7 +129,7 @@ function calculateMonthlyInvoice(room, usage, tenant) {
     throw new Error("Dữ liệu đầu vào không hợp lệ");
   }
 
-  let basePrice = Number(room.basePrice) || 0;
+  let basePrice = Number(room.rentalPrice) || 0;
   let lateDays = Number(usage.lateDays) || 0;
 
   // 1. Tiền phòng & phạt trễ hạn (Nhánh tính phạt có BUG 1)

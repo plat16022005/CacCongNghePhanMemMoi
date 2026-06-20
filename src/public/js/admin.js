@@ -144,14 +144,17 @@ async function loadRooms() {
       }
 
       // Thêm nút Sửa và Xóa cho mọi phòng
+      // Lấy toàn bộ thông tin phòng để truyền vào hàm sửa
+      const roomJson = encodeURIComponent(JSON.stringify(room));
       actions += `
-        <button onclick="showEditRoom('${room.id}', '${room.roomNumber}', ${room.basePrice}, '${room.status}')" style="padding: 6px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); border-radius: 6px; cursor: pointer; margin-right: 8px;">Sửa</button>
+        <button onclick="showViewRoom('${roomJson}')" style="padding: 6px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; cursor: pointer; margin-right: 8px;">Chi tiết</button>
+        <button onclick="showEditRoom('${roomJson}')" style="padding: 6px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); border-radius: 6px; cursor: pointer; margin-right: 8px;">Sửa</button>
         <button onclick="deleteRoom('${room.id}')" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer;">Xóa</button>
       `;
 
       tr.innerHTML = `
         <td style="padding: 12px; font-weight: 600;">Phòng ${room.roomNumber}</td>
-        <td style="padding: 12px;">${Number(room.basePrice).toLocaleString()} VND</td>
+        <td style="padding: 12px;">${Number(room.rentalPrice).toLocaleString()} VND</td>
         <td style="padding: 12px;">${statusBadge}</td>
         <td style="padding: 12px;">${tenantInfo}</td>
         <td style="padding: 12px;">${actions}</td>
@@ -167,14 +170,25 @@ async function loadRooms() {
 async function handleCreateRoom(e) {
   e.preventDefault();
   const roomNumber = document.getElementById("newRoomNumber").value;
-  const basePrice = document.getElementById("newRoomBasePrice").value;
+  const floor = document.getElementById("newFloor").value;
+  const area = document.getElementById("newArea").value;
+  const bedroomCount = document.getElementById("newBedroomCount").value;
+  const bathroomCount = document.getElementById("newBathroomCount").value;
+  const maxOccupants = document.getElementById("newMaxOccupants").value;
+  const rentalPrice = document.getElementById("newRentalPrice").value;
+  const depositAmount = document.getElementById("newDepositAmount").value;
   const status = document.getElementById("newRoomStatus").value;
+  const description = document.getElementById("newDescription").value;
 
   try {
     const res = await fetch("/api/rooms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomNumber, basePrice, status }),
+      body: JSON.stringify({
+        roomNumber, floor, area,
+        bedroomCount, bathroomCount, maxOccupants,
+        rentalPrice, depositAmount, status, description
+      }),
       credentials: "include",
     });
 
@@ -194,6 +208,8 @@ async function showAssignTenant(roomId, roomNumber) {
   document.getElementById("assignRoomNumber").textContent = roomNumber;
   document.getElementById("assignTenantSection").style.display = "block";
   document.getElementById("invoiceSection").style.display = "none";
+  if (document.getElementById("editRoomSection")) document.getElementById("editRoomSection").style.display = "none";
+  if (document.getElementById("viewRoomSection")) document.getElementById("viewRoomSection").style.display = "none";
 
   try {
     const res = await fetch("/api/rooms/available-tenants", {
@@ -276,17 +292,46 @@ function cancelAssign() {
   document.getElementById("assignTenantSection").style.display = "none";
 }
 
-function showEditRoom(roomId, roomNumber, basePrice, status) {
-  document.getElementById("editRoomId").value = roomId;
-  document.getElementById("editRoomNumberHeader").textContent =
-    roomNumber;
-  document.getElementById("editRoomNumber").value = roomNumber;
-  document.getElementById("editRoomBasePrice").value = basePrice;
-  document.getElementById("editRoomStatus").value = status;
+function showEditRoom(roomJson) {
+  const room = JSON.parse(decodeURIComponent(roomJson));
+  document.getElementById("editRoomObjId").value = room.id;
+  document.getElementById("editRoomNumberHeader").textContent = room.roomNumber;
+  document.getElementById("editRoomNumber").value = room.roomNumber || "";
+  document.getElementById("editFloor").value = room.floor || "";
+  document.getElementById("editArea").value = room.area || "";
+  document.getElementById("editBedroomCount").value = room.bedroomCount || "";
+  document.getElementById("editBathroomCount").value = room.bathroomCount || "";
+  document.getElementById("editMaxOccupants").value = room.maxOccupants || "";
+  document.getElementById("editRentalPrice").value = room.rentalPrice || "";
+  document.getElementById("editDepositAmount").value = room.depositAmount || "";
+  document.getElementById("editRoomStatus").value = room.status || "available";
+  document.getElementById("editDescription").value = room.description || "";
 
   document.getElementById("editRoomSection").style.display = "block";
   document.getElementById("assignTenantSection").style.display = "none";
   document.getElementById("invoiceSection").style.display = "none";
+  if (document.getElementById("viewRoomSection")) document.getElementById("viewRoomSection").style.display = "none";
+}
+
+function showViewRoom(roomJson) {
+  const room = JSON.parse(decodeURIComponent(roomJson));
+  document.getElementById("viewRoomNumberHeader").textContent = room.roomNumber || "";
+  document.getElementById("viewFloor").textContent = room.floor || "Chưa cập nhật";
+  document.getElementById("viewArea").textContent = room.area || "Chưa cập nhật";
+  document.getElementById("viewBedroomCount").textContent = room.bedroomCount || "Chưa cập nhật";
+  document.getElementById("viewBathroomCount").textContent = room.bathroomCount || "Chưa cập nhật";
+  document.getElementById("viewMaxOccupants").textContent = room.maxOccupants || "Chưa cập nhật";
+  document.getElementById("viewDepositAmount").textContent = room.depositAmount ? Number(room.depositAmount).toLocaleString() : "Chưa cập nhật";
+  document.getElementById("viewDescription").textContent = room.description || "Không có mô tả";
+
+  document.getElementById("viewRoomSection").style.display = "block";
+  document.getElementById("editRoomSection").style.display = "none";
+  document.getElementById("assignTenantSection").style.display = "none";
+  document.getElementById("invoiceSection").style.display = "none";
+}
+
+function closeViewRoom() {
+  document.getElementById("viewRoomSection").style.display = "none";
 }
 
 function cancelEditRoom() {
@@ -295,16 +340,27 @@ function cancelEditRoom() {
 
 async function submitEditRoom(e) {
   e.preventDefault();
-  const roomId = document.getElementById("editRoomId").value;
+  const objId = document.getElementById("editRoomObjId").value;
   const roomNumber = document.getElementById("editRoomNumber").value;
-  const basePrice = document.getElementById("editRoomBasePrice").value;
+  const floor = document.getElementById("editFloor").value;
+  const area = document.getElementById("editArea").value;
+  const bedroomCount = document.getElementById("editBedroomCount").value;
+  const bathroomCount = document.getElementById("editBathroomCount").value;
+  const maxOccupants = document.getElementById("editMaxOccupants").value;
+  const rentalPrice = document.getElementById("editRentalPrice").value;
+  const depositAmount = document.getElementById("editDepositAmount").value;
   const status = document.getElementById("editRoomStatus").value;
+  const description = document.getElementById("editDescription").value;
 
   try {
-    const res = await fetch(`/api/rooms/${roomId}`, {
+    const res = await fetch(`/api/rooms/${objId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomNumber, basePrice, status }),
+      body: JSON.stringify({
+        roomNumber, floor, area,
+        bedroomCount, bathroomCount, maxOccupants,
+        rentalPrice, depositAmount, status, description
+      }),
       credentials: "include",
     });
 
@@ -350,6 +406,8 @@ function showCalculateInvoice(roomId, roomNumber) {
   document.getElementById("invoiceSection").style.display = "block";
   document.getElementById("assignTenantSection").style.display = "none";
   document.getElementById("invoiceResultSection").style.display = "none";
+  if (document.getElementById("editRoomSection")) document.getElementById("editRoomSection").style.display = "none";
+  if (document.getElementById("viewRoomSection")) document.getElementById("viewRoomSection").style.display = "none";
 }
 
 function toggleVehicleInput() {

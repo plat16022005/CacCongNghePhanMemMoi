@@ -491,7 +491,7 @@
           document.getElementById("hasRoomSection").style.display = "block";
           
           document.getElementById("myRoomNumber").textContent = room.roomNumber;
-          document.getElementById("myRoomPrice").textContent = Number(room.basePrice).toLocaleString();
+          document.getElementById("myRoomPrice").textContent = Number(room.rentalPrice).toLocaleString();
           
           let statusText = "Hoạt động";
           if (room.status === "maintenance") statusText = "Đang bảo trì";

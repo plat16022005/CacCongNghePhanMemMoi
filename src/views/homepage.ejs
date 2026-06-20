@@ -736,7 +736,7 @@
             <a href="#guide">Hướng dẫn</a>
             <a href="#contact">Liên hệ</a>
             <% if (locals.user) { %>
-                <a href="/profile" class="btn-login">Hồ sơ của tôi</a>
+                <a href="/dashboard" class="btn-login">Hồ sơ của tôi</a>
                 <% } else { %>
                     <a href="/login" class="btn-login">Đăng nhập</a>
                     <% } %>
@@ -754,7 +754,7 @@
                 một nơi, nhanh chóng và tiện lợi.</p>
             <div class="hero-btns">
                 <% if (locals.user) { %>
-                    <a href="/profile" class="btn-primary">Xem hóa đơn của tôi →</a>
+                    <a href="/dashboard" class="btn-primary">Xem hóa đơn của tôi →</a>
                     <% } else { %>
                         <a href="/login" class="btn-primary">Đăng nhập ngay →</a>
                         <a href="/register" class="btn-secondary">Tạo tài khoản</a>

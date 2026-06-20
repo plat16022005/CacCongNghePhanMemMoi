@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cổng thông tin Người thuê – Neet Paradise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --navy: #0f2d6b;
+            --navy2: #1e3a8a;
+            --teal: #0d9488;
+            --teal-bg: #f0fdfa;
+            --blue-bg: #eff6ff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+            --white: #fff;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* NAVBAR */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--navy2), var(--teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-greeting {
+            font-weight: 600;
+            color: var(--navy2);
+            font-size: 15px;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 6%;
+        }
+
+        .section-header {
+            margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        .section-header p {
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        /* BENTO GRID - AVAILABLE ROOMS */
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .room-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .room-card:hover {
+            box-shadow: 0 12px 24px rgba(15, 45, 107, 0.08);
+            border-color: var(--teal);
+            transform: translateY(-4px);
+        }
+
+        .room-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--teal), var(--navy2));
+        }
+
+        .room-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .room-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 16px;
+        }
+
+        .btn-rent {
+            width: 100%;
+            padding: 12px;
+            background: var(--navy2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-rent:hover {
+            background: var(--navy);
+        }
+
+        /* MY ROOM DASHBOARD */
+        .my-room-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .dashboard-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .info-label {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: var(--navy);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* INVOICE TABLE */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--bg);
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-unpaid {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* SPINNER & MESSAGES */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .my-room-dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-box">🏠</div>
+            <span class="logo-text">Neet Paradise</span>
+        </a>
+        <div class="nav-right">
+            <div class="user-greeting" id="userGreeting">Xin chào, <%= locals.user ? locals.user.name : 'Khách' %></div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertMessage" class="alert"></div>
+
+        <!-- VIEW: CHƯA CÓ PHÒNG (THUÊ PHÒNG) -->
+        <div id="viewNoRoom" style="display: none;">
+            <div class="section-header">
+                <h2>👋 Chào mừng bạn đến với Neet Paradise!</h2>
+                <p>Có vẻ như bạn chưa thuê phòng nào. Dưới đây là danh sách các phòng đang trống, hãy chọn cho mình một căn phòng ưng ý nhé.</p>
+            </div>
+            <div class="room-grid" id="availableRoomsGrid">
+                <div class="loading">Đang tải danh sách phòng...</div>
+            </div>
+        </div>
+
+        <!-- VIEW: ĐÃ CÓ PHÒNG (DASHBOARD) -->
+        <div id="viewHasRoom" style="display: none;">
+            <div class="section-header">
+                <h2>🏠 Tổng quan Căn hộ của bạn</h2>
+                <p>Theo dõi thông tin phòng và lịch sử hóa đơn thanh toán hàng tháng.</p>
+            </div>
+            
+            <div class="my-room-dashboard">
+                <!-- THÔNG TIN PHÒNG -->
+                <div class="dashboard-card">
+                    <div class="card-title">✨ Thông tin Căn hộ</div>
+                    <div class="info-row">
+                        <span class="info-label">Số phòng</span>
+                        <span class="info-value" id="myRoomNumber">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tầng</span>
+                        <span class="info-value" id="myRoomFloor">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Diện tích</span>
+                        <span class="info-value" id="myRoomArea">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Số phòng ngủ</span>
+                        <span class="info-value" id="myRoomBedrooms">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Số phòng tắm</span>
+                        <span class="info-value" id="myRoomBathrooms">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Số người tối đa</span>
+                        <span class="info-value" id="myRoomMaxOccupants">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Giá thuê cơ bản</span>
+                        <span class="info-value" style="color: var(--teal);" id="myRoomPrice">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tiền cọc</span>
+                        <span class="info-value" id="myRoomDeposit">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Trạng thái</span>
+                        <span class="info-value">Đang sử dụng</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mô tả</span>
+                        <span class="info-value" id="myRoomDescription" style="max-width: 60%; text-align: right; overflow-wrap: break-word;">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Liên hệ quản lý</span>
+                        <span class="info-value">admin@neetparadise.com</span>
+                    </div>
+                </div>
+
+                <!-- LỊCH SỬ HÓA ĐƠN -->
+                <div class="dashboard-card" style="padding: 0; overflow: hidden;">
+                    <div class="card-title" style="padding: 24px 24px 0;">🧾 Lịch sử Hóa đơn</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kỳ thu</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hạn nộp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceTableBody">
+                                <tr>
+                                    <td colspan="4" class="loading">Đang tải hóa đơn...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL XEM CHI TIẾT PHÒNG -->
+        <div id="roomDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: var(--white); width: 90%; max-width: 600px; border-radius: 16px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;">
+                <button onclick="closeRoomDetail()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--muted); line-height: 1;">&times;</button>
+                <h3 style="font-size: 24px; font-weight: 800; color: var(--navy); margin-bottom: 20px;">Chi tiết Phòng <span id="modalRoomNumber"></span></h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div class="info-row"><span class="info-label">Tầng</span><span class="info-value" id="modalFloor"></span></div>
+                    <div class="info-row"><span class="info-label">Diện tích</span><span class="info-value" id="modalArea"></span></div>
+                    <div class="info-row"><span class="info-label">Số phòng ngủ</span><span class="info-value" id="modalBedrooms"></span></div>
+                    <div class="info-row"><span class="info-label">Số phòng tắm</span><span class="info-value" id="modalBathrooms"></span></div>
+                    <div class="info-row"><span class="info-label">Số người tối đa</span><span class="info-value" id="modalMaxOccupants"></span></div>
+                    <div class="info-row"><span class="info-label">Giá thuê</span><span class="info-value" style="color: var(--teal);" id="modalPrice"></span></div>
+                    <div class="info-row"><span class="info-label">Tiền cọc</span><span class="info-value" id="modalDeposit"></span></div>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <strong style="color: var(--navy); display: block; margin-bottom: 8px;">Mô tả chi tiết:</strong>
+                    <p id="modalDescription" style="color: var(--muted); font-size: 15px; line-height: 1.6;"></p>
+                </div>
+                
+                <button class="btn-rent" id="modalRentBtn">Thuê phòng này</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        function showAlert(message, type) {
+            const alertEl = document.getElementById('alertMessage');
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.style.display = 'block';
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 4000);
+        }
+
+        async function initDashboard() {
+            try {
+                // 1. Kiểm tra phòng của user
+                const roomRes = await fetch("/api/rooms/my-room", { credentials: "include" });
+                if (!roomRes.ok) throw new Error("Failed to fetch my room");
+                const roomResult = await roomRes.json();
+                
+                if (roomResult.data && roomResult.data.roomNumber) {
+                    // ĐÃ CÓ PHÒNG
+                    document.getElementById('viewNoRoom').style.display = 'none';
+                    document.getElementById('viewHasRoom').style.display = 'block';
+                    
+                    document.getElementById('myRoomNumber').textContent = roomResult.data.roomNumber;
+                    document.getElementById('myRoomFloor').textContent = roomResult.data.floor || '--';
+                    document.getElementById('myRoomArea').textContent = (roomResult.data.area || '--') + ' m²';
+                    document.getElementById('myRoomBedrooms').textContent = roomResult.data.bedroomCount || '--';
+                    document.getElementById('myRoomBathrooms').textContent = roomResult.data.bathroomCount || '--';
+                    document.getElementById('myRoomMaxOccupants').textContent = roomResult.data.maxOccupants || '--';
+                    document.getElementById('myRoomPrice').textContent = Number(roomResult.data.rentalPrice).toLocaleString() + ' đ';
+                    document.getElementById('myRoomDeposit').textContent = roomResult.data.depositAmount ? Number(roomResult.data.depositAmount).toLocaleString() + ' đ' : '--';
+                    document.getElementById('myRoomDescription').textContent = roomResult.data.description || 'Không có mô tả';
+                    
+                    // Load hóa đơn
+                    loadInvoices();
+                } else {
+                    // CHƯA CÓ PHÒNG -> Hiển thị phòng trống
+                    document.getElementById('viewHasRoom').style.display = 'none';
+                    document.getElementById('viewNoRoom').style.display = 'block';
+                    
+                    loadAvailableRooms();
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert("Đã có lỗi xảy ra khi tải dữ liệu.", "error");
+            }
+        }
+
+        async function loadAvailableRooms() {
+            try {
+                const res = await fetch("/api/rooms/available", { credentials: "include" });
+                const result = await res.json();
+                const grid = document.getElementById('availableRoomsGrid');
+                
+                if (!result.data || result.data.length === 0) {
+                    grid.innerHTML = '<div class="loading">Hiện tại không có phòng nào trống. Vui lòng quay lại sau!</div>';
+                    return;
+                }
+
+                grid.innerHTML = result.data.map(room => {
+                    const roomJson = encodeURIComponent(JSON.stringify(room));
+                    return `
+                    <div class="room-card">
+                        <div class="room-title">
+                            Phòng ${room.roomNumber}
+                            <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; background: var(--teal-bg); color: var(--teal); border-radius: 20px;">Trống</span>
+                        </div>
+                        <div class="room-price">${Number(room.rentalPrice).toLocaleString()} đ/tháng</div>
+                        <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">
+                            ${room.area ? room.area + ' m²' : '-- m²'} • Tầng ${room.floor || '--'} • ${room.bedroomCount || 1} PN<br/>
+                            ${room.description || 'Phòng thoáng mát, an ninh tốt, tiện ích đầy đủ.'}
+                        </p>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-rent" style="flex: 1; background: var(--white); color: var(--navy2); border: 1px solid var(--navy2);" onclick="viewRoomDetail('${roomJson}')">Xem chi tiết</button>
+                            <button class="btn-rent" style="flex: 1;" onclick="rentRoom('${room.id}', '${room.roomNumber}')">Thuê ngay</button>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('availableRoomsGrid').innerHTML = '<div class="loading">Lỗi khi tải danh sách phòng.</div>';
+            }
+        }
+
+        async function rentRoom(roomId, roomNumber) {
+            if (!confirm(`Bạn có chắc chắn muốn thuê Phòng ${roomNumber} không?`)) return;
+
+            try {
+                const res = await fetch(`/api/rooms/${roomId}/rent`, {
+                    method: "POST",
+                    credentials: "include"
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.message || "Thuê phòng thất bại!", "error");
+                    return;
+                }
+
+                showAlert(`Thuê thành công Phòng ${roomNumber}!`, "success");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } catch (err) {
+                console.error(err);
+                showAlert("Lỗi kết nối máy chủ.", "error");
+            }
+        }
+
+        function viewRoomDetail(roomJson) {
+            const room = JSON.parse(decodeURIComponent(roomJson));
+            document.getElementById('modalRoomNumber').textContent = room.roomNumber;
+            document.getElementById('modalFloor').textContent = room.floor || '--';
+            document.getElementById('modalArea').textContent = room.area ? room.area + ' m²' : '--';
+            document.getElementById('modalBedrooms').textContent = room.bedroomCount || '--';
+            document.getElementById('modalBathrooms').textContent = room.bathroomCount || '--';
+            document.getElementById('modalMaxOccupants').textContent = room.maxOccupants || '--';
+            document.getElementById('modalPrice').textContent = Number(room.rentalPrice).toLocaleString() + ' đ/tháng';
+            document.getElementById('modalDeposit').textContent = room.depositAmount ? Number(room.depositAmount).toLocaleString() + ' đ' : '--';
+            document.getElementById('modalDescription').textContent = room.description || 'Chưa có mô tả.';
+            
+            document.getElementById('modalRentBtn').onclick = () => {
+                closeRoomDetail();
+                rentRoom(room.id, room.roomNumber);
+            };
+            
+            document.getElementById('roomDetailModal').style.display = 'flex';
+        }
+
+        function closeRoomDetail() {
+            document.getElementById('roomDetailModal').style.display = 'none';
+        }
+
+        async function loadInvoices() {
+            try {
+                const res = await fetch("/api/rooms/my-invoices", { credentials: "include" });
+                const result = await res.json();
+                const tbody = document.getElementById('invoiceTableBody');
+
+                if (!result.data || result.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="loading">Chưa có hóa đơn nào được tạo.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = result.data.map(inv => {
+                    const isPaid = inv.status === 'paid';
+                    const badgeClass = isPaid ? 'status-paid' : 'status-unpaid';
+                    const badgeText = isPaid ? 'Đã thanh toán' : 'Chưa thanh toán';
+                    
+                    return `
+                    <tr>
+                        <td style="font-weight: 600; color: var(--navy);">${inv.month}</td>
+                        <td style="font-weight: 700;">${Number(inv.totalBill).toLocaleString()} đ</td>
+                        <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
+                        <td style="color: var(--muted);">Mùng 5 hàng tháng</td>
+                    </tr>
+                `}).join('');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('invoiceTableBody').innerHTML = '<tr><td colspan="4" class="loading">Lỗi tải hóa đơn.</td></tr>';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                window.location.href = "/login";
+            } catch (error) {
+                console.error(error);
+                alert("Lỗi kết nối!");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,24 +2,17 @@ const mongoose = require("mongoose");
 
 const roomSchema = new mongoose.Schema(
   {
-    roomNumber: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    basePrice: {
-      type: Number,
-      required: true
-    },
-    status: {
-      type: String,
-      default: "available"
-    },
-    tenantId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    }
+    roomNumber: { type: String, required: true, unique: true },
+    floor: { type: Number, default: 1 },
+    area: { type: Number, default: 0 },
+    bedroomCount: { type: Number, default: 1 },
+    bathroomCount: { type: Number, default: 1 },
+    maxOccupants: { type: Number, default: 2 },
+    rentalPrice: { type: Number, required: true },
+    depositAmount: { type: Number, default: 0 },
+    status: { type: String, enum: ['available', 'occupied', 'maintenance'], default: "available" },
+    description: { type: String, default: "" },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
   },
   {
     timestamps: true,
