@@ -17,17 +17,15 @@ exports.createRoom = async (req, res, next) => {
       rentalPrice, depositAmount, status, description
     } = req.body;
     
-    // INTENTIONAL BUG: Bỏ qua kiểm tra phòng trùng để cho phép tạo trùng số phòng
-    // const existing = await Room.findOne({ roomNumber });
-    // if (existing) {
-    //   return res.status(400).json({ message: "Số phòng đã tồn tại" });
-    // }
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => file.path);
+    }
 
-    // Cho phép lưu giá phòng bất kỳ (kể cả âm) mà không có kiểm tra
     const room = await Room.create({
       roomNumber, floor, area,
       bedroomCount, bathroomCount, maxOccupants,
-      rentalPrice, depositAmount, status, description
+      rentalPrice, depositAmount, status, description, images
     });
     res.status(201).json({ message: "Tạo phòng thành công", data: room });
   } catch (err) {
@@ -261,13 +259,12 @@ exports.updateRoom = async (req, res, next) => {
       return res.status(404).json({ message: "Phòng trọ không tồn tại" });
     }
 
-    // INTENTIONAL BUG: Bỏ qua kiểm tra trùng số phòng khi đổi tên/số phòng của phòng khác
-    // const existing = await Room.findOne({ roomNumber, _id: { $ne: roomId } });
-    // if (existing) {
-    //   return res.status(400).json({ message: "Số phòng đã tồn tại" });
-    // }
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(file => file.path);
+      // Gộp ảnh mới vào mảng ảnh cũ (có thể cải thiện xóa ảnh cũ nếu muốn)
+      room.images = [...(room.images || []), ...newImages];
+    }
 
-    // Cho phép lưu giá phòng bất kỳ (kể cả âm)
     if (roomNumber !== undefined) room.roomNumber = roomNumber;
     if (floor !== undefined) room.floor = floor;
     if (area !== undefined) room.area = area;
@@ -412,11 +409,91 @@ exports.rentRoom = async (req, res, next) => {
       return res.status(400).json({ message: "Phòng này đã có người thuê hoặc không khả dụng." });
     }
 
-    room.tenantId = userId;
-    room.status = "available"; 
-    await room.save();
+    // Kiểm tra xem user đã nộp đơn cho phòng nào đang pending chưa
+    const { RentalApplication } = require("../models");
+    const existingApp = await RentalApplication.findOne({ tenantId: userId, status: "pending" });
+    if (existingApp) {
+      return res.status(400).json({ message: "Bạn đã có đơn thuê phòng đang chờ duyệt." });
+    }
 
-    res.status(200).json({ message: "Thuê phòng thành công!", data: room });
+    // Lấy thông tin user gửi lên từ form
+    const { name, cccdNumber, dob, phoneNumber, address, gender } = req.body;
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (cccdNumber) updateData.cccdNumber = cccdNumber;
+    if (dob) updateData.dob = dob;
+    if (phoneNumber) updateData.phoneNumber = phoneNumber;
+    if (address) updateData.address = address;
+    if (gender) updateData.gender = gender;
+    const { occupation } = req.body;
+    if (occupation) updateData.occupation = occupation;
+
+    // Xử lý file ảnh CCCD cho người thuê chính (vì dùng .any() nên req.files là một mảng)
+    if (req.files && Array.isArray(req.files)) {
+      const frontFile = req.files.find(f => f.fieldname === 'cccdFront');
+      if (frontFile) updateData.cccdFrontImage = frontFile.path;
+
+      const backFile = req.files.find(f => f.fieldname === 'cccdBack');
+      if (backFile) updateData.cccdBackImage = backFile.path;
+    }
+
+    // Cập nhật thông tin User
+    const { User } = require("../models");
+    await User.findByIdAndUpdate(userId, { $set: updateData });
+
+    // Trích xuất thông tin người ở ghép (members) từ req.body và req.files
+    const members = [];
+    for (let i = 0; i < room.maxOccupants; i++) {
+      if (req.body[`members[${i}][name]`] || req.body[`members[${i}][cccdNumber]`]) {
+        const member = {
+          name: req.body[`members[${i}][name]`],
+          phoneNumber: req.body[`members[${i}][phoneNumber]`],
+          cccdNumber: req.body[`members[${i}][cccdNumber]`],
+          dob: req.body[`members[${i}][dob]`],
+          occupation: req.body[`members[${i}][occupation]`]
+        };
+
+        if (req.files && Array.isArray(req.files)) {
+          const mFrontFile = req.files.find(f => f.fieldname === `members[${i}][cccdFront]`);
+          if (mFrontFile) member.cccdFrontImage = mFrontFile.path;
+
+          const mBackFile = req.files.find(f => f.fieldname === `members[${i}][cccdBack]`);
+          if (mBackFile) member.cccdBackImage = mBackFile.path;
+        }
+
+        members.push(member);
+      }
+    }
+
+    // Tạo đơn thuê
+    const application = await RentalApplication.create({
+      tenantId: userId,
+      roomId: roomId,
+      members: members,
+      status: "pending"
+    });
+
+    res.status(200).json({ message: "Đã nộp đơn thuê thành công! Vui lòng chờ Ban quản lý duyệt.", data: application });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 17. Lấy chi tiết một phòng trọ cụ thể
+exports.getRoomById = async (req, res, next) => {
+  try {
+    const room = await Room.findById(req.params.id).populate({ path: "tenant", select: "_id name email" });
+    if (!room) {
+      return res.status(404).json({ message: "Phòng trọ không tồn tại" });
+    }
+    
+    const plainRoom = room.toObject ? room.toObject() : room;
+    plainRoom.id = plainRoom._id.toString();
+    if (plainRoom.tenant) {
+      plainRoom.tenant.id = plainRoom.tenant._id.toString();
+    }
+    
+    res.status(200).json({ data: plainRoom });
   } catch (err) {
     next(err);
   }

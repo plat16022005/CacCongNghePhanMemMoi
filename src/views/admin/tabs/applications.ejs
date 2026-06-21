@@ -1,0 +1,68 @@
+<div id="applicationsTab" style="display: none;">
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2>📝 Duyệt Đơn Thuê Phòng</h2>
+    <button onclick="loadApplications()" class="logout-btn" style="width: auto; padding: 8px 16px; margin: 0; background: var(--teal); color: white; border: none;">
+      🔄 Làm mới
+    </button>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Người nộp đơn</th>
+        <th>Phòng</th>
+        <th>Ngày nộp</th>
+        <th>Trạng thái</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody id="applicationsTableBody">
+      <tr><td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Nhấn "Làm mới" để tải danh sách đơn thuê</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal chi tiết đơn -->
+<div id="applicationModal" class="modal">
+  <div class="modal-content" style="max-width: 700px;">
+    <h2>Chi tiết Đơn Thuê</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+      <div>
+        <h4 style="color: var(--teal); margin-bottom: 12px;">Thông tin khách hàng</h4>
+        <p><strong>Họ tên:</strong> <span id="appUserName"></span></p>
+        <p><strong>SĐT:</strong> <span id="appUserPhone"></span></p>
+        <p><strong>CCCD:</strong> <span id="appUserCccd"></span></p>
+        <p><strong>Ngày sinh:</strong> <span id="appUserDob"></span></p>
+      </div>
+      <div>
+        <h4 style="color: var(--teal); margin-bottom: 12px;">Thông tin phòng</h4>
+        <p><strong>Phòng:</strong> <span id="appRoomNumber"></span></p>
+        <p><strong>Giá thuê:</strong> <span id="appRoomPrice"></span> VNĐ</p>
+        <p><strong>Tầng / Diện tích:</strong> <span id="appRoomInfo"></span></p>
+      </div>
+    </div>
+
+    <h4 style="color: var(--teal); margin-top: 24px; margin-bottom: 12px;">🪪 Ảnh Căn Cước Công Dân</h4>
+    <div style="display: flex; gap: 16px;">
+      <div style="flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; padding: 8px;">
+        <p style="text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Mặt Trước</p>
+        <img id="appCccdFront" src="" style="width: 100%; height: 200px; object-fit: contain; background: #f8fafc;" alt="CCCD Mặt Trước">
+      </div>
+      <div style="flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; padding: 8px;">
+        <p style="text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Mặt Sau</p>
+        <img id="appCccdBack" src="" style="width: 100%; height: 200px; object-fit: contain; background: #f8fafc;" alt="CCCD Mặt Sau">
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 16px; margin-top: 24px; justify-content: flex-end;">
+      <button onclick="closeModal('applicationModal')" class="logout-btn" style="width: auto; margin: 0;">Đóng</button>
+      <button id="btnRejectApp" class="logout-btn" style="width: auto; margin: 0; background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger);">❌ Từ chối</button>
+      <button id="btnApproveApp" class="logout-btn" style="width: auto; margin: 0; background: var(--teal); color: white; border: none;">✅ Duyệt (Yêu cầu nộp cọc)</button>
+      <button id="btnConfirmDeposit" class="logout-btn" style="width: auto; margin: 0; background: var(--navy); color: white; border: none; display: none;">💰 Xác nhận đã thu cọc & Gán phòng</button>
+    </div>
+  </div>
+</div>
+</div>
+

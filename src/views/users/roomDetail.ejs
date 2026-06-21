@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chi tiết Phòng – Neet Paradise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --navy: #0f2d6b;
+            --navy2: #1e3a8a;
+            --teal: #0d9488;
+            --teal-bg: #f0fdfa;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+            --white: #fff;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--navy2), var(--teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--navy2);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .back-btn:hover {
+            color: var(--navy);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 6%;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        /* Thư viện ảnh */
+        .gallery-card {
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .main-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            background: #e2e8f0;
+        }
+
+        .thumbnail-list {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            border-color: var(--teal);
+        }
+
+        /* Chi tiết phòng */
+        .info-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 100px;
+        }
+
+        .room-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        .room-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 24px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .info-label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            color: var(--navy);
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .description {
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-rent {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--navy2), var(--teal));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+
+        .btn-rent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-rent:disabled {
+            background: var(--muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 900px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-card {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-box">🏠</div>
+            <span class="logo-text">Neet Paradise</span>
+        </a>
+    </nav>
+
+    <div class="container">
+        <a href="/" class="back-btn">← Quay lại danh sách phòng</a>
+
+        <div id="loading" class="loading">Đang tải thông tin phòng...</div>
+
+        <div id="content" class="bento-grid" style="display: none;">
+            <!-- Cột trái: Hình ảnh -->
+            <div class="gallery-card">
+                <img id="mainImage" src="https://via.placeholder.com/1000x600?text=Chưa+có+ảnh" alt="Ảnh phòng"
+                    class="main-image">
+                <div id="thumbnailContainer" class="thumbnail-list">
+                    <!-- Thumbnails sẽ được thêm bằng JS -->
+                </div>
+            </div>
+
+            <!-- Cột phải: Thông tin -->
+            <div class="info-card">
+                <div class="room-title">Phòng <span id="roomNumber"></span></div>
+                <div class="room-price"><span id="rentalPrice"></span> đ/tháng</div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Diện tích</div>
+                        <div class="info-value"><span id="area"></span> m²</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tầng</div>
+                        <div class="info-value" id="floor"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phòng ngủ/tắm</div>
+                        <div class="info-value"><span id="bedroomCount"></span> / <span id="bathroomCount"></span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Người tối đa</div>
+                        <div class="info-value"><span id="maxOccupants"></span> người</div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--blue-bg); border-radius: 12px;">
+                    <span style="color: var(--navy); font-weight: 600;">Tiền cọc bảo đảm:</span>
+                    <span id="depositAmount" style="color: var(--navy); font-weight: 800; font-size: 18px;"></span>
+                </div>
+
+                <div class="description" id="description">
+                    Chưa có mô tả cho phòng này.
+                </div>
+
+                <button id="btnRent" class="btn-rent" onclick="rentRoom()">Thuê phòng này ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const roomId = "<%= roomId %>";
+        let roomData = null;
+
+        document.addEventListener('DOMContentLoaded', loadRoomDetails);
+
+        async function loadRoomDetails() {
+            try {
+                const res = await fetch(`/api/rooms/${roomId}`, { credentials: "include" });
+                const result = await res.json();
+
+                if (!res.ok) throw new Error(result.message || "Lỗi tải thông tin phòng");
+
+                roomData = result.data;
+                renderRoom();
+            } catch (err) {
+                document.getElementById('loading').textContent = err.message;
+            }
+        }
+
+        function renderRoom() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'grid';
+
+            document.getElementById('roomNumber').textContent = roomData.roomNumber;
+            document.getElementById('rentalPrice').textContent = Number(roomData.rentalPrice).toLocaleString();
+            document.getElementById('area').textContent = roomData.area || '--';
+            document.getElementById('floor').textContent = roomData.floor || '--';
+            document.getElementById('bedroomCount').textContent = roomData.bedroomCount || '1';
+            document.getElementById('bathroomCount').textContent = roomData.bathroomCount || '1';
+            document.getElementById('maxOccupants').textContent = roomData.maxOccupants || '2';
+            document.getElementById('depositAmount').textContent = roomData.depositAmount ? Number(roomData.depositAmount).toLocaleString() + ' đ' : '0 đ';
+
+            if (roomData.description) {
+                document.getElementById('description').textContent = roomData.description;
+            }
+
+            // Xử lý nút thuê
+            const btnRent = document.getElementById('btnRent');
+            if (roomData.status !== 'available' || roomData.tenantId) {
+                btnRent.disabled = true;
+                btnRent.textContent = 'Phòng đã có người thuê hoặc đang bảo trì';
+                btnRent.style.background = 'var(--muted)';
+            }
+
+            // Xử lý ảnh
+            if (roomData.images && roomData.images.length > 0) {
+                const mainImg = document.getElementById('mainImage');
+                mainImg.src = roomData.images[0];
+
+                const thumbContainer = document.getElementById('thumbnailContainer');
+                roomData.images.forEach((imgUrl, index) => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+                    img.onclick = () => {
+                        mainImg.src = imgUrl;
+                        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                        img.classList.add('active');
+                    };
+                    thumbContainer.appendChild(img);
+                });
+            }
+        }
+
+        function rentRoom() {
+            window.location.href = `/dashboard/room/${roomId}/rent`;
+        }
+    </script>
+</body>
+
+</html>

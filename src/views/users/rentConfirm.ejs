@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận thông tin thuê phòng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0f2d6b;
+            --navy2: #1e3a8a;
+            --teal: #0d9488;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+            --white: #fff;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        .container { max-width: 800px; margin: 40px auto; padding: 0 6%; }
+        
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .title { color: var(--navy); font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--muted); margin-bottom: 24px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; color: var(--navy); }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+            border-radius: 12px; font-size: 15px; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus { border-color: var(--teal); outline: none; }
+
+        .file-upload-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .file-upload-box {
+            background: rgba(13, 148, 136, 0.05);
+            border: 1px dashed var(--teal);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .file-upload-box input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-primary { background: var(--teal); color: white; }
+        .btn-primary:hover { background: #0f766e; }
+        
+        .btn-upload {
+            background: var(--white); color: var(--teal); border: 1px solid var(--teal);
+            padding: 8px 16px; font-size: 14px; width: auto; margin-top: 12px;
+            border-radius: 8px; cursor: pointer;
+        }
+
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: none; font-weight: 600; color: var(--navy);
+        }
+
+        .preview-img {
+            max-width: 100%; max-height: 120px; margin-top: 10px; border-radius: 8px; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay">
+        <div style="font-size: 40px; margin-bottom: 16px;">⏳</div>
+        <div id="loadingText">Đang xử lý...</div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h1 class="title">Đơn xin thuê phòng</h1>
+            <p class="subtitle">Vui lòng điền thông tin cá nhân và tải lên ảnh CCCD (2 mặt). Đơn của bạn sẽ được Ban quản lý xem xét và phê duyệt thuê phòng <strong id="roomDisplay">...</strong>.</p>
+
+            <form id="profileForm" onsubmit="handleConfirmRent(event)">
+                <div class="file-upload-container">
+                    <div class="file-upload-box">
+                        <div style="font-size: 24px; margin-bottom: 8px;">🪪</div>
+                        <h4 style="color: var(--teal);">CCCD (Mặt trước)</h4>
+                        <input type="file" id="cccdFront" accept="image/*" required onchange="previewImage(this, 'previewFront')">
+                        <button type="button" class="btn-upload" onclick="document.getElementById('cccdFront').click()">📸 Chọn ảnh</button>
+                        <img id="previewFront" class="preview-img">
+                    </div>
+                    <div class="file-upload-box">
+                        <div style="font-size: 24px; margin-bottom: 8px;">🪪</div>
+                        <h4 style="color: var(--teal);">CCCD (Mặt sau)</h4>
+                        <input type="file" id="cccdBack" accept="image/*" required onchange="previewImage(this, 'previewBack')">
+                        <button type="button" class="btn-upload" onclick="document.getElementById('cccdBack').click()">📸 Chọn ảnh</button>
+                        <img id="previewBack" class="preview-img">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Họ và tên (Đầy đủ)</label>
+                    <input type="text" id="name" name="name" required placeholder="VD: NGUYEN VAN A">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>Nghề nghiệp</label>
+                        <input type="text" id="occupation" name="occupation" placeholder="VD: Sinh viên, Nhân viên văn phòng...">
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày sinh</label>
+                        <input type="date" id="dob" name="dob" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="Nhập SĐT">
+                    </div>
+                    <div class="form-group">
+                        <label>Giới tính</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Địa chỉ thường trú</label>
+                    <input type="text" id="address" name="address" required placeholder="Nhập địa chỉ">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Gửi Đơn Xin Thuê Phòng</button>
+                <div style="text-align: center; margin-top: 16px;">
+                    <a href="javascript:history.back()" style="color: var(--muted); text-decoration: none; font-size: 14px;">← Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const roomId = "<%= roomId %>";
+        
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadProfile();
+            await loadRoom();
+        });
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+            }
+        }
+
+        async function loadRoom() {
+            try {
+                const res = await fetch(`/api/rooms/${roomId}`);
+                const data = await res.json();
+                if(data.data) {
+                    document.getElementById('roomDisplay').textContent = data.data.roomNumber;
+                }
+            } catch (err) {}
+        }
+
+        async function loadProfile() {
+            try {
+                showLoading("Đang tải dữ liệu...");
+                const res = await fetch('/api/user/profile');
+                const result = await res.json();
+                if(res.ok && result.data) {
+                    const user = result.data;
+                    document.getElementById('name').value = user.name || "";
+                    document.getElementById('occupation').value = user.occupation || "";
+                    document.getElementById('dob').value = user.dob || "";
+                    document.getElementById('phoneNumber').value = user.phoneNumber || "";
+                    document.getElementById('address').value = user.address || "";
+                    document.getElementById('gender').value = user.gender || "";
+                }
+                hideLoading();
+            } catch (err) {
+                hideLoading();
+            }
+        }
+
+        async function handleConfirmRent(e) {
+            e.preventDefault();
+            showLoading("Đang xử lý đơn thuê và upload ảnh...");
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('occupation', document.getElementById('occupation').value);
+            formData.append('dob', document.getElementById('dob').value);
+            formData.append('phoneNumber', document.getElementById('phoneNumber').value);
+            formData.append('gender', document.getElementById('gender').value);
+            formData.append('address', document.getElementById('address').value);
+            
+            const frontFile = document.getElementById('cccdFront').files[0];
+            const backFile = document.getElementById('cccdBack').files[0];
+            if(frontFile) formData.append('cccdFront', frontFile);
+            if(backFile) formData.append('cccdBack', backFile);
+
+            try {
+                // Gọi API Thuê phòng (tạo Đơn thuê + cập nhật profile)
+                const rentRes = await fetch(`/api/rooms/${roomId}/rent`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const rentResult = await rentRes.json();
+
+                hideLoading();
+
+                if (!rentRes.ok) {
+                    alert(rentResult.message || "Gửi đơn thất bại!");
+                    return;
+                }
+
+                alert(`Đã nộp đơn xin thuê thành công! Vui lòng chờ Ban quản lý duyệt.`);
+                window.location.href = '/dashboard';
+
+            } catch (err) {
+                hideLoading();
+                alert("Có lỗi xảy ra: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

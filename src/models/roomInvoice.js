@@ -16,6 +16,11 @@ const roomInvoiceSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    type: {
+      type: String,
+      enum: ["monthly", "deposit"],
+      default: "monthly"
+    },
     oldElec: {
       type: Number,
       default: 0

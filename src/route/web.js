@@ -27,6 +27,16 @@ let initWebRoutes = (app) => {
   router.get("/login", (req, res) => res.render("auth/login.ejs"));
   router.get("/register", (req, res) => res.render("auth/register.ejs"));
 
+  // Trang hồ sơ người dùng
+  router.get(
+    "/user/profile",
+    verifyTokenLoginView,
+    authorizeView("user"),
+    (req, res) => {
+      res.render("users/profile", { user: req.user });
+    }
+  );
+
   router.get(
     "/dashboard",
     verifyTokenLoginView,
@@ -38,6 +48,24 @@ let initWebRoutes = (app) => {
       }
       res.render("users/dashboard", { user: req.user });
     },
+  );
+
+  router.get(
+    "/dashboard/room/:id",
+    verifyTokenLoginView,
+    authorizeView("user"),
+    (req, res) => {
+      res.render("users/roomDetail", { user: req.user, roomId: req.params.id });
+    }
+  );
+
+  router.get(
+    "/dashboard/room/:id/rent",
+    verifyTokenLoginView,
+    authorizeView("user"),
+    (req, res) => {
+      res.render("users/rentConfirm", { user: req.user, roomId: req.params.id });
+    }
   );
 
   // GET /admin/dashboard - Dashboard admin
@@ -57,6 +85,7 @@ let initWebRoutes = (app) => {
   app.use("/api/auth", authRoutes);
   app.use("/api/user", userRoutes);
   app.use("/api/rooms", require("./room.routes"));
+  app.use("/api/applications", require("./application.routes"));
   return app.use("/", router);
 };
 

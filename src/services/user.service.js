@@ -9,6 +9,9 @@ exports.updateProfile = async (userId, updateData) => {
     "address",
     "phoneNumber",
     "gender",
+    "cccdNumber",
+    "dob",
+    "occupation"
   ];
   const dataToUpdate = {};
 

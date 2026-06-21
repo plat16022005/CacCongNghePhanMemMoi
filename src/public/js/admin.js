@@ -52,6 +52,9 @@ function switchTab(tab) {
   document.getElementById("roomsTab").style.display = "none";
   document.getElementById("cancellationTab").style.display = "none";
   document.getElementById("testingLabTab").style.display = "none";
+  
+  const appTab = document.getElementById("applicationsTab");
+  if(appTab) appTab.style.display = "none";
 
   // Cập nhật nút active
   document.querySelectorAll(".sidebar-menu button").forEach((btn) => {
@@ -71,6 +74,7 @@ function switchTab(tab) {
     dashboard: "📊 Dashboard",
     rooms: "🏠 Quản lý phòng trọ",
     users: "👥 Quản lý người dùng",
+    applications: "📝 Duyệt đơn thuê",
     cancellation: "💸 Hủy phòng & Hoàn cọc",
     "testing-lab": "🧪 Thực nghiệm Kiểm thử",
     profile: "👤 Hồ sơ của tôi",
@@ -89,6 +93,9 @@ function switchTab(tab) {
   } else if (tab === "rooms") {
     document.getElementById("roomsTab").style.display = "block";
     loadRooms();
+  } else if (tab === "applications") {
+    document.getElementById("applicationsTab").style.display = "block";
+    if(typeof loadApplications === 'function') loadApplications();
   } else if (tab === "settings") {
     document.getElementById("settingsTab").style.display = "block";
   } else if (tab === "cancellation") {
@@ -169,26 +176,30 @@ async function loadRooms() {
 
 async function handleCreateRoom(e) {
   e.preventDefault();
-  const roomNumber = document.getElementById("newRoomNumber").value;
-  const floor = document.getElementById("newFloor").value;
-  const area = document.getElementById("newArea").value;
-  const bedroomCount = document.getElementById("newBedroomCount").value;
-  const bathroomCount = document.getElementById("newBathroomCount").value;
-  const maxOccupants = document.getElementById("newMaxOccupants").value;
-  const rentalPrice = document.getElementById("newRentalPrice").value;
-  const depositAmount = document.getElementById("newDepositAmount").value;
-  const status = document.getElementById("newRoomStatus").value;
-  const description = document.getElementById("newDescription").value;
+
+  const formData = new FormData();
+  formData.append("roomNumber", document.getElementById("newRoomNumber").value);
+  formData.append("floor", document.getElementById("newFloor").value);
+  formData.append("area", document.getElementById("newArea").value);
+  formData.append("bedroomCount", document.getElementById("newBedroomCount").value);
+  formData.append("bathroomCount", document.getElementById("newBathroomCount").value);
+  formData.append("maxOccupants", document.getElementById("newMaxOccupants").value);
+  formData.append("rentalPrice", document.getElementById("newRentalPrice").value);
+  formData.append("depositAmount", document.getElementById("newDepositAmount").value);
+  formData.append("status", document.getElementById("newRoomStatus").value);
+  formData.append("description", document.getElementById("newDescription").value);
+
+  const imageInput = document.getElementById("newImages");
+  if (imageInput && imageInput.files) {
+    for (const file of imageInput.files) {
+      formData.append("images", file);
+    }
+  }
 
   try {
     const res = await fetch("/api/rooms", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        roomNumber, floor, area,
-        bedroomCount, bathroomCount, maxOccupants,
-        rentalPrice, depositAmount, status, description
-      }),
+      body: formData,
       credentials: "include",
     });
 
@@ -340,27 +351,31 @@ function cancelEditRoom() {
 
 async function submitEditRoom(e) {
   e.preventDefault();
+
   const objId = document.getElementById("editRoomObjId").value;
-  const roomNumber = document.getElementById("editRoomNumber").value;
-  const floor = document.getElementById("editFloor").value;
-  const area = document.getElementById("editArea").value;
-  const bedroomCount = document.getElementById("editBedroomCount").value;
-  const bathroomCount = document.getElementById("editBathroomCount").value;
-  const maxOccupants = document.getElementById("editMaxOccupants").value;
-  const rentalPrice = document.getElementById("editRentalPrice").value;
-  const depositAmount = document.getElementById("editDepositAmount").value;
-  const status = document.getElementById("editRoomStatus").value;
-  const description = document.getElementById("editDescription").value;
+  const formData = new FormData();
+  formData.append("roomNumber", document.getElementById("editRoomNumber").value);
+  formData.append("floor", document.getElementById("editFloor").value);
+  formData.append("area", document.getElementById("editArea").value);
+  formData.append("bedroomCount", document.getElementById("editBedroomCount").value);
+  formData.append("bathroomCount", document.getElementById("editBathroomCount").value);
+  formData.append("maxOccupants", document.getElementById("editMaxOccupants").value);
+  formData.append("rentalPrice", document.getElementById("editRentalPrice").value);
+  formData.append("depositAmount", document.getElementById("editDepositAmount").value);
+  formData.append("status", document.getElementById("editRoomStatus").value);
+  formData.append("description", document.getElementById("editDescription").value);
+
+  const editImageInput = document.getElementById("editImages");
+  if (editImageInput && editImageInput.files) {
+    for (const file of editImageInput.files) {
+      formData.append("images", file);
+    }
+  }
 
   try {
     const res = await fetch(`/api/rooms/${objId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        roomNumber, floor, area,
-        bedroomCount, bathroomCount, maxOccupants,
-        rentalPrice, depositAmount, status, description
-      }),
+      body: formData,
       credentials: "include",
     });
 

@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema(
     address: String,
     phoneNumber: String,
     gender: String,
+    cccdNumber: String,
+    dob: String,
+    occupation: String,
+    cccdFrontImage: String,
+    cccdBackImage: String,
     image: String,
     role: {
       type: String,

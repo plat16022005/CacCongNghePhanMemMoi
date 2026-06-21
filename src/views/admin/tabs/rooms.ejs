@@ -116,6 +116,10 @@
           <label>Mô tả phòng</label>
           <input type="text" id="newDescription" class="admin-input" placeholder="Ghi chú thêm" />
         </div>
+        <div class="form-group">
+          <label>Hình ảnh phòng</label>
+          <input type="file" id="newImages" name="images" multiple accept="image/*" class="admin-input" style="background: none; border: none; padding: 0;" />
+        </div>
         <div style="grid-column: span 2; display: flex; justify-content: flex-end; margin-top: 10px;">
           <button class="logout-btn" style="background: rgba(59, 130, 246, 0.1); border-color: var(--primary); color: var(--primary);" type="submit">
             Thêm phòng
@@ -257,6 +261,10 @@
       <div class="form-group">
         <label>Mô tả phòng</label>
         <input type="text" id="editDescription" class="admin-input" />
+      </div>
+      <div class="form-group">
+        <label>Hình ảnh phòng (Bỏ qua nếu không đổi)</label>
+        <input type="file" id="editImages" name="images" multiple accept="image/*" class="admin-input" style="background: none; border: none; padding: 0;" />
       </div>
 
       <div style="grid-column: span 3; display: flex; gap: 16px; justify-content: flex-end; margin-top: 12px;">

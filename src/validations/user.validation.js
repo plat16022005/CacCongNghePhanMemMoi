@@ -4,34 +4,43 @@ exports.editProfileRules = [
   body('name')
     .optional()
     .trim()
-    .isLength({ min: 2, max: 100 }).withMessage('Tên từ 2–100 ký tự')
-    .escape(), // Chặn mã độc XSS
-    
+    .isLength({ min: 2, max: 100 }).withMessage('Tên phải từ 2 đến 100 ký tự'),
+
   body('firstName')
     .optional()
     .trim()
-    .isLength({ max: 50 }).withMessage('Họ tối đa 50 ký tự')
-    .escape(),
-    
+    .isLength({ max: 50 }).withMessage('Họ tối đa 50 ký tự'),
+
   body('lastName')
     .optional()
     .trim()
-    .isLength({ max: 50 }).withMessage('Tên tối đa 50 ký tự')
-    .escape(),
+    .isLength({ max: 50 }).withMessage('Tên tối đa 50 ký tự'),
 
   body('address')
     .optional()
     .trim()
-    .isLength({ max: 200 }).withMessage('Địa chỉ tối đa 200 ký tự')
-    .escape(),
+    .isLength({ max: 300 }).withMessage('Địa chỉ tối đa 300 ký tự'),
 
   body('phoneNumber')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .matches(/(84|0[3|5|7|8|9])+([0-9]{8})\b/).withMessage('Số điện thoại không hợp lệ (phải là định dạng VN)')
-    .escape(),
+    .matches(/^(84|0[35789])[0-9]{8}$/).withMessage('Số điện thoại không hợp lệ (VD: 0912345678)'),
 
   body('gender')
-    .optional()
-    .isBoolean().withMessage('Giới tính phải là true/false'),
+    .optional({ checkFalsy: true })
+    .isIn(['male', 'female', 'other']).withMessage('Giới tính không hợp lệ'),
+
+  body('dob')
+    .optional({ checkFalsy: true })
+    .trim(),
+
+  body('occupation')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 100 }).withMessage('Nghề nghiệp tối đa 100 ký tự'),
+
+  body('cccdNumber')
+    .optional({ checkFalsy: true })
+    .trim()
+    .matches(/^[0-9]{12}$/).withMessage('Số CCCD phải là 12 chữ số'),
 ];

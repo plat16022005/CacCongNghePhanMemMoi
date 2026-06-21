@@ -2,20 +2,24 @@ const express = require("express");
 const router = express.Router();
 const roomCtrl = require("../controllers/room.controller");
 const { verifyTokenLogin, authorize } = require("../middlewares/auth.middleware");
+const upload = require("../middlewares/upload.middleware");
+const { uploadCccd } = upload;
 
 // --- API CHO RENTER (KHÁCH TRỌ) ---
 // Xem danh sách phòng trống
 router.get("/available", verifyTokenLogin, authorize("user"), roomCtrl.getAvailableRoomsForTenant);
-// Đăng ký thuê phòng
-router.post("/:id/rent", verifyTokenLogin, authorize("user"), roomCtrl.rentRoom);
+// Đăng ký thuê phòng (upload nhiều ảnh CCCD của người thuê chính và người ở ghép)
+router.post("/:id/rent", verifyTokenLogin, authorize("user"), uploadCccd.any(), roomCtrl.rentRoom);
 // Xem phòng của mình
 router.get("/my-room", verifyTokenLogin, authorize("user"), roomCtrl.getMyRoom);
 // Xem hóa đơn của mình
 router.get("/my-invoices", verifyTokenLogin, authorize("user"), roomCtrl.getMyInvoices);
+// Xem chi tiết 1 phòng (cho Renter)
+router.get("/:id", verifyTokenLogin, authorize("user"), roomCtrl.getRoomById);
 
 // --- API CHO ADMIN ---
 // Thêm phòng mới
-router.post("/", verifyTokenLogin, authorize("admin"), roomCtrl.createRoom);
+router.post("/", verifyTokenLogin, authorize("admin"), upload.array('images', 10), roomCtrl.createRoom);
 // Lấy danh sách toàn bộ phòng
 router.get("/", verifyTokenLogin, authorize("admin"), roomCtrl.getAllRooms);
 // Lấy danh sách khách thuê chưa được gán phòng
@@ -23,7 +27,7 @@ router.get("/available-tenants", verifyTokenLogin, authorize("admin"), roomCtrl.
 // Gán khách thuê vào phòng
 router.put("/:id/assign", verifyTokenLogin, authorize("admin"), roomCtrl.assignTenant);
 // Cập nhật thông tin phòng (Sửa phòng)
-router.put("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.updateRoom);
+router.put("/:id", verifyTokenLogin, authorize("admin"), upload.array('images', 10), roomCtrl.updateRoom);
 // Xóa phòng trọ
 router.delete("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.deleteRoom);
 // Tính toán hoàn cọc khi hủy đặt phòng

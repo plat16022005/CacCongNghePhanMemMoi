@@ -98,6 +98,27 @@
             transition: all 0.2s;
         }
 
+        .btn-profile {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--navy2);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-profile:hover {
+            background: var(--navy);
+            transform: translateY(-1px);
+        }
+
         .btn-logout:hover {
             background: var(--danger);
             color: white;
@@ -327,6 +348,7 @@
         </a>
         <div class="nav-right">
             <div class="user-greeting" id="userGreeting">Xin chào, <%= locals.user ? locals.user.name : 'Khách' %></div>
+            <a href="/user/profile" class="btn-profile">👤 Hồ sơ</a>
             <button class="btn-logout" onclick="logout()">Đăng xuất</button>
         </div>
     </nav>
@@ -528,8 +550,8 @@
                             ${room.description || 'Phòng thoáng mát, an ninh tốt, tiện ích đầy đủ.'}
                         </p>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn-rent" style="flex: 1; background: var(--white); color: var(--navy2); border: 1px solid var(--navy2);" onclick="viewRoomDetail('${roomJson}')">Xem chi tiết</button>
-                            <button class="btn-rent" style="flex: 1;" onclick="rentRoom('${room.id}', '${room.roomNumber}')">Thuê ngay</button>
+                            <button class="btn-rent" style="flex: 1; background: var(--white); color: var(--navy2); border: 1px solid var(--navy2);" onclick="window.location.href='/dashboard/room/${room.id}'">Xem chi tiết</button>
+                            <button class="btn-rent" style="flex: 1;" onclick="window.location.href='/dashboard/room/${room.id}/rent'">Thuê ngay</button>
                         </div>
                     </div>
                 `}).join('');

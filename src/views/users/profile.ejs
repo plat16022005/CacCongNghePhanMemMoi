@@ -293,6 +293,12 @@
             <p id="viewPhone">Chưa cập nhật</p>
           </div>
 
+
+          <div class="profile-field">
+            <label>Ngày sinh</label>
+            <p id="viewDob">Chưa cập nhật</p>
+          </div>
+
           <div class="profile-field">
             <label>Địa chỉ</label>
             <p id="viewAddress">Chưa cập nhật</p>
@@ -301,6 +307,11 @@
           <div class="profile-field">
             <label>Giới tính</label>
             <p id="viewGender">Chưa cập nhật</p>
+          </div>
+
+          <div class="profile-field">
+            <label>Nghề nghiệp</label>
+            <p id="viewOccupation">Chưa cập nhật</p>
           </div>
 
           <button
@@ -338,6 +349,15 @@
             </div>
 
             <div class="form-group">
+              <label for="editDob">Ngày sinh</label>
+              <input
+                type="date"
+                id="editDob"
+                name="dob"
+              />
+            </div>
+
+            <div class="form-group">
               <label for="editAddress">Địa chỉ</label>
               <input
                 type="text"
@@ -355,6 +375,16 @@
                 <option value="female">Nữ</option>
                 <option value="other">Khác</option>
               </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editOccupation">Nghề nghiệp</label>
+              <input
+                type="text"
+                id="editOccupation"
+                name="occupation"
+                placeholder="VD: Sinh viên, Nhân viên văn phòng..."
+              />
             </div>
 
             <div class="form-actions">
@@ -377,38 +407,41 @@
       <div class="profile-card" style="margin-top: 24px;">
         <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">🏠 Thông tin phòng & Hóa đơn của tôi</h2>
         
-        <!-- Nếu chưa được gán phòng -->
-        <div id="noRoomSection" style="display: none; padding: 20px; background: rgba(185, 28, 28, 0.05); border: 1px dashed var(--danger); border-radius: 12px; color: var(--text-muted); text-align: center;">
-          <p>⚠️ Bạn chưa được gán phòng trọ nào trong hệ thống. Vui lòng liên hệ với Ban quản lý (Admin) để đăng ký phòng.</p>
+        <!-- Thông tin phòng -->
+        <div id="noRoomSection" style="display: none; padding: 20px; background: rgba(185, 28, 28, 0.05); border: 1px dashed var(--danger); border-radius: 12px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">
+          <p>⚠️ Bạn chưa được gán phòng trọ nào trong hệ thống.</p>
         </div>
 
-        <!-- Nếu đã được gán phòng -->
-        <div id="hasRoomSection" style="display: none;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; background: rgba(30, 58, 138, 0.05); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px;">
+        <div id="hasRoomSection" style="display: none; margin-bottom: 24px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; background: rgba(30, 58, 138, 0.05); border: 1px solid var(--border); border-radius: 12px;">
             <div>Số phòng thuê: <strong id="myRoomNumber" style="font-size: 18px; color: var(--primary);">--</strong></div>
             <div>Giá phòng cơ bản: <strong id="myRoomPrice" style="font-size: 18px;">--</strong> VND</div>
             <div>Trạng thái phòng: <strong id="myRoomStatus">--</strong></div>
             <div>Liên hệ Ban quản lý: <strong>admin@example.com</strong></div>
           </div>
+        </div>
 
-          <h3 style="margin-bottom: 12px; font-size: 18px;">🧾 Lịch sử hóa đơn hàng tháng</h3>
-          <table style="width: 100%; border-collapse: collapse; color: var(--text-main); font-size: 14px;">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border); text-align: left;">
-                <th style="padding: 10px; color: var(--text-muted);">Tháng</th>
-                <th style="padding: 10px; color: var(--text-muted);">Điện nước tiêu thụ</th>
-                <th style="padding: 10px; color: var(--text-muted);">Phí dịch vụ + Xe</th>
-                <th style="padding: 10px; color: var(--text-muted);">Phạt / Khấu trừ</th>
-                <th style="padding: 10px; color: var(--text-muted);">Tổng hóa đơn</th>
-                <th style="padding: 10px; color: var(--text-muted);">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody id="myInvoicesTableBody">
-              <tr>
-                <td colspan="6" style="padding: 20px; text-align: center; color: var(--text-muted);">Đang tải danh sách hóa đơn...</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Lịch sử hóa đơn -->
+        <div>
+          <h3 style="margin-bottom: 12px; font-size: 18px;">🧾 Lịch sử hóa đơn</h3>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; color: var(--text-main); font-size: 14px;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                  <th style="padding: 10px; color: var(--text-muted); text-align: left;">Loại / Tháng</th>
+                  <th style="padding: 10px; color: var(--text-muted); text-align: left;">Chi tiết (Điện nước / Dịch vụ)</th>
+                  <th style="padding: 10px; color: var(--text-muted); text-align: left;">Phạt / Khấu trừ</th>
+                  <th style="padding: 10px; color: var(--text-muted);">Tổng hóa đơn</th>
+                  <th style="padding: 10px; color: var(--text-muted);">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody id="myInvoicesTableBody">
+                <tr>
+                  <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Đang tải danh sách hóa đơn...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -454,16 +487,22 @@
             user.name || "Người dùng";
           document.getElementById("viewPhone").textContent =
             user.phoneNumber || "Chưa cập nhật";
+          document.getElementById("viewDob").textContent =
+            user.dob || "Chưa cập nhật";
           document.getElementById("viewAddress").textContent =
             user.address || "Chưa cập nhật";
           document.getElementById("viewGender").textContent =
             formatGender(user.gender) || "Chưa cập nhật";
+          document.getElementById("viewOccupation").textContent =
+            user.occupation || "Chưa cập nhật";
 
           // Cập nhật edit mode
           document.getElementById("editName").value = user.name || "";
           document.getElementById("editPhone").value = user.phoneNumber || "";
+          document.getElementById("editDob").value = user.dob || "";
           document.getElementById("editAddress").value = user.address || "";
           document.getElementById("editGender").value = user.gender || "";
+          document.getElementById("editOccupation").value = user.occupation || "";
 
           // Tải thêm thông tin phòng và hóa đơn của chính mình
           loadMyRoom();
@@ -520,22 +559,38 @@
             const tr = document.createElement("tr");
             tr.style.borderBottom = "1px solid var(--border)";
             
-            const elecWaterUsage = `Điện: ${inv.oldElec} → ${inv.newElec} kWh (${(inv.newElec - inv.oldElec)} kWh)<br>Nước: ${inv.oldWater} → ${inv.newWater} m³ (${(inv.newWater - inv.oldWater)} m³)`;
+            let title = `Tháng ${inv.month}`;
+            let details = '';
+            let adjust = '';
             
-            const fees = `Dịch vụ: ${Number(inv.serviceFee).toLocaleString()}đ<br>Xe máy: ${Number(inv.vehicleFee).toLocaleString()}đ`;
+            if (inv.type === 'deposit') {
+              title = `<span style="color: var(--teal); font-weight: bold;">Hoá đơn Tiền cọc</span>`;
+              details = `<span style="color: var(--text-muted);"><i>Phí đặt cọc phòng ban đầu. Vui lòng thanh toán cho Ban quản lý (Chuyển khoản / Tiền mặt).</i></span>`;
+              adjust = '-';
+            } else {
+              const elecWaterUsage = `Điện: ${inv.oldElec} → ${inv.newElec} kWh (${(inv.newElec - inv.oldElec)} kWh)<br>Nước: ${inv.oldWater} → ${inv.newWater} m³ (${(inv.newWater - inv.oldWater)} m³)`;
+              const fees = `Dịch vụ: ${Number(inv.serviceFee).toLocaleString()}đ<br>Xe máy: ${Number(inv.vehicleFee).toLocaleString()}đ`;
+              details = `${elecWaterUsage}<br><br>${fees}`;
+              adjust = `Phạt trễ: ${Number(inv.penalty).toLocaleString()}đ<br>Khấu trừ: -${Number(inv.discount).toLocaleString()}đ`;
+            }
             
-            const adjust = `Phạt trễ: ${Number(inv.penalty).toLocaleString()}đ<br>Khấu trừ: -${Number(inv.discount).toLocaleString()}đ`;
-            
-            const statusBadge = inv.status === "paid" 
-              ? `<span style="color: var(--success); background: rgba(15,118,110,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Đã thanh toán</span>`
-              : `<span style="color: var(--danger); background: rgba(185,28,28,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px;">Chưa thanh toán</span>`;
+            let statusBadge = '';
+            if (inv.status === "paid") {
+              statusBadge = `<span style="color: var(--success); background: rgba(15,118,110,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">Đã thanh toán</span>`;
+            } else {
+              statusBadge = `
+                <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+                  <span style="color: var(--danger); background: rgba(185,28,28,0.1); padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">Chưa thanh toán</span>
+                  <button onclick="showPaymentInfo(${inv.totalBill})" style="background: var(--teal); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">💳 Thanh toán</button>
+                </div>
+              `;
+            }
 
             tr.innerHTML = `
-              <td style="padding: 10px; font-weight: 600; vertical-align: top;">Tháng ${inv.month}</td>
-              <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${elecWaterUsage}</td>
-              <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${fees}</td>
+              <td style="padding: 10px; font-weight: 600; vertical-align: top;">${title}</td>
+              <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${details}</td>
               <td style="padding: 10px; vertical-align: top; line-height: 1.5;">${adjust}</td>
-              <td style="padding: 10px; vertical-align: top; font-weight: 700; color: var(--primary);">${Number(inv.totalBill).toLocaleString()} VND</td>
+              <td style="padding: 10px; vertical-align: top; font-weight: 700; color: var(--teal);">${Number(inv.totalBill).toLocaleString()} VND</td>
               <td style="padding: 10px; vertical-align: top;">${statusBadge}</td>
             `;
             tbody.appendChild(tr);
@@ -550,6 +605,10 @@
       function formatGender(gender) {
         const genderMap = { male: "Nam", female: "Nữ", other: "Khác" };
         return genderMap[gender] || "Chưa cập nhật";
+      }
+
+      function showPaymentInfo(amount) {
+        alert(`THÔNG TIN THANH TOÁN:\n\nNgân hàng: Vietcombank\nSố tài khoản: 0123456789\nChủ tài khoản: NGUYEN VAN A\nSố tiền: ${Number(amount).toLocaleString()} VND\nNội dung: [Họ tên] - [SĐT] - Dong tien coc\n\nSau khi chuyển khoản, vui lòng liên hệ và chờ Ban quản lý xác nhận duyệt đơn.`);
       }
 
       function enterEditMode() {
@@ -574,8 +633,10 @@
           const formData = {
             name: document.getElementById("editName").value,
             phoneNumber: document.getElementById("editPhone").value,
+            dob: document.getElementById("editDob").value,
             address: document.getElementById("editAddress").value,
             gender: document.getElementById("editGender").value,
+            occupation: document.getElementById("editOccupation").value,
           };
 
           try {
