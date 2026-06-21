@@ -18,6 +18,8 @@ const roomSchema = new mongoose.Schema(
       cccdNumber: String,
       dob: String,
       occupation: String,
+      gender: String,
+      address: String,
       cccdFrontImage: String,
       cccdBackImage: String
     }],

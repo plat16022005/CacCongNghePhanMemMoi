@@ -442,34 +442,89 @@ exports.rentRoom = async (req, res, next) => {
     await User.findByIdAndUpdate(userId, { $set: updateData });
 
     // Trích xuất thông tin người ở ghép (members) từ req.body và req.files
-    const members = [];
-    for (let i = 0; i < room.maxOccupants; i++) {
-      if (req.body[`members[${i}][name]`] || req.body[`members[${i}][cccdNumber]`]) {
-        const member = {
-          name: req.body[`members[${i}][name]`],
-          phoneNumber: req.body[`members[${i}][phoneNumber]`],
-          cccdNumber: req.body[`members[${i}][cccdNumber]`],
-          dob: req.body[`members[${i}][dob]`],
-          occupation: req.body[`members[${i}][occupation]`]
+    const normalizeMemberPayload = (value) => {
+      if (Array.isArray(value)) return value;
+      if (value && typeof value === 'object') {
+        return Object.keys(value)
+          .sort((a, b) => Number(a) - Number(b))
+          .map(k => value[k])
+          .filter(item => item && typeof item === 'object');
+      }
+      return [];
+    };
+
+    const bodyMembers = normalizeMemberPayload(req.body?.members);
+    const memberMap = new Map();
+
+    bodyMembers.forEach((memberObj, index) => {
+      memberMap.set(index, memberObj || {});
+    });
+
+    Object.entries(req.body || {}).forEach(([key, value]) => {
+      const match = key.match(/^members\[(\d+)\]\[(.+)\]$/);
+      if (!match) return;
+      const index = Number(match[1]);
+      const field = match[2];
+      if (!memberMap.has(index)) {
+        memberMap.set(index, {});
+      }
+      memberMap.get(index)[field] = value;
+    });
+
+    const members = Array.from(memberMap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([index, memberData]) => {
+        const frontFile = req.files && Array.isArray(req.files)
+          ? req.files.find(f => f.fieldname === `members[${index}][cccdFront]`)
+          : null;
+        const backFile = req.files && Array.isArray(req.files)
+          ? req.files.find(f => f.fieldname === `members[${index}][cccdBack]`)
+          : null;
+
+        const normalizedMember = {
+          name: memberData?.name || "",
+          phoneNumber: memberData?.phoneNumber || "",
+          dob: memberData?.dob || "",
+          occupation: memberData?.occupation || "",
+          gender: memberData?.gender || "",
+          address: memberData?.address || "",
+          cccdFrontImage: frontFile ? frontFile.path : null,
+          cccdBackImage: backFile ? backFile.path : null,
         };
 
-        if (req.files && Array.isArray(req.files)) {
-          const mFrontFile = req.files.find(f => f.fieldname === `members[${i}][cccdFront]`);
-          if (mFrontFile) member.cccdFrontImage = mFrontFile.path;
+        return normalizedMember;
+      })
+      .filter(member => Object.values(member).some(value => value !== "" && value !== null && value !== undefined));
 
-          const mBackFile = req.files.find(f => f.fieldname === `members[${i}][cccdBack]`);
-          if (mBackFile) member.cccdBackImage = mBackFile.path;
-        }
+    const tenantInfo = {
+      name: req.body.name || "",
+      occupation: req.body.occupation || "",
+      dob: req.body.dob || "",
+      phoneNumber: req.body.phoneNumber || "",
+      gender: req.body.gender || "",
+      address: req.body.address || "",
+      cccdFrontImage: req.files && Array.isArray(req.files)
+        ? (req.files.find(f => f.fieldname === 'cccdFront')?.path || null)
+        : null,
+      cccdBackImage: req.files && Array.isArray(req.files)
+        ? (req.files.find(f => f.fieldname === 'cccdBack')?.path || null)
+        : null,
+    };
 
-        members.push(member);
-      }
-    }
+    const rawSubmission = {
+      tenantInfo,
+      members,
+      roomId,
+      submittedAt: new Date().toISOString()
+    };
 
     // Tạo đơn thuê
     const application = await RentalApplication.create({
       tenantId: userId,
       roomId: roomId,
-      members: members,
+      tenantInfo,
+      members,
+      rawSubmission,
       status: "pending"
     });
 

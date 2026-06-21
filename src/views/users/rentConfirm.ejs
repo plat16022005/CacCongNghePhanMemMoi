@@ -155,6 +155,14 @@
                     <input type="text" id="address" name="address" required placeholder="Nhập địa chỉ">
                 </div>
 
+                <div id="memberSectionWrapper" style="display: none; margin-top: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <h3 style="color: var(--navy); font-size: 18px;">👥 Người ở ghép</h3>
+                        <button type="button" id="addMemberBtn" class="btn-upload" style="display: none;">+ Thêm người ở ghép</button>
+                    </div>
+                    <div id="memberSections"></div>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Gửi Đơn Xin Thuê Phòng</button>
                 <div style="text-align: center; margin-top: 16px;">
                     <a href="javascript:history.back()" style="color: var(--muted); text-decoration: none; font-size: 14px;">← Quay lại</a>
@@ -165,6 +173,7 @@
 
     <script>
         const roomId = "<%= roomId %>";
+        let roomMaxOccupants = 1;
         
         window.addEventListener('DOMContentLoaded', async () => {
             await loadProfile();
@@ -194,12 +203,94 @@
             }
         }
 
+        function updateAddMemberButton() {
+            const addMemberBtn = document.getElementById('addMemberBtn');
+            const currentMemberCount = document.querySelectorAll('.member-section').length;
+            const canAddMore = roomMaxOccupants >= 2 && currentMemberCount < (roomMaxOccupants - 1);
+            addMemberBtn.style.display = canAddMore ? 'inline-block' : 'none';
+        }
+
+        function addMemberSection() {
+            const container = document.getElementById('memberSections');
+            if (!container) return;
+
+            const currentMemberCount = container.querySelectorAll('.member-section').length;
+            if (currentMemberCount >= (roomMaxOccupants - 1)) return;
+
+            const index = currentMemberCount;
+            const section = document.createElement('div');
+            section.className = 'member-section';
+            section.style.cssText = 'border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #f8fafc;';
+            section.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="color: var(--navy); margin: 0;">Người ở ghép ${index + 1}</h4>
+                    <button type="button" class="btn-upload" onclick="this.closest('.member-section').remove(); updateAddMemberButton();">🗑️ Xóa</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Họ và tên</label>
+                        <input type="text" name="members[${index}][name]" required placeholder="VD: NGUYEN VAN B">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Số điện thoại</label>
+                        <input type="tel" name="members[${index}][phoneNumber]" required placeholder="Nhập SĐT">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Nghề nghiệp</label>
+                        <input type="text" name="members[${index}][occupation]" placeholder="VD: Sinh viên, Nhân viên">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Ngày sinh</label>
+                        <input type="date" name="members[${index}][dob]" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Giới tính</label>
+                        <select name="members[${index}][gender]" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Địa chỉ thường trú</label>
+                        <input type="text" name="members[${index}][address]" required placeholder="Nhập địa chỉ">
+                    </div>
+                </div>
+                <div class="file-upload-container" style="grid-template-columns: 1fr 1fr; margin-bottom: 0;">
+                    <div class="file-upload-box">
+                        <h4 style="color: var(--teal);">CCCD (Mặt trước)</h4>
+                        <input type="file" name="members[${index}][cccdFront]" accept="image/*" required onchange="previewImage(this, 'memberFrontPreview${index}')">
+                        <button type="button" class="btn-upload" onclick="this.previousElementSibling.click()">📸 Chọn ảnh</button>
+                        <img id="memberFrontPreview${index}" class="preview-img">
+                    </div>
+                    <div class="file-upload-box">
+                        <h4 style="color: var(--teal);">CCCD (Mặt sau)</h4>
+                        <input type="file" name="members[${index}][cccdBack]" accept="image/*" required onchange="previewImage(this, 'memberBackPreview${index}')">
+                        <button type="button" class="btn-upload" onclick="this.previousElementSibling.click()">📸 Chọn ảnh</button>
+                        <img id="memberBackPreview${index}" class="preview-img">
+                    </div>
+                </div>
+            `;
+            container.appendChild(section);
+            updateAddMemberButton();
+        }
+
         async function loadRoom() {
             try {
                 const res = await fetch(`/api/rooms/${roomId}`);
                 const data = await res.json();
                 if(data.data) {
                     document.getElementById('roomDisplay').textContent = data.data.roomNumber;
+                    roomMaxOccupants = Number(data.data.maxOccupants || 1);
+                    const wrapper = document.getElementById('memberSectionWrapper');
+                    if (wrapper) {
+                        wrapper.style.display = roomMaxOccupants >= 2 ? 'block' : 'none';
+                    }
+                    updateAddMemberButton();
                 }
             } catch (err) {}
         }
@@ -241,6 +332,20 @@
             if(frontFile) formData.append('cccdFront', frontFile);
             if(backFile) formData.append('cccdBack', backFile);
 
+            document.querySelectorAll('.member-section').forEach((section, index) => {
+                section.querySelectorAll('input, select').forEach(field => {
+                    if (field.name) {
+                        if (field.type === 'file') {
+                            if (field.files && field.files[0]) {
+                                formData.append(field.name, field.files[0]);
+                            }
+                        } else {
+                            formData.append(field.name, field.value);
+                        }
+                    }
+                });
+            });
+
             try {
                 // Gọi API Thuê phòng (tạo Đơn thuê + cập nhật profile)
                 const rentRes = await fetch(`/api/rooms/${roomId}/rent`, {
@@ -265,6 +370,8 @@
                 alert("Có lỗi xảy ra: " + err.message);
             }
         }
+
+        document.getElementById('addMemberBtn')?.addEventListener('click', addMemberSection);
     </script>
 </body>
 </html>

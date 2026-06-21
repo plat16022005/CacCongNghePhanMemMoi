@@ -33,8 +33,9 @@
         <h4 style="color: var(--teal); margin-bottom: 12px;">Thông tin khách hàng</h4>
         <p><strong>Họ tên:</strong> <span id="appUserName"></span></p>
         <p><strong>SĐT:</strong> <span id="appUserPhone"></span></p>
-        <p><strong>CCCD:</strong> <span id="appUserCccd"></span></p>
         <p><strong>Ngày sinh:</strong> <span id="appUserDob"></span></p>
+        <p><strong>Giới tính:</strong> <span id="appUserGender"></span></p>
+        <p><strong>Địa chỉ:</strong> <span id="appUserAddress"></span></p>
       </div>
       <div>
         <h4 style="color: var(--teal); margin-bottom: 12px;">Thông tin phòng</h4>
@@ -44,7 +45,7 @@
       </div>
     </div>
 
-    <h4 style="color: var(--teal); margin-top: 24px; margin-bottom: 12px;">🪪 Ảnh Căn Cước Công Dân</h4>
+    <h4 style="color: var(--teal); margin-top: 24px; margin-bottom: 12px;">🪪 Ảnh Căn Cước Công Dân của Người Thuê Chính</h4>
     <div style="display: flex; gap: 16px;">
       <div style="flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; padding: 8px;">
         <p style="text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Mặt Trước</p>
@@ -54,6 +55,11 @@
         <p style="text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Mặt Sau</p>
         <img id="appCccdBack" src="" style="width: 100%; height: 200px; object-fit: contain; background: #f8fafc;" alt="CCCD Mặt Sau">
       </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <h4 style="color: var(--teal); margin-bottom: 12px;">👥 Người ở ghép</h4>
+      <div id="appMembersContainer"></div>
     </div>
 
     <div style="display: flex; gap: 16px; margin-top: 24px; justify-content: flex-end;">

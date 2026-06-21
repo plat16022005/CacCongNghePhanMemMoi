@@ -33,9 +33,11 @@ function renderApplications(apps) {
     if(app.status === 'completed') { statusText = 'Đã gán phòng'; badgeClass += 'status-available'; }
     if(app.status === 'rejected') { statusText = 'Từ chối'; badgeClass += 'status-occupied'; }
     
+    const tenant = app.tenantInfo || app.tenantId || {};
+    const room = app.roomId || {};
     tr.innerHTML = `
-      <td><strong>${app.tenantId?.name || 'N/A'}</strong><br><small>${app.tenantId?.phoneNumber || ''}</small></td>
-      <td><strong>${app.roomId?.roomNumber || 'N/A'}</strong></td>
+      <td><strong>${tenant.name || 'N/A'}</strong><br><small>${tenant.phoneNumber || ''}</small></td>
+      <td><strong>${room.roomNumber || 'N/A'}</strong></td>
       <td>${new Date(app.createdAt).toLocaleDateString('vi-VN')}</td>
       <td><span class="${badgeClass}">${statusText}</span></td>
       <td>
@@ -49,18 +51,64 @@ function renderApplications(apps) {
 function viewApplication(appId) {
   const app = currentApplications.find(a => a._id === appId);
   if(!app) return;
+
+  const tenant = (app.tenantInfo && Object.keys(app.tenantInfo).length > 0)
+    ? app.tenantInfo
+    : (app.tenantId || {});
+  const room = (app.roomId && typeof app.roomId === 'object')
+    ? app.roomId
+    : {};
+  const members = Array.isArray(app.members) ? app.members : [];
+
+  const safeSetText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  const safeSetSrc = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.src = value;
+  };
   
-  document.getElementById('appUserName').textContent = app.tenantId?.name || 'N/A';
-  document.getElementById('appUserPhone').textContent = app.tenantId?.phoneNumber || 'N/A';
-  document.getElementById('appUserCccd').textContent = app.tenantId?.cccdNumber || 'N/A';
-  document.getElementById('appUserDob').textContent = app.tenantId?.dob || 'N/A';
+  safeSetText('appUserName', tenant.name || app.tenantId?.name || 'N/A');
+  safeSetText('appUserPhone', tenant.phoneNumber || app.tenantId?.phoneNumber || 'N/A');
+  safeSetText('appUserDob', tenant.dob || app.tenantId?.dob || 'N/A');
+  safeSetText('appUserGender', tenant.gender === 'male' ? 'Nam' : tenant.gender === 'female' ? 'Nữ' : (tenant.gender || app.tenantId?.gender || 'N/A'));
+  safeSetText('appUserAddress', tenant.address || app.tenantId?.address || 'N/A');
   
-  document.getElementById('appRoomNumber').textContent = app.roomId?.roomNumber || 'N/A';
-  document.getElementById('appRoomPrice').textContent = Number(app.roomId?.rentalPrice).toLocaleString() || 'N/A';
-  document.getElementById('appRoomInfo').textContent = `Tầng ${app.roomId?.floor || '?'} / ${app.roomId?.area || '?'} m2`;
+  safeSetText('appRoomNumber', room.roomNumber || app.roomId?.roomNumber || 'N/A');
+  safeSetText('appRoomPrice', room.rentalPrice ? Number(room.rentalPrice).toLocaleString() : (app.roomId?.rentalPrice ? Number(app.roomId.rentalPrice).toLocaleString() : 'N/A'));
+  safeSetText('appRoomInfo', `Tầng ${room.floor || app.roomId?.floor || '?'} / ${room.area || app.roomId?.area || '?'} m2`);
   
-  document.getElementById('appCccdFront').src = app.tenantId?.cccdFrontImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh';
-  document.getElementById('appCccdBack').src = app.tenantId?.cccdBackImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh';
+  safeSetSrc('appCccdFront', tenant.cccdFrontImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh');
+  safeSetSrc('appCccdBack', tenant.cccdBackImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh');
+
+  const membersContainer = document.getElementById('appMembersContainer');
+  if (membersContainer) {
+    if (members.length === 0) {
+      membersContainer.innerHTML = '<p style="color:#64748b;">Không có thông tin người ở ghép</p>';
+    } else {
+      membersContainer.innerHTML = members.map((member, index) => `
+        <div style="border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px; background:#f8fafc;">
+          <p style="margin-bottom: 8px;"><strong>${index + 1}. ${member.name || 'N/A'}</strong></p>
+          <p><small>SĐT:</small> ${member.phoneNumber || 'N/A'}</p>
+          <p><small>Ngày sinh:</small> ${member.dob || 'N/A'}</p>
+          <p><small>Giới tính:</small> ${member.gender === 'male' ? 'Nam' : member.gender === 'female' ? 'Nữ' : (member.gender || 'N/A')}</p>
+          <p style="margin-bottom: 10px;"><small>Địa chỉ:</small> ${member.address || 'N/A'}</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 220px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #fff;">
+              <p style="font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 6px;">CCCD Mặt Trước</p>
+              <img src="${member.cccdFrontImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh'}" style="width: 100%; height: 180px; object-fit: contain; background: #f8fafc;" alt="CCCD mặt trước người ở ghép">
+            </div>
+            <div style="flex: 1; min-width: 220px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #fff;">
+              <p style="font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 6px;">CCCD Mặt Sau</p>
+              <img src="${member.cccdBackImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh'}" style="width: 100%; height: 180px; object-fit: contain; background: #f8fafc;" alt="CCCD mặt sau người ở ghép">
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
   
   const btnApprove = document.getElementById('btnApproveApp');
   const btnReject = document.getElementById('btnRejectApp');

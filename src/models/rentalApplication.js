@@ -12,15 +12,32 @@ const rentalApplicationSchema = new mongoose.Schema(
       ref: "Room",
       required: true,
     },
-    members: [{
+    tenantInfo: {
       name: String,
-      phoneNumber: String,
-      cccdNumber: String,
-      dob: String,
       occupation: String,
+      dob: String,
+      phoneNumber: String,
+      gender: String,
+      address: String,
       cccdFrontImage: String,
-      cccdBackImage: String
-    }],
+      cccdBackImage: String,
+    },
+    members: [
+      {
+        name: String,
+        phoneNumber: String,
+        dob: String,
+        occupation: String,
+        gender: String,
+        address: String,
+        cccdFrontImage: String,
+        cccdBackImage: String,
+      },
+    ],
+    rawSubmission: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "completed", "rejected"],
@@ -32,6 +49,10 @@ const rentalApplicationSchema = new mongoose.Schema(
   }
 );
 
-const RentalApplication = mongoose.models.RentalApplication || mongoose.model("RentalApplication", rentalApplicationSchema);
+const RentalApplication = mongoose.models.RentalApplication || mongoose.model(
+  "RentalApplication",
+  rentalApplicationSchema,
+  "rental_applications"
+);
 
 module.exports = RentalApplication;
