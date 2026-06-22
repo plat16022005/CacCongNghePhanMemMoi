@@ -13,6 +13,66 @@ exports.getAllApplications = async (req, res, next) => {
   }
 };
 
+exports.getMyApplications = async (req, res, next) => {
+  try {
+    const tenantId = req.user?.id || req.user?._id;
+    if (!tenantId) {
+      return res.status(401).json({ message: "Bạn cần đăng nhập để xem đơn thuê." });
+    }
+
+    const applications = await RentalApplication.find({ tenantId })
+      .populate("roomId", "roomNumber rentalPrice floor area status")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ data: applications });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteApplication = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user?.id || req.user?._id;
+
+    if (!tenantId) {
+      return res.status(401).json({ message: "Bạn cần đăng nhập để thực hiện thao tác này." });
+    }
+
+    const application = await RentalApplication.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Đơn thuê không tồn tại." });
+    }
+
+    if (application.tenantId.toString() !== tenantId.toString()) {
+      return res.status(403).json({ message: "Bạn không có quyền xóa đơn này." });
+    }
+
+    if (application.status !== "pending") {
+      return res.status(400).json({ message: "Không thể xóa đơn khi đơn đã được xử lý hoặc đã bị từ chối." });
+    }
+
+    const room = await Room.findById(application.roomId);
+    await RentalApplication.findByIdAndDelete(id);
+
+    if (room && room.status === "reserved") {
+      const remainingPending = await RentalApplication.findOne({
+        roomId: application.roomId,
+        status: "pending"
+      });
+
+      if (!remainingPending) {
+        room.status = "available";
+        await room.save();
+      }
+    }
+
+    res.status(200).json({ message: "Đã xóa đơn thuê thành công.", data: { id } });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.approveApplication = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -146,6 +206,21 @@ exports.rejectApplication = async (req, res, next) => {
 
     application.status = "rejected";
     await application.save();
+
+    if (application.status === "rejected") {
+      const room = await Room.findById(application.roomId);
+      if (room && room.status === "reserved") {
+        const remainingPending = await RentalApplication.findOne({
+          roomId: application.roomId,
+          status: "pending"
+        });
+
+        if (!remainingPending) {
+          room.status = "available";
+          await room.save();
+        }
+      }
+    }
 
     res.status(200).json({ message: "Đã hủy/từ chối đơn thuê", data: application });
   } catch (err) {

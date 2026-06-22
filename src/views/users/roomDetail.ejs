@@ -303,7 +303,7 @@
                     Chưa có mô tả cho phòng này.
                 </div>
 
-                <button id="btnRent" class="btn-rent" onclick="rentRoom()">Thuê phòng này ngay</button>
+                <button id="btnRent" class="btn-rent" onclick="rentRoom()" style="display: none;">Thuê phòng này ngay</button>
             </div>
         </div>
     </div>
@@ -347,10 +347,10 @@
 
             // Xử lý nút thuê
             const btnRent = document.getElementById('btnRent');
-            if (roomData.status !== 'available' || roomData.tenantId) {
-                btnRent.disabled = true;
-                btnRent.textContent = 'Phòng đã có người thuê hoặc đang bảo trì';
-                btnRent.style.background = 'var(--muted)';
+            if (roomData.canRent) {
+                btnRent.style.display = 'inline-flex';
+            } else {
+                btnRent.style.display = 'none';
             }
 
             // Xử lý ảnh

@@ -1,0 +1,53 @@
+<section id="usersTab" class="tab-panel" style="display:none;">
+  <div class="section-header d-flex align-items-center justify-content-between">
+    <div>
+      <h3>Quản lý tài khoản</h3>
+      <p>Danh sách người dùng và quyền truy cập</p>
+    </div>
+    <button class="btn btn-success" id="btnCreateManager">Tạo Manager</button>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="adminUsersTable">
+      <thead>
+        <tr>
+          <th>Tài khoản</th>
+          <th>Vai trò</th>
+          <th>Trạng thái</th>
+          <th>Lý do khóa</th>
+          <th>Ngày tạo</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<div class="modal-overlay" id="createManagerModal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-labelledby="createManagerModalLabel">
+    <div class="modal-header">
+      <h3 id="createManagerModalLabel">Tạo tài khoản Manager</h3>
+      <button type="button" class="btn-close" id="closeCreateManagerModal" aria-label="Close">×</button>
+    </div>
+    <form id="createManagerForm">
+      <div class="modal-body">
+        <div class="modal-field">
+          <label for="managerName">Họ tên</label>
+          <input type="text" id="managerName" name="name" required />
+        </div>
+        <div class="modal-field">
+          <label for="managerEmail">Email</label>
+          <input type="email" id="managerEmail" name="email" required />
+        </div>
+        <div class="modal-field">
+          <label for="managerPassword">Mật khẩu</label>
+          <input type="password" id="managerPassword" name="password" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelCreateManager">Hủy</button>
+        <button type="submit" class="btn btn-success">Tạo Manager</button>
+      </div>
+    </form>
+  </div>
+</div>

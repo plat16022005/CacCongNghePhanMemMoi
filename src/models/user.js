@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema(
     is_active: {
       type: Boolean,
       default: false
+    },
+    is_blocked: {
+      type: Boolean,
+      default: false
+    },
+    block_reason: {
+      type: String,
+      default: ""
     }
   },
   {

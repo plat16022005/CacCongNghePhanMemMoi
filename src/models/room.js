@@ -10,6 +10,7 @@ const roomSchema = new mongoose.Schema(
     maxOccupants: { type: Number, default: 2 },
     rentalPrice: { type: Number, required: true },
     depositAmount: { type: Number, default: 0 },
+    description: { type: String, default: "" },
     status: { type: String, enum: ['available', 'reserved', 'occupied', 'maintenance'], default: "available" },
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     members: [{

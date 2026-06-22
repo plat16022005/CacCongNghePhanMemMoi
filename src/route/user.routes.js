@@ -34,4 +34,40 @@ router.get(
   userCtrl.getManagerProfile,
 );
 
+// Admin dashboard APIs
+router.get(
+  "/admin/users",
+  verifyTokenLogin,
+  authorize("admin"),
+  userCtrl.getAllUsers,
+);
+
+router.put(
+  "/admin/users/:id/role",
+  verifyTokenLogin,
+  authorize("admin"),
+  userCtrl.updateUserRole,
+);
+
+router.put(
+  "/admin/users/:id/status",
+  verifyTokenLogin,
+  authorize("admin"),
+  userCtrl.toggleUserStatus,
+);
+
+router.post(
+  "/admin/users/manager",
+  verifyTokenLogin,
+  authorize("admin"),
+  userCtrl.createManagerUser,
+);
+
+router.get(
+  "/admin/stats",
+  verifyTokenLogin,
+  authorize("admin"),
+  userCtrl.getAdminDashboardStats,
+);
+
 module.exports = router;

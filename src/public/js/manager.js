@@ -192,7 +192,7 @@ async function loadRooms() {
       // Lấy toàn bộ thông tin phòng để truyền vào hàm sửa
       const roomJson = encodeURIComponent(JSON.stringify(room));
       actions += `
-        <button onclick="showViewRoom('${roomJson}')" style="padding: 6px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; cursor: pointer; margin-right: 8px;">Chi tiết</button>
+        <button onclick="showViewRoom('${roomJson}')" style="padding: 6px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; cursor: pointer; margin-right: 8px;">Xem chi tiết phòng</button>
         <button onclick="showEditRoom('${roomJson}')" style="padding: 6px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); border-radius: 6px; cursor: pointer; margin-right: 8px;">Sửa</button>
         <button onclick="deleteRoom('${room.id}')" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer;">Xóa</button>
       `;
@@ -370,7 +370,18 @@ function showViewRoom(roomJson) {
   document.getElementById("viewBedroomCount").textContent = room.bedroomCount || "Chưa cập nhật";
   document.getElementById("viewBathroomCount").textContent = room.bathroomCount || "Chưa cập nhật";
   document.getElementById("viewMaxOccupants").textContent = room.maxOccupants || "Chưa cập nhật";
-  document.getElementById("viewDepositAmount").textContent = room.depositAmount ? Number(room.depositAmount).toLocaleString() : "Chưa cập nhật";
+  document.getElementById("viewRentalPrice").textContent = room.rentalPrice ? Number(room.rentalPrice).toLocaleString() + " VND" : "Chưa cập nhật";
+  document.getElementById("viewDepositAmount").textContent = room.depositAmount ? Number(room.depositAmount).toLocaleString() + " VND" : "Chưa cập nhật";
+  document.getElementById("viewStatus").textContent = room.status === "available"
+    ? "Trống"
+    : room.status === "occupied"
+      ? "Đã thuê"
+      : room.status === "maintenance"
+        ? "Bảo trì"
+        : room.status || "Không xác định";
+  document.getElementById("viewTenant").textContent = room.tenant && room.tenant.name
+    ? `${room.tenant.name} (${room.tenant.email || ""})`
+    : "Chưa có khách thuê";
   document.getElementById("viewDescription").textContent = room.description || "Không có mô tả";
 
   document.getElementById("viewRoomSection").style.display = "block";

@@ -291,6 +291,7 @@
           try {
             const response = await fetch("/api/auth/login", {
               method: "POST",
+              credentials: "include",
               headers: {
                 "Content-Type": "application/json",
               },
@@ -320,8 +321,14 @@
 
             alert("✅ " + data.message);
             setTimeout(() => {
-              window.location.href = "/";
-            }, 1000);
+              if (data.role === 'admin') {
+                window.location.href = '/admin/dashboard';
+              } else if (data.role === 'manager') {
+                window.location.href = '/dashboard';
+              } else {
+                window.location.href = '/dashboard';
+              }
+            }, 500);
           } catch (error) {
             console.error("Login error:", error);
             alert("❌ Lỗi kết nối. Vui lòng thử lại!");

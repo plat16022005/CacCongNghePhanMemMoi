@@ -174,6 +174,12 @@ exports.login = async ({ email, password }) => {
   if (!isMatch)
     throw { status: 401, message: "Email hoặc mật khẩu không đúng" };
 
+  if (user.is_blocked)
+    throw {
+      status: 403,
+      message: `Tài khoản đã bị khóa.${user.block_reason ? ` Lý do: ${user.block_reason}` : " Vui lòng liên hệ quản trị viên."}`,
+    };
+
   const payload = { id: user.id, email: user.email, role: user.role };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken({ id: user.id });

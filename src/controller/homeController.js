@@ -34,6 +34,8 @@ let getHomePage = async (req, res) => {
     if (user) {
       if (user.role === "manager") {
         return res.redirect("/manager/dashboard");
+      } else if (user.role === "admin") {
+        return res.redirect("/admin/dashboard");
       } else {
         return res.render("users/dashboard", { user: user });
       }

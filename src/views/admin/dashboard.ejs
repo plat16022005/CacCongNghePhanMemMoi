@@ -1,0 +1,283 @@
+<%- include('./partials/header') %>
+<body>
+  <%- include('./partials/sidebar') %>
+
+  <div class="main-content">
+    <%- include('./partials/topbar') %>
+
+    <div id="adminDashboardError" class="dashboard-error" style="display:none; margin:16px 0; color:#b91c1c; background:#fee2e2; padding:12px; border-radius:12px;"></div>
+
+    <%- include('./tabs/dashboard') %>
+    <%- include('./tabs/users') %>
+    <%- include('./tabs/rooms') %>
+    <%- include('./tabs/applications') %>
+    <%- include('./tabs/reports') %>
+    <%- include('./tabs/settings') %>
+    <%- include('./tabs/profile') %>
+  </div>
+
+  <script>
+    const adminErrorEl = document.getElementById('adminDashboardError');
+
+    function showAdminError(message) {
+      if (!adminErrorEl) return;
+      adminErrorEl.textContent = message;
+      adminErrorEl.style.display = 'block';
+    }
+
+    function clearAdminError() {
+      if (!adminErrorEl) return;
+      adminErrorEl.textContent = '';
+      adminErrorEl.style.display = 'none';
+    }
+
+    async function logout() {
+      try {
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          alert('✅ Đăng xuất thành công!');
+          window.location.href = '/login';
+        } else {
+          const result = await response.json().catch(() => ({}));
+          alert('❌ Lỗi khi đăng xuất: ' + (result.message || 'Vui lòng thử lại.'));
+        }
+      } catch (err) {
+        console.error('Logout error:', err);
+        alert('❌ Lỗi kết nối khi đăng xuất.');
+      }
+    }
+
+    async function loadAdminStats() {
+      try {
+        clearAdminError();
+        const res = await fetch('/api/user/admin/stats', { credentials: 'include' });
+        const result = await res.json();
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            window.location.href = '/login';
+            return;
+          }
+          throw new Error(result.message || 'Không thể tải dữ liệu');
+        }
+        const data = result.data || {};
+        document.getElementById('statUsers').textContent = data.totalUsers ?? '--';
+        document.getElementById('statManagers').textContent = data.totalManagers ?? '--';
+        document.getElementById('statAdmins').textContent = data.totalAdmins ?? '--';
+        document.getElementById('statRooms').textContent = data.totalRooms ?? '--';
+        document.getElementById('statPending').textContent = data.pendingApplications ?? '--';
+        document.getElementById('statInvoices').textContent = data.totalInvoices ?? '--';
+      } catch (err) {
+        console.error(err);
+        showAdminError('Không thể tải thông tin admin. Vui lòng đăng nhập lại.');
+      }
+    }
+
+    async function loadAdminUsers() {
+      try {
+        const res = await fetch('/api/user/admin/users', { credentials: 'include' });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || 'Không thể tải danh sách người dùng');
+
+        const tbody = document.querySelector('#adminUsersTable tbody');
+        tbody.innerHTML = '';
+
+        const users = result.data || [];
+        users.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>
+              <strong>${user.name || user.email}</strong><br />
+              <small>${user.email}</small>
+            </td>
+            <td>
+              <select class="role-select" data-user-id="${user.id}">
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+              </select>
+            </td>
+            <td>${user.blockReason ? user.blockReason : '-'}</td>
+            <td>
+              <button class="status-btn ${user.isBlocked ? 'blocked' : 'active'}" data-user-id="${user.id}" data-is-blocked="${user.isBlocked}">
+                ${user.isBlocked ? 'Mở khóa' : 'Khóa'}
+              </button>
+            </td>
+            <td>${new Date(user.createdAt).toLocaleDateString('vi-VN')}</td>
+            <td>
+              <button class="table-btn" onclick="window.location.href='/dashboard'">Xem</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        document.querySelectorAll('.role-select').forEach(select => {
+          select.addEventListener('change', async (e) => {
+            const userId = e.target.dataset.userId;
+            const role = e.target.value;
+            await fetch(`/api/user/admin/users/${userId}/role`, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ role })
+            });
+            loadAdminUsers();
+            loadAdminStats();
+          });
+        });
+
+        document.querySelectorAll('.status-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const userId = btn.dataset.userId;
+            const isBlocked = btn.dataset.isBlocked === 'true';
+            let payload = {};
+
+            if (!isBlocked) {
+              const reason = prompt('Nhập lý do khóa tài khoản:');
+              if (!reason || !reason.trim()) {
+                alert('Vui lòng nhập lý do khóa tài khoản.');
+                return;
+              }
+              payload.reason = reason.trim();
+            }
+
+            const response = await fetch(`/api/user/admin/users/${userId}/status`, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+              alert(result.message || 'Có lỗi khi thay đổi trạng thái.');
+              return;
+            }
+
+            loadAdminUsers();
+            loadAdminStats();
+          });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('adminSearch')?.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('#adminUsersTable tbody tr').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+
+    const createManagerModal = document.getElementById('createManagerModal');
+    const createManagerForm = document.getElementById('createManagerForm');
+
+    const openCreateManagerModal = () => {
+      if (!createManagerModal) return;
+      createManagerModal.setAttribute('aria-hidden', 'false');
+      createManagerModal.classList.add('modal-open');
+    };
+
+    const closeCreateManagerModal = () => {
+      if (!createManagerModal) return;
+      createManagerModal.setAttribute('aria-hidden', 'true');
+      createManagerModal.classList.remove('modal-open');
+      createManagerForm?.reset();
+    };
+
+    document.getElementById('btnCreateManager')?.addEventListener('click', openCreateManagerModal);
+    document.getElementById('closeCreateManagerModal')?.addEventListener('click', closeCreateManagerModal);
+    document.getElementById('cancelCreateManager')?.addEventListener('click', closeCreateManagerModal);
+    createManagerModal?.addEventListener('click', (event) => {
+      if (event.target === createManagerModal) {
+        closeCreateManagerModal();
+      }
+    });
+
+    createManagerForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(createManagerForm);
+      const payload = {
+        name: formData.get('name')?.toString().trim(),
+        email: formData.get('email')?.toString().trim(),
+        password: formData.get('password')?.toString(),
+      };
+
+      if (!payload.name || !payload.email || !payload.password) {
+        alert('Vui lòng điền đầy đủ thông tin tạo Manager.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/user/admin/users/manager', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.message || 'Lỗi khi tạo tài khoản manager.');
+          return;
+        }
+
+        alert(result.message || 'Tạo manager thành công.');
+        closeCreateManagerModal();
+        loadAdminUsers();
+        loadAdminStats();
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi kết nối khi tạo tài khoản manager.');
+      }
+    });
+
+    function switchTab(tab) {
+      const tabIds = ['dashboardTab', 'usersTab', 'roomsTab', 'applicationsTab', 'reportsTab', 'settingsTab', 'profileTab'];
+      tabIds.forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+      });
+
+      document.querySelectorAll('.sidebar-menu button').forEach((btn) => {
+        btn.classList.remove('active');
+      });
+
+      const clickedButton = window.event?.currentTarget;
+      if (clickedButton && clickedButton.tagName === 'BUTTON') {
+        clickedButton.classList.add('active');
+      } else {
+        const btn = Array.from(document.querySelectorAll('.sidebar-menu button')).find((b) =>
+          b.getAttribute('onclick')?.includes(`'${tab}'`)
+        );
+        if (btn) btn.classList.add('active');
+      }
+
+      const titles = {
+        dashboard: '📊 Bảng điều khiển',
+        users: '👤 Quản lý tài khoản',
+        rooms: '🏠 Quản lý phòng',
+        applications: '📝 Đơn thuê',
+        reports: '📈 Báo cáo',
+        settings: '⚙️ Cài đặt',
+        profile: '👤 Hồ sơ',
+      };
+
+      document.getElementById('pageTitle').textContent = titles[tab] || 'Bảng điều khiển';
+
+      const panel = document.getElementById(`${tab}Tab`);
+      if (panel) panel.style.display = 'block';
+    }
+
+    loadAdminStats();
+    loadAdminUsers();
+  </script>
+</body>
+</html>

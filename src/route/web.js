@@ -40,13 +40,26 @@ let initWebRoutes = (app) => {
   router.get(
     "/dashboard",
     verifyTokenLoginView,
-    authorizeView("user", "manager"),
+    authorizeView("user", "manager", "admin"),
     (req, res) => {
       if (req.user && req.user.role === "manager") {
         console.log("Manager truy cập /dashboard, tự động chuyển hướng sang /manager/dashboard");
         return res.redirect("/manager/dashboard");
       }
+      if (req.user && req.user.role === "admin") {
+        console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
+        return res.redirect("/admin/dashboard");
+      }
       res.render("users/dashboard", { user: req.user });
+    },
+  );
+
+  router.get(
+    "/admin/dashboard",
+    verifyTokenLoginView,
+    authorizeView("admin"),
+    (req, res) => {
+      res.render("admin/dashboard", { user: req.user });
     },
   );
 

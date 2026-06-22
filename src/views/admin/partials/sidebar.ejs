@@ -1,0 +1,62 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">A</div>
+    <div>
+      <h3>BlueSky Admin</h3>
+      <p>Residence Admin</p>
+    </div>
+  </div>
+
+  <div class="sidebar-panel">
+    <div class="sidebar-panel-title">Menu chính</div>
+    <ul class="sidebar-menu">
+      <li>
+        <button class="active" onclick="switchTab('dashboard')">
+          <span>📊</span>
+          <span>Bảng điều khiển</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('users')">
+          <span>👤</span>
+          <span>Quản lý tài khoản</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('rooms')">
+          <span>🏠</span>
+          <span>Quản lý phòng</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('applications')">
+          <span>📝</span>
+          <span>Đơn thuê</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('reports')">
+          <span>📈</span>
+          <span>Báo cáo</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('settings')">
+          <span>⚙️</span>
+          <span>Cài đặt</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('profile')">
+          <span>👤</span>
+          <span>Hồ sơ</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">
+    <span>🚪</span>
+    <span>Đăng xuất</span>
+  </button>
+</aside>

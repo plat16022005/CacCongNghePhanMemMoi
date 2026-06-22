@@ -1,4 +1,4 @@
-const { Room, User, RoomInvoice } = require("../models");
+const { Room, User, RoomInvoice, RentalApplication } = require("../models");
 const { calculateMonthlyInvoice } = require("../utils/invoice.util");
 const { calculateCancellationRefund } = require("../utils/cancellation.util");
 const {
@@ -372,7 +372,14 @@ exports.estimateRenovation = async (req, res, next) => {
 // 15. Xem danh sách phòng trống để thuê (Renter)
 exports.getAvailableRoomsForTenant = async (req, res, next) => {
   try {
-    const rooms = await Room.find({ status: "available", tenantId: null })
+    const pendingRoomIds = await RentalApplication.find({ status: "pending" })
+      .distinct("roomId");
+
+    const rooms = await Room.find({
+      status: "available",
+      tenantId: null,
+      _id: { $nin: pendingRoomIds }
+    })
       .select("_id roomNumber rentalPrice area floor bedroomCount status description")
       .sort({ roomNumber: 1 });
     
@@ -409,11 +416,33 @@ exports.rentRoom = async (req, res, next) => {
       return res.status(400).json({ message: "Phòng này đã có người thuê hoặc không khả dụng." });
     }
 
-    // Kiểm tra xem user đã nộp đơn cho phòng nào đang pending chưa
+    // Kiểm tra xem user đã nộp đơn cho phòng này và đơn đó đã được xử lý chưa
     const { RentalApplication } = require("../models");
+    const handledApp = await RentalApplication.findOne({
+      tenantId: userId,
+      roomId: roomId,
+      status: { $in: ["approved", "completed", "rejected"] }
+    });
+    if (handledApp) {
+      return res.status(400).json({
+        message: "Đơn thuê cho phòng này đã được quản lý xử lý, bạn không thể chỉnh sửa hoặc gửi lại đơn này."
+      });
+    }
+
     const existingApp = await RentalApplication.findOne({ tenantId: userId, status: "pending" });
     if (existingApp) {
       return res.status(400).json({ message: "Bạn đã có đơn thuê phòng đang chờ duyệt." });
+    }
+
+    const existingPendingForRoom = await RentalApplication.findOne({
+      roomId,
+      status: "pending",
+      tenantId: { $ne: userId }
+    });
+    if (existingPendingForRoom) {
+      return res.status(409).json({
+        message: "Phòng này đã có người khác đang gửi đơn chờ duyệt. Bạn không thể gửi thêm đơn cho phòng này."
+      });
     }
 
     // Lấy thông tin user gửi lên từ form
@@ -541,13 +570,21 @@ exports.getRoomById = async (req, res, next) => {
     if (!room) {
       return res.status(404).json({ message: "Phòng trọ không tồn tại" });
     }
-    
+
+    const pendingApplication = await RentalApplication.findOne({
+      roomId: room._id,
+      status: "pending"
+    });
+
     const plainRoom = room.toObject ? room.toObject() : room;
     plainRoom.id = plainRoom._id.toString();
     if (plainRoom.tenant) {
       plainRoom.tenant.id = plainRoom.tenant._id.toString();
     }
-    
+
+    plainRoom.hasPendingApplication = !!pendingApplication;
+    plainRoom.canRent = plainRoom.status === "available" && !plainRoom.tenantId && !plainRoom.hasPendingApplication;
+
     res.status(200).json({ data: plainRoom });
   } catch (err) {
     next(err);

@@ -18,7 +18,8 @@ let createNewUser = (data) => {
         gender: data.gender === '1' ? 'female' : 'male',
         roleId: data.roleId,
         role: data.roleId === '1' ? 'admin' : 'user', // Set role based on roleId
-        is_active: true // Auto activate users created via admin panel
+        is_active: true, // Auto activate users created via admin panel
+        is_blocked: false,
       });
       resolve('OK create a new user successfull');
     } catch (e) {

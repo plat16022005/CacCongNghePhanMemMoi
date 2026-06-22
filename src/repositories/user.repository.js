@@ -8,13 +8,16 @@ const findByEmail = async (email) => {
   return user;
 };
 
-const createUser = async ({ name, email, password, role = 'user' }) => {
+const createUser = async ({ name, email, password, role = 'user', roleId = '', is_active = false, is_blocked = false, block_reason = '' }) => {
   const user = await User.create({
     name,
     email,
     password,
     role,
-    is_active: false
+    roleId,
+    is_active,
+    is_blocked,
+    block_reason,
   });
   return user._id.toString();
 };
