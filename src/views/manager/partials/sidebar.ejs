@@ -1,0 +1,86 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">B</div>
+    <div>
+      <h3>BlueSky</h3>
+      <p>Residence Manager</p>
+    </div>
+  </div>
+
+  <div class="sidebar-panel">
+    <div class="sidebar-panel-title">Menu chính</div>
+    <ul class="sidebar-menu">
+      <li>
+        <button class="active" onclick="switchTab('dashboard')">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('residents')">
+          <span>👥</span>
+          <span>Quản lý cư dân</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('rooms')">
+          <span>🏢</span>
+          <span>Quản lý căn hộ</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('applications')">
+          <span>📝</span>
+          <span>Duyệt đăng ký khách</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('invoices')">
+          <span>🧾</span>
+          <span>Quản lý hóa đơn</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('notices')">
+          <span>📣</span>
+          <span>Gửi thông báo</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('feedback')">
+          <span>⚠️</span>
+          <span>Xử lý phản ánh</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('revenue')">
+          <span>💰</span>
+          <span>Thống kê doanh thu</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('utilities')">
+          <span>🔧</span>
+          <span>Quản lý tiện ích</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('parking')">
+          <span>🅿️</span>
+          <span>Xét duyệt đơn gửi xe</span>
+        </button>
+      </li>
+      <li>
+        <button onclick="switchTab('profile')">
+          <span>👤</span>
+          <span>Hồ sơ</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">
+    <span>🚪</span>
+    <span>Đăng xuất</span>
+  </button>
+</aside>

@@ -1,0 +1,120 @@
+<div id="applicationsTab" style="display: none;">
+  <div class="section table-panel">
+    <div class="section-header">
+      <div>
+        <p>Quản lý hồ sơ</p>
+        <h3>📝 Duyệt đăng ký khách thuê</h3>
+      </div>
+      <button onclick="loadApplications()" class="btn btn-primary">
+        🔄 Làm mới
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Người nộp đơn</th>
+            <th>Phòng</th>
+            <th>Ngày nộp</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="applicationsTableBody">
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">Nhấn "Làm mới" để tải danh sách đơn thuê</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<!-- Modal chi tiết đơn -->
+<div id="applicationModal" class="modal">
+  <div class="modal-content modal-application">
+    <div class="modal-header">
+      <div>
+        <p class="modal-kicker">Đơn đăng ký</p>
+        <h3>Chi tiết đơn thuê</h3>
+      </div>
+      <span class="badge badge-primary">Đang xem</span>
+    </div>
+
+    <div class="modal-grid">
+      <div class="modal-column">
+        <h4>Thông tin khách hàng</h4>
+        <div class="field-grid">
+          <div class="modal-field">
+            <label>Họ tên</label>
+            <p id="appUserName"></p>
+          </div>
+          <div class="modal-field">
+            <label>SĐT</label>
+            <p id="appUserPhone"></p>
+          </div>
+          <div class="modal-field">
+            <label>Ngày sinh</label>
+            <p id="appUserDob"></p>
+          </div>
+          <div class="modal-field">
+            <label>Giới tính</label>
+            <p id="appUserGender"></p>
+          </div>
+          <div class="modal-field field-full">
+            <label>Địa chỉ</label>
+            <p id="appUserAddress"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-column">
+        <h4>Thông tin phòng</h4>
+        <div class="field-grid">
+          <div class="modal-field">
+            <label>Phòng</label>
+            <p id="appRoomNumber"></p>
+          </div>
+          <div class="modal-field">
+            <label>Giá thuê</label>
+            <p id="appRoomPrice"></p>
+          </div>
+          <div class="modal-field field-full">
+            <label>Tầng / Diện tích</label>
+            <p id="appRoomInfo"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h4>🪪 Ảnh căn cước công dân</h4>
+      <div class="document-preview-grid">
+        <div class="document-preview">
+          <p>Mặt trước</p>
+          <img id="appCccdFront" src="" alt="CCCD mặt trước">
+        </div>
+        <div class="document-preview">
+          <p>Mặt sau</p>
+          <img id="appCccdBack" src="" alt="CCCD mặt sau">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h4>👥 Người ở ghép</h4>
+      <div id="appMembersContainer" class="member-list"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button onclick="closeModal('applicationModal')" class="btn btn-secondary">Đóng</button>
+      <button id="btnRejectApp" class="btn btn-danger">❌ Từ chối</button>
+      <button id="btnApproveApp" class="btn btn-primary">✅ Duyệt</button>
+      <button id="btnConfirmDeposit" class="btn btn-success" style="display: none;">💰 Xác nhận đã thu cọc</button>
+    </div>
+  </div>
+</div>
+</div>
+

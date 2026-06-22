@@ -31,14 +31,14 @@ exports.getUserProfile = async (req, res, next) => {
   }
 };
 
-exports.getAdminProfile = async (req, res, next) => {
+exports.getManagerProfile = async (req, res, next) => {
   try {
     const user = await userService.getProfile(req.user.id);
     res.status(200).json({
-      message: "Admin Dashboard Profile",
+      message: "Manager Dashboard Profile",
       data: user,
-      redirectUrl: "/admin/profile",
-      adminFeatures: ["manage_users", "view_logs", "settings"],
+      redirectUrl: "/manager/profile",
+      managerFeatures: ["manage_users", "view_logs", "settings"],
     });
   } catch (err) {
     if (err.status)

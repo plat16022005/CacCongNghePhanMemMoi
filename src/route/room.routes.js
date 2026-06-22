@@ -17,30 +17,30 @@ router.get("/my-invoices", verifyTokenLogin, authorize("user"), roomCtrl.getMyIn
 // Xem chi tiết 1 phòng (cho Renter)
 router.get("/:id", verifyTokenLogin, authorize("user"), roomCtrl.getRoomById);
 
-// --- API CHO ADMIN ---
+// --- API CHO MANAGER / ADMIN ---
 // Thêm phòng mới
-router.post("/", verifyTokenLogin, authorize("admin"), upload.array('images', 10), roomCtrl.createRoom);
+router.post("/", verifyTokenLogin, authorize("manager", "admin"), upload.array('images', 10), roomCtrl.createRoom);
 // Lấy danh sách toàn bộ phòng
-router.get("/", verifyTokenLogin, authorize("admin"), roomCtrl.getAllRooms);
+router.get("/", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.getAllRooms);
 // Lấy danh sách khách thuê chưa được gán phòng
-router.get("/available-tenants", verifyTokenLogin, authorize("admin"), roomCtrl.getAvailableTenants);
+router.get("/available-tenants", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.getAvailableTenants);
 // Gán khách thuê vào phòng
-router.put("/:id/assign", verifyTokenLogin, authorize("admin"), roomCtrl.assignTenant);
+router.put("/:id/assign", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.assignTenant);
 // Cập nhật thông tin phòng (Sửa phòng)
-router.put("/:id", verifyTokenLogin, authorize("admin"), upload.array('images', 10), roomCtrl.updateRoom);
+router.put("/:id", verifyTokenLogin, authorize("manager", "admin"), upload.array('images', 10), roomCtrl.updateRoom);
 // Xóa phòng trọ
-router.delete("/:id", verifyTokenLogin, authorize("admin"), roomCtrl.deleteRoom);
+router.delete("/:id", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.deleteRoom);
 // Tính toán hoàn cọc khi hủy đặt phòng
-router.post("/cancel-refund", verifyTokenLogin, authorize("admin"), roomCtrl.calculateRefund);
+router.post("/cancel-refund", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.calculateRefund);
 // Tính tiền phạt vi phạm & đền bù tài sản
-router.post("/test-fine", verifyTokenLogin, authorize("admin"), roomCtrl.calculateFine);
+router.post("/test-fine", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.calculateFine);
 // Đánh giá điểm tín nhiệm & gia hạn
-router.post("/test-credit", verifyTokenLogin, authorize("admin"), roomCtrl.evaluateCredit);
+router.post("/test-credit", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.evaluateCredit);
 // Tính lương nhân viên
-router.post("/test-salary", verifyTokenLogin, authorize("admin"), roomCtrl.calculatePayroll);
+router.post("/test-salary", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.calculatePayroll);
 // Dự toán cải tạo nâng cấp phòng
-router.post("/test-renovation", verifyTokenLogin, authorize("admin"), roomCtrl.estimateRenovation);
+router.post("/test-renovation", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.estimateRenovation);
 // Nhập số liệu tiêu thụ và kết xuất hóa đơn tháng
-router.post("/:id/invoice", verifyTokenLogin, authorize("admin"), roomCtrl.generateInvoice);
+router.post("/:id/invoice", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.generateInvoice);
 
 module.exports = router;

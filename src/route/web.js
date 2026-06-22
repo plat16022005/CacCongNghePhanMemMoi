@@ -40,11 +40,11 @@ let initWebRoutes = (app) => {
   router.get(
     "/dashboard",
     verifyTokenLoginView,
-    authorizeView("user", "admin"),
+    authorizeView("user", "manager"),
     (req, res) => {
-      if (req.user && req.user.role === "admin") {
-        console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
-        return res.redirect("/admin/dashboard");
+      if (req.user && req.user.role === "manager") {
+        console.log("Manager truy cập /dashboard, tự động chuyển hướng sang /manager/dashboard");
+        return res.redirect("/manager/dashboard");
       }
       res.render("users/dashboard", { user: req.user });
     },
@@ -68,17 +68,17 @@ let initWebRoutes = (app) => {
     }
   );
 
-  // GET /admin/dashboard - Dashboard admin
+  // GET /manager/dashboard - Dashboard manager
   router.get(
-    "/admin/dashboard",
+    "/manager/dashboard",
     verifyTokenLoginView,
-    authorizeView("admin"),
+    authorizeView("manager"),
     (req, res) => {
-      if (req.user && req.user.role !== "admin") {
-        console.log("Cư dân truy cập /admin/dashboard, tự động chuyển hướng sang /dashboard");
+      if (req.user && req.user.role !== "manager") {
+        console.log("Người dùng không phải manager truy cập /manager/dashboard, tự động chuyển hướng sang /dashboard");
         return res.redirect("/dashboard");
       }
-      res.render("admin/dashboard", { user: req.user });
+      res.render("manager/dashboard", { user: req.user });
     },
   );
 

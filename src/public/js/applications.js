@@ -12,6 +12,13 @@ async function loadApplications() {
 
 let currentApplications = [];
 
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
 function renderApplications(apps) {
   currentApplications = apps;
   const tbody = document.getElementById('applicationsTableBody');
@@ -86,23 +93,31 @@ function viewApplication(appId) {
   const membersContainer = document.getElementById('appMembersContainer');
   if (membersContainer) {
     if (members.length === 0) {
-      membersContainer.innerHTML = '<p style="color:#64748b;">Không có thông tin người ở ghép</p>';
+      membersContainer.innerHTML = '<div class="empty-state">Không có thông tin người ở ghép</div>';
     } else {
       membersContainer.innerHTML = members.map((member, index) => `
-        <div style="border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px; background:#f8fafc;">
-          <p style="margin-bottom: 8px;"><strong>${index + 1}. ${member.name || 'N/A'}</strong></p>
-          <p><small>SĐT:</small> ${member.phoneNumber || 'N/A'}</p>
-          <p><small>Ngày sinh:</small> ${member.dob || 'N/A'}</p>
-          <p><small>Giới tính:</small> ${member.gender === 'male' ? 'Nam' : member.gender === 'female' ? 'Nữ' : (member.gender || 'N/A')}</p>
-          <p style="margin-bottom: 10px;"><small>Địa chỉ:</small> ${member.address || 'N/A'}</p>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #fff;">
-              <p style="font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 6px;">CCCD Mặt Trước</p>
-              <img src="${member.cccdFrontImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh'}" style="width: 100%; height: 180px; object-fit: contain; background: #f8fafc;" alt="CCCD mặt trước người ở ghép">
+        <div class="member-card">
+          <div class="member-card-header">
+            <div class="member-title-wrap">
+              <span>${index + 1}</span>
+              <strong>${member.name || 'N/A'}</strong>
             </div>
-            <div style="flex: 1; min-width: 220px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #fff;">
-              <p style="font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 6px;">CCCD Mặt Sau</p>
-              <img src="${member.cccdBackImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh'}" style="width: 100%; height: 180px; object-fit: contain; background: #f8fafc;" alt="CCCD mặt sau người ở ghép">
+            <span class="badge badge-primary">Người ở ghép</span>
+          </div>
+          <div class="member-meta">
+            <p><label>SĐT</label><span>${member.phoneNumber || 'N/A'}</span></p>
+            <p><label>Ngày sinh</label><span>${member.dob || 'N/A'}</span></p>
+            <p><label>Giới tính</label><span>${member.gender === 'male' ? 'Nam' : member.gender === 'female' ? 'Nữ' : (member.gender || 'N/A')}</span></p>
+            <p><label>Địa chỉ</label><span>${member.address || 'N/A'}</span></p>
+          </div>
+          <div class="member-docs">
+            <div class="document-preview">
+              <p>CCCD mặt trước</p>
+              <img src="${member.cccdFrontImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh'}" alt="CCCD mặt trước người ở ghép">
+            </div>
+            <div class="document-preview">
+              <p>CCCD mặt sau</p>
+              <img src="${member.cccdBackImage || 'https://via.placeholder.com/400x200?text=Khong+co+anh'}" alt="CCCD mặt sau người ở ghép">
             </div>
           </div>
         </div>

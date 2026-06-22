@@ -1,9 +1,9 @@
-// Load admin profile khi trang load
-window.addEventListener("DOMContentLoaded", loadAdminProfile);
+// Load manager profile khi trang load
+window.addEventListener("DOMContentLoaded", loadManagerProfile);
 
-async function loadAdminProfile() {
+async function loadManagerProfile() {
   try {
-    const response = await fetch("/api/admin/profile", {
+    const response = await fetch("/api/manager/profile", {
       method: "GET",
       credentials: "include",
     });
@@ -19,89 +19,127 @@ async function loadAdminProfile() {
     const result = await response.json();
     const user = result.data;
 
-    // Cập nhật thông tin admin
+    // Cập nhật thông tin manager
     document.getElementById("adminName").textContent =
-      user.name || "Admin User";
+      user.name || "Manager User";
     document.getElementById("adminEmail").textContent =
-      user.email || "admin@example.com";
+      user.email || "manager@example.com";
     document.getElementById("adminAvatar").textContent = (
-      user.name || "A"
+      user.name || "M"
     )
       .charAt(0)
       .toUpperCase();
 
     document.getElementById("profileName").textContent =
-      user.name || "Admin User";
+      user.name || "Manager User";
     document.getElementById("profileEmail").textContent =
-      user.email || "admin@example.com";
+      user.email || "manager@example.com";
     document.getElementById("profilePhone").textContent =
       user.phoneNumber || "Chưa cập nhật";
     document.getElementById("profileAddress").textContent =
       user.address || "Chưa cập nhật";
   } catch (error) {
-    console.error("Load admin profile error:", error);
+    console.error("Load manager profile error:", error);
   }
 }
 
 function switchTab(tab) {
-  // Ẩn tất cả tab
-  document.getElementById("dashboardTab").style.display = "none";
-  document.getElementById("profileTab").style.display = "none";
-  document.getElementById("usersTab").style.display = "none";
-  document.getElementById("settingsTab").style.display = "none";
-  document.getElementById("roomsTab").style.display = "none";
-  document.getElementById("cancellationTab").style.display = "none";
-  document.getElementById("testingLabTab").style.display = "none";
-  
-  const appTab = document.getElementById("applicationsTab");
-  if(appTab) appTab.style.display = "none";
+  // Ẩn tất cả tab có thể tồn tại
+  const tabIds = [
+    "dashboardTab",
+    "profileTab",
+    "usersTab",
+    "settingsTab",
+    "roomsTab",
+    "cancellationTab",
+    "testingLabTab",
+    "applicationsTab",
+    "residentsTab",
+    "invoicesTab",
+    "noticesTab",
+    "feedbackTab",
+    "revenueTab",
+    "utilitiesTab",
+    "parkingTab"
+  ];
+
+  tabIds.forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) element.style.display = "none";
+  });
 
   // Cập nhật nút active
   document.querySelectorAll(".sidebar-menu button").forEach((btn) => {
     btn.classList.remove("active");
   });
-  if (window.event && window.event.currentTarget && window.event.currentTarget.tagName === 'BUTTON') {
-    window.event.currentTarget.classList.add("active");
+
+  const clickedButton = window.event?.currentTarget;
+  if (clickedButton && clickedButton.tagName === "BUTTON") {
+    clickedButton.classList.add("active");
   } else {
-    const btn = Array.from(
-      document.querySelectorAll(".sidebar-menu button")
-    ).find((b) => b.getAttribute("onclick").includes(tab));
+    const btn = Array.from(document.querySelectorAll(".sidebar-menu button")).find((b) =>
+      b.getAttribute("onclick")?.includes(`'${tab}'`)
+    );
     if (btn) btn.classList.add("active");
   }
 
   // Hiển thị tab được chọn
   const titles = {
     dashboard: "📊 Dashboard",
-    rooms: "🏠 Quản lý phòng trọ",
-    users: "👥 Quản lý người dùng",
-    applications: "📝 Duyệt đơn thuê",
-    cancellation: "💸 Hủy phòng & Hoàn cọc",
-    "testing-lab": "🧪 Thực nghiệm Kiểm thử",
+    residents: "👥 Quản lý cư dân",
+    rooms: "🏢 Quản lý căn hộ",
+    applications: "📝 Duyệt đăng ký khách",
+    invoices: "🧾 Quản lý hóa đơn",
+    notices: "📣 Gửi thông báo",
+    feedback: "⚠️ Xử lý phản ánh",
+    revenue: "💰 Thống kê doanh thu",
+    utilities: "🔧 Quản lý tiện ích",
+    parking: "🅿️ Xét duyệt đơn gửi xe",
     profile: "👤 Hồ sơ của tôi",
-    settings: "⚙️ Cài đặt hệ thống",
   };
 
   document.getElementById("pageTitle").textContent =
     titles[tab] || "Dashboard";
 
   if (tab === "dashboard") {
-    document.getElementById("dashboardTab").style.display = "block";
+    const dash = document.getElementById("dashboardTab");
+    if (dash) dash.style.display = "block";
   } else if (tab === "profile") {
-    document.getElementById("profileTab").style.display = "block";
-  } else if (tab === "users") {
-    document.getElementById("usersTab").style.display = "block";
+    const prof = document.getElementById("profileTab");
+    if (prof) prof.style.display = "block";
+  } else if (tab === "residents") {
+    const residents = document.getElementById("residentsTab");
+    if (residents) residents.style.display = "block";
   } else if (tab === "rooms") {
-    document.getElementById("roomsTab").style.display = "block";
-    loadRooms();
+    const roomsTab = document.getElementById("roomsTab");
+    if (roomsTab) {
+      roomsTab.style.display = "block";
+      loadRooms();
+    }
   } else if (tab === "applications") {
-    document.getElementById("applicationsTab").style.display = "block";
-    if(typeof loadApplications === 'function') loadApplications();
-  } else if (tab === "settings") {
-    document.getElementById("settingsTab").style.display = "block";
-  } else if (tab === "cancellation") {
-    document.getElementById("cancellationTab").style.display = "block";
-  } else if (tab === "testing-lab") {
-    document.getElementById("testingLabTab").style.display = "block";
+    const appTab = document.getElementById("applicationsTab");
+    if (appTab) {
+      appTab.style.display = "block";
+      if (typeof loadApplications === "function") loadApplications();
+    }
+  } else if (tab === "invoices") {
+    const invoices = document.getElementById("invoicesTab");
+    if (invoices) invoices.style.display = "block";
+  } else if (tab === "notices") {
+    const notices = document.getElementById("noticesTab");
+    if (notices) notices.style.display = "block";
+  } else if (tab === "feedback") {
+    const feedback = document.getElementById("feedbackTab");
+    if (feedback) feedback.style.display = "block";
+  } else if (tab === "revenue") {
+    const revenue = document.getElementById("revenueTab");
+    if (revenue) revenue.style.display = "block";
+  } else if (tab === "utilities") {
+    const utilities = document.getElementById("utilitiesTab");
+    if (utilities) utilities.style.display = "block";
+  } else if (tab === "parking") {
+    const parking = document.getElementById("parkingTab");
+    if (parking) parking.style.display = "block";
   }
 }
 

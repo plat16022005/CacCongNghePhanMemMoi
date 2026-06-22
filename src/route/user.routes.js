@@ -26,12 +26,12 @@ router.get(
   userCtrl.getUserProfile,
 );
 
-// GET /api/admin/profile
+// GET /api/manager/profile
 router.get(
-  "/admin/profile",
+  "/manager/profile",
   verifyTokenLogin,
-  authorize("admin"),
-  userCtrl.getAdminProfile,
+  authorize("manager"),
+  userCtrl.getManagerProfile,
 );
 
 module.exports = router;
