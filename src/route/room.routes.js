@@ -21,7 +21,7 @@ router.get("/:id", verifyTokenLogin, authorize("user"), roomCtrl.getRoomById);
 // Thêm phòng mới
 router.post("/", verifyTokenLogin, authorize("manager", "admin"), upload.array('images', 10), roomCtrl.createRoom);
 // Lấy danh sách toàn bộ phòng
-router.get("/", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.getAllRooms);
+router.get("/", verifyTokenLogin, authorize("manager", "admin", "accountant"), roomCtrl.getAllRooms);
 // Lấy danh sách khách thuê chưa được gán phòng
 router.get("/available-tenants", verifyTokenLogin, authorize("manager", "admin"), roomCtrl.getAvailableTenants);
 // Gán khách thuê vào phòng

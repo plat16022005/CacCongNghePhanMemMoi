@@ -9,6 +9,7 @@ const maintenanceRequestSchema = new mongoose.Schema(
     },
     title: { type: String, required: true },
     description: { type: String, required: true },
+    images: [{ type: String }], // Ảnh đính kèm sự cố
     status: {
       type: String,
       enum: ["pending", "in_progress", "resolved"],

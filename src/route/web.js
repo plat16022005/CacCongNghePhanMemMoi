@@ -123,7 +123,7 @@ let initWebRoutes = (app) => {
   router.get(
     /^\/dashboard(?:\/.*)?$/,
     verifyTokenLoginView,
-    authorizeView("user"),
+    authorizeView("user", "guard", "accountant", "maintenance"),
     (req, res) => {
       res.render("homepage.ejs", { user: req.user });
     }
@@ -148,6 +148,9 @@ let initWebRoutes = (app) => {
   app.use("/api/resident", require("./resident.routes"));
   app.use("/api/rooms", require("./room.routes"));
   app.use("/api/applications", require("./application.routes"));
+  app.use("/api/guard", require("./guard.routes"));
+  app.use("/api/accountant", require("./accountant.routes"));
+  app.use("/api/maintenance", require("./maintenance.routes"));
   return app.use("/", router);
 };
 

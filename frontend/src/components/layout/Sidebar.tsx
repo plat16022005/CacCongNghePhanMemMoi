@@ -8,21 +8,53 @@ import {
   Car, 
   Wrench, 
   MessageSquare, 
-  Settings 
+  Settings,
+  QrCode,
+  AlertTriangle,
+  Calendar,
+  DollarSign,
+  PlusCircle
 } from 'lucide-react';
 
 export default function Sidebar() {
-  const navItems = [
-    { name: 'Tổng quan', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Hồ sơ', path: '/dashboard/profile', icon: User },
-    { name: 'Căn hộ của tôi', path: '/dashboard/apartment', icon: Home },
-    { name: 'Hóa đơn', path: '/dashboard/invoices', icon: FileText },
-    { name: 'Khách thăm', path: '/dashboard/guests', icon: Users },
-    { name: 'Đăng ký xe', path: '/dashboard/parking', icon: Car },
-    { name: 'Báo cáo sự cố', path: '/dashboard/maintenance', icon: Wrench },
-    { name: 'Đánh giá', path: '/dashboard/feedbacks', icon: MessageSquare },
-    { name: 'Cài đặt', path: '/dashboard/settings', icon: Settings },
-  ];
+  const role = (window as any).USER_DATA?.role || 'user';
+  
+  let navItems = [];
+  if (role === 'guard') {
+    navItems = [
+      { name: 'Tổng quan bảo vệ', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'Quét QR khách', path: '/dashboard/guests-scan', icon: QrCode },
+      { name: 'Danh sách khách', path: '/dashboard/guests-list', icon: Users },
+      { name: 'Kiểm tra xe gửi', path: '/dashboard/vehicles', icon: Car },
+      { name: 'Ghi nhận sự cố', path: '/dashboard/incidents', icon: AlertTriangle },
+    ];
+  } else if (role === 'accountant') {
+    navItems = [
+      { name: 'Tổng quan kế toán', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'Quản lý hóa đơn', path: '/dashboard/invoices-manage', icon: FileText },
+      { name: 'Tạo hóa đơn', path: '/dashboard/invoices-create', icon: PlusCircle },
+      { name: 'Theo dõi công nợ', path: '/dashboard/debts', icon: DollarSign },
+    ];
+  } else if (role === 'maintenance') {
+    navItems = [
+      { name: 'Tổng quan kỹ thuật', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'Yêu cầu sửa chữa', path: '/dashboard/requests', icon: Wrench },
+      { name: 'Lịch bảo trì thiết bị', path: '/dashboard/schedules', icon: Calendar },
+    ];
+  } else {
+    // Default 'user' (resident)
+    navItems = [
+      { name: 'Tổng quan', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'Hồ sơ', path: '/dashboard/profile', icon: User },
+      { name: 'Căn hộ của tôi', path: '/dashboard/apartment', icon: Home },
+      { name: 'Hóa đơn', path: '/dashboard/invoices', icon: FileText },
+      { name: 'Khách thăm', path: '/dashboard/guests', icon: Users },
+      { name: 'Đăng ký xe', path: '/dashboard/parking', icon: Car },
+      { name: 'Báo cáo sự cố', path: '/dashboard/maintenance', icon: Wrench },
+      { name: 'Đánh giá', path: '/dashboard/feedbacks', icon: MessageSquare },
+      { name: 'Cài đặt', path: '/dashboard/settings', icon: Settings },
+    ];
+  }
 
   return (
     <aside className="hidden md:flex flex-col w-[240px] h-screen bg-white border-r border-[var(--color-border)] fixed left-0 top-0 z-20">
