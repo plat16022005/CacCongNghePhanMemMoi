@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng ký Gửi xe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 20px; color: #0f172a; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { color: #475569; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; color: white; background: #10b981; }
+    .btn-danger { background: #ef4444; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button onclick="window.location.href='/dashboard'" style="padding:10px; margin-bottom:20px; border-radius:8px; border:1px solid #ccc; cursor:pointer;">← Quay lại</button>
+    
+    <div class="card">
+      <h2>Thêm xe mới</h2>
+      <form id="parkingForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label>Loại xe</label>
+            <select id="pType">
+              <option value="motorcycle">Xe máy</option>
+              <option value="car">Ô tô</option>
+              <option value="bicycle">Xe đạp / Xe điện</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Biển số xe</label><input type="text" id="pPlate" required placeholder="VD: 29H1-123.45"></div>
+          <div class="form-group"><label>Hãng xe</label><input type="text" id="pBrand" required placeholder="VD: Honda, Toyota"></div>
+          <div class="form-group"><label>Màu xe</label><input type="text" id="pColor" required placeholder="VD: Đen"></div>
+        </div>
+        <button type="submit" class="btn">Gửi yêu cầu đăng ký</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Xe đã đăng ký</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Loại xe</th>
+            <th>Biển số</th>
+            <th>Hãng - Màu</th>
+            <th>Vị trí bãi</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="parkingTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadParking() {
+      const res = await fetch("/api/resident/parking");
+      const json = await res.json();
+      const tbody = document.getElementById("parkingTable");
+      tbody.innerHTML = "";
+      json.data.forEach(p => {
+        let status = '';
+        if(p.status === 'pending') status = '<span style="color:orange">Chờ duyệt</span>';
+        else if(p.status === 'approved') status = '<span style="color:green">Đã duyệt</span>';
+        else status = '<span style="color:red">Từ chối</span>';
+
+        let type = p.vehicleType === 'motorcycle' ? '🏍️ Xe máy' : (p.vehicleType === 'car' ? '🚗 Ô tô' : '🚲 Xe đạp');
+        let btn = p.status === 'pending' ? `<button class="btn-danger" onclick="delParking('${p._id}')">Hủy</button>` : '';
+
+        tbody.innerHTML += `<tr>
+          <td>${type}</td>
+          <td style="font-weight:bold">${p.licensePlate}</td>
+          <td>${p.vehicleBrand} - ${p.vehicleColor}</td>
+          <td>${p.slotNumber || 'Chưa xếp'}</td>
+          <td>${status}</td><td>${btn}</td>
+        </tr>`;
+      });
+    }
+
+    document.getElementById("parkingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = {
+        vehicleType: document.getElementById("pType").value,
+        licensePlate: document.getElementById("pPlate").value,
+        vehicleBrand: document.getElementById("pBrand").value,
+        vehicleColor: document.getElementById("pColor").value
+      };
+      const res = await fetch("/api/resident/parking", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+      if(res.ok) { alert("Đăng ký thành công!"); document.getElementById("parkingForm").reset(); loadParking(); }
+    });
+
+    async function delParking(id) {
+      if(!confirm("Bạn muốn hủy đăng ký này?")) return;
+      const res = await fetch(`/api/resident/parking/${id}`, { method: "DELETE" });
+      if(res.ok) loadParking();
+      else alert("Lỗi khi hủy");
+    }
+
+    window.onload = loadParking;
+  </script>
+</body>
+</html>

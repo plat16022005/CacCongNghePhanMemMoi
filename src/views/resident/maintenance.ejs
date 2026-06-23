@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Báo cáo Sự cố</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 20px; color: #0f172a; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { color: #475569; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; color: white; background: #dc2626; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button onclick="window.location.href='/dashboard'" style="padding:10px; margin-bottom:20px; border-radius:8px; border:1px solid #ccc; cursor:pointer;">← Quay lại</button>
+    
+    <div class="card">
+      <h2>🛠 Báo cáo sự cố kỹ thuật</h2>
+      <form id="mrForm">
+        <div class="form-group"><label>Tiêu đề sự cố</label><input type="text" id="mTitle" required placeholder="VD: Hỏng vòi nước nhà vệ sinh"></div>
+        <div class="form-group"><label>Mô tả chi tiết</label><textarea id="mDesc" required rows="4" placeholder="Cung cấp thông tin chi tiết về tình trạng hư hỏng..."></textarea></div>
+        <button type="submit" class="btn">Gửi yêu cầu sửa chữa</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Tiến độ sửa chữa</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tiêu đề</th>
+            <th>Mô tả</th>
+            <th>Ngày báo cáo</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="mrTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadMrs() {
+      const res = await fetch("/api/resident/maintenance");
+      const json = await res.json();
+      const tbody = document.getElementById("mrTable");
+      tbody.innerHTML = "";
+      json.data.forEach(m => {
+        let status = '';
+        if(m.status === 'pending') status = '<span style="color:orange; font-weight:bold;">Đang chờ tiếp nhận</span>';
+        else if(m.status === 'in_progress') status = '<span style="color:blue; font-weight:bold;">Đang xử lý</span>';
+        else status = '<span style="color:green; font-weight:bold;">Đã khắc phục</span>';
+
+        tbody.innerHTML += `<tr>
+          <td style="font-weight:bold">${m.title}</td>
+          <td>${m.description}</td>
+          <td>${new Date(m.createdAt).toLocaleString('vi-VN')}</td>
+          <td>${status}</td>
+        </tr>`;
+      });
+    }
+
+    document.getElementById("mrForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = {
+        title: document.getElementById("mTitle").value,
+        description: document.getElementById("mDesc").value
+      };
+      const res = await fetch("/api/resident/maintenance", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+      if(res.ok) { alert("Đã gửi báo cáo!"); document.getElementById("mrForm").reset(); loadMrs(); }
+    });
+
+    window.onload = loadMrs;
+  </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách hóa đơn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 20px; color: #0f172a; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { color: #475569; }
+    .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; color: white; }
+    .btn-pay { background: #10b981; }
+    .btn-view { background: #3b82f6; }
+    
+    /* Modal styles */
+    .modal-backdrop {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+    }
+    .modal {
+      background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 100%;
+    }
+    .close-btn { float: right; cursor: pointer; font-size: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button onclick="window.location.href='/dashboard'" style="padding:10px; margin-bottom:20px; border-radius:8px; border:1px solid #ccc; cursor:pointer;">← Quay lại</button>
+    <div class="card">
+      <h2>🧾 Quản lý Hóa đơn</h2>
+      <table id="invoicesTable">
+        <thead>
+          <tr>
+            <th>Kỳ (Tháng/Năm)</th>
+            <th>Loại</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- data -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="invoiceModal">
+    <div class="modal">
+      <span class="close-btn" onclick="closeModal()">×</span>
+      <h3>Chi tiết hóa đơn</h3>
+      <div id="modalContent" style="margin-top: 16px; line-height: 1.6;"></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadInvoices() {
+      try {
+        const res = await fetch("/api/resident/invoices");
+        const json = await res.json();
+        const tbody = document.querySelector("#invoicesTable tbody");
+        tbody.innerHTML = "";
+        
+        json.data.forEach(inv => {
+          const tr = document.createElement("tr");
+          let statusHtml = '';
+          if(inv.status === 'paid') statusHtml = '<span style="color:green; font-weight:bold;">Đã thanh toán</span>';
+          else if(inv.status === 'pending') statusHtml = '<span style="color:orange; font-weight:bold;">Đang chờ xử lý</span>';
+          else statusHtml = '<span style="color:red; font-weight:bold;">Chưa thanh toán</span>';
+          
+          let actionHtml = `<button class="btn btn-view" onclick="viewDetails('${inv._id}')">Chi tiết</button>`;
+          if(inv.status === 'unpaid') {
+            actionHtml += ` <button class="btn btn-pay" onclick="payInvoice('${inv._id}')">Thanh toán</button>`;
+          }
+
+          tr.innerHTML = `
+            <td>Tháng ${inv.month}</td>
+            <td>${inv.type === 'deposit' ? 'Tiền cọc' : 'Định kỳ'}</td>
+            <td style="font-weight:bold; color: #0f766e;">${Number(inv.totalBill).toLocaleString()} VND</td>
+            <td>${statusHtml}</td>
+            <td>${actionHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function viewDetails(id) {
+      try {
+        const res = await fetch(`/api/resident/invoices/${id}`);
+        const json = await res.json();
+        const inv = json.data;
+        
+        let html = `
+          <p><strong>Tháng:</strong> ${inv.month}</p>
+          <p><strong>Tiền điện:</strong> ${inv.oldElec} -> ${inv.newElec} (${(inv.electricityFee || 0).toLocaleString()} VND)</p>
+          <p><strong>Tiền nước:</strong> ${inv.oldWater} -> ${inv.newWater} (${(inv.waterFee || 0).toLocaleString()} VND)</p>
+          <p><strong>Phí dịch vụ:</strong> ${(inv.serviceFee || 0).toLocaleString()} VND</p>
+          <p><strong>Phí giữ xe:</strong> ${(inv.vehicleFee || 0).toLocaleString()} VND</p>
+          <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+          <p style="color:red;"><strong>Phạt trễ:</strong> ${(inv.penalty || 0).toLocaleString()} VND</p>
+          <p style="color:green;"><strong>Giảm trừ:</strong> -${(inv.discount || 0).toLocaleString()} VND</p>
+          <h3 style="color: #1e3a8a; margin-top: 10px;">Tổng cộng: ${inv.totalBill.toLocaleString()} VND</h3>
+        `;
+        document.getElementById("modalContent").innerHTML = html;
+        document.getElementById("invoiceModal").style.display = "flex";
+      } catch (e) {
+        alert("Lỗi tải chi tiết");
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("invoiceModal").style.display = "none";
+    }
+
+    async function payInvoice(id) {
+      try {
+        const res = await fetch(`/api/resident/invoices/${id}/pay`, { method: "POST" });
+        const json = await res.json();
+        if(res.ok) {
+          // Lưu id hóa đơn đang xử lý thanh toán vào localStorage để trang payment biết
+          localStorage.setItem("currentPaymentInvoiceId", id);
+          localStorage.setItem("currentPaymentAmount", json.data.totalBill);
+          window.location.href = "/resident/payment";
+        } else {
+          alert(json.message);
+        }
+      } catch (e) {
+        alert("Lỗi kết nối");
+      }
+    }
+
+    window.onload = loadInvoices;
+  </script>
+</body>
+</html>

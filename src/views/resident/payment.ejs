@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Thanh toán</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 40px; color: #0f172a; text-align: center; }
+    .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: inline-block; max-width: 500px; width: 100%; }
+    .qr-box { width: 250px; height: 250px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 12px; margin: 30px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; color: #64748b; }
+    .btn { padding: 14px 24px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; width: 100%; }
+    .btn:hover { background: #059669; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="color: #1e3a8a; margin-bottom: 10px;">Thanh toán Hóa đơn (Demo)</h2>
+    <p>Tổng tiền cần thanh toán:</p>
+    <div id="amount" style="font-size: 32px; font-weight: bold; color: #0f766e; margin: 10px 0;">--</div>
+    
+    <div class="qr-box">
+      <span style="font-size: 40px; margin-bottom: 10px;">📱</span>
+      <span>[QR CODE ẢO]</span>
+      <span style="font-size: 12px; font-weight: normal; margin-top: 10px;">Mã QR chuyển khoản tự động</span>
+    </div>
+    <p style="color: #64748b; font-size: 14px; margin-bottom: 30px;">Vui lòng quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử (Momo/ZaloPay) để thanh toán.</p>
+    
+    <button class="btn" id="confirmBtn" onclick="confirmPayment()">Xác nhận đã chuyển khoản</button>
+    <br><br>
+    <a href="/resident/invoices" style="color: #3b82f6; text-decoration: none; font-size: 14px;">← Quay lại danh sách hóa đơn</a>
+  </div>
+
+  <script>
+    const invoiceId = localStorage.getItem("currentPaymentInvoiceId");
+    const amount = localStorage.getItem("currentPaymentAmount");
+    
+    if(!invoiceId) {
+      alert("Không có hóa đơn nào đang chờ thanh toán.");
+      window.location.href = "/resident/invoices";
+    } else {
+      document.getElementById("amount").innerText = Number(amount).toLocaleString() + " VND";
+    }
+
+    async function confirmPayment() {
+      document.getElementById("confirmBtn").innerText = "Đang xử lý...";
+      document.getElementById("confirmBtn").disabled = true;
+      try {
+        const res = await fetch("/api/resident/invoices/payment/callback", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ invoiceId })
+        });
+        
+        if(res.ok) {
+          alert("Giao dịch thành công! Hóa đơn đã được thanh toán.");
+          localStorage.removeItem("currentPaymentInvoiceId");
+          localStorage.removeItem("currentPaymentAmount");
+          window.location.href = "/resident/invoices";
+        } else {
+          const json = await res.json();
+          alert("Lỗi: " + json.message);
+          document.getElementById("confirmBtn").innerText = "Xác nhận đã chuyển khoản";
+          document.getElementById("confirmBtn").disabled = false;
+        }
+      } catch (e) {
+        alert("Lỗi kết nối");
+        document.getElementById("confirmBtn").innerText = "Xác nhận đã chuyển khoản";
+        document.getElementById("confirmBtn").disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

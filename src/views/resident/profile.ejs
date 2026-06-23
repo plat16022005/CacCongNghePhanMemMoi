@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hồ sơ Cư dân</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --success: #0f766e;
+      --danger: #b91c1c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 40px; max-width: 800px; margin-left: auto; margin-right: auto;
+    }
+    .header h1 { font-size: 32px; color: var(--primary); }
+    .header button {
+      padding: 10px 20px; background: var(--danger); color: white;
+      border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .profile-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 40px; margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .profile-header {
+      display: flex; align-items: center; gap: 24px; margin-bottom: 32px;
+      padding-bottom: 32px; border-bottom: 1px solid var(--border);
+    }
+    .avatar {
+      width: 100px; height: 100px; background: linear-gradient(135deg, #1e3a8a, #0f766e);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 40px; font-weight: 700; color: white;
+    }
+    .profile-info h2 { font-size: 24px; margin-bottom: 4px; }
+    .profile-info p { color: var(--text-muted); font-size: 14px; }
+    .profile-field { margin-bottom: 24px; }
+    .profile-field label {
+      display: block; color: var(--text-muted); font-size: 13px; font-weight: 600;
+      margin-bottom: 8px; text-transform: uppercase;
+    }
+    .profile-field p { font-size: 16px; }
+    .btn-save { background: var(--primary); color: white; padding: 14px; border: none; border-radius: 12px; cursor: pointer; }
+    .btn-cancel { background: #f1f5f9; border: 1px solid var(--border); padding: 14px; border-radius: 12px; cursor: pointer; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <button onclick="window.location.href='/dashboard'" style="background: #e2e8f0; color: #000;">← Quay lại</button>
+      <h1 style="display: inline-block; margin-left: 10px;">Hồ sơ Cư dân</h1>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="profile-card">
+      <div id="viewMode">
+        <div class="profile-header">
+          <div class="avatar" id="avatarInitial">U</div>
+          <div class="profile-info">
+            <h2 id="displayName">Loading...</h2>
+            <p id="displayEmail">loading...</p>
+          </div>
+        </div>
+        <div class="profile-field"><label>Họ và tên</label><p id="viewName">...</p></div>
+        <div class="profile-field"><label>Email</label><p id="viewEmail">...</p></div>
+        <div class="profile-field"><label>Số điện thoại</label><p id="viewPhone">...</p></div>
+        <div class="profile-field"><label>Ngày sinh</label><p id="viewDob">...</p></div>
+        <button class="btn-save" onclick="enterEditMode()">✏️ Chỉnh sửa</button>
+      </div>
+
+      <div id="editMode" style="display: none;">
+        <h2>Chỉnh sửa hồ sơ</h2>
+        <form id="profileForm">
+          <div class="form-group"><label>Họ và tên</label><input type="text" id="editName"></div>
+          <div class="form-group"><label>Số điện thoại</label><input type="text" id="editPhone"></div>
+          <div class="form-group"><label>Ngày sinh</label><input type="date" id="editDob"></div>
+          <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-save" style="flex: 1;">💾 Lưu</button>
+            <button type="button" class="btn-cancel" style="flex: 1;" onclick="exitEditMode()">✕ Hủy</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/resident/profile");
+        const json = await res.json();
+        const user = json.data;
+        document.getElementById('displayName').innerText = user.name || 'Cư dân';
+        document.getElementById('displayEmail').innerText = user.email;
+        document.getElementById('viewName').innerText = user.name || '';
+        document.getElementById('viewEmail').innerText = user.email;
+        document.getElementById('viewPhone').innerText = user.phoneNumber || 'Chưa có';
+        document.getElementById('viewDob').innerText = user.dob || 'Chưa có';
+        document.getElementById('avatarInitial').innerText = (user.name || 'U')[0].toUpperCase();
+
+        document.getElementById('editName').value = user.name || '';
+        document.getElementById('editPhone').value = user.phoneNumber || '';
+        document.getElementById('editDob').value = user.dob || '';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    function enterEditMode() {
+      document.getElementById('viewMode').style.display = 'none';
+      document.getElementById('editMode').style.display = 'block';
+    }
+    function exitEditMode() {
+      document.getElementById('viewMode').style.display = 'block';
+      document.getElementById('editMode').style.display = 'none';
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        name: document.getElementById('editName').value,
+        phoneNumber: document.getElementById('editPhone').value,
+        dob: document.getElementById('editDob').value
+      };
+      try {
+        const res = await fetch("/api/resident/profile", {
+          method: "PATCH",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(body)
+        });
+        if(res.ok) {
+          alert("Cập nhật thành công!");
+          exitEditMode();
+          loadProfile();
+        } else {
+          alert("Cập nhật thất bại!");
+        }
+      } catch(e) {
+        alert("Lỗi kết nối");
+      }
+    });
+
+    window.onload = loadProfile;
+  </script>
+</body>
+</html>

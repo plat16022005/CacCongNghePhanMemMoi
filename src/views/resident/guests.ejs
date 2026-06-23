@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng ký Khách thăm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 20px; color: #0f172a; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { color: #475569; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; color: white; background: #1d4ed8; }
+    .btn-danger { background: #ef4444; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button onclick="window.location.href='/dashboard'" style="padding:10px; margin-bottom:20px; border-radius:8px; border:1px solid #ccc; cursor:pointer;">← Quay lại</button>
+    
+    <div class="card">
+      <h2>Đăng ký khách thăm</h2>
+      <form id="guestForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group"><label>Họ tên khách</label><input type="text" id="gName" required></div>
+          <div class="form-group"><label>CCCD</label><input type="text" id="gCccd" required></div>
+          <div class="form-group"><label>Số điện thoại</label><input type="text" id="gPhone" required></div>
+          <div class="form-group"><label>Mục đích</label><input type="text" id="gReason"></div>
+          <div class="form-group"><label>Ngày đến</label><input type="datetime-local" id="gVisit" required></div>
+          <div class="form-group"><label>Ngày đi</label><input type="datetime-local" id="gLeave" required></div>
+        </div>
+        <button type="submit" class="btn">Đăng ký</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Danh sách đã đăng ký</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tên khách</th>
+            <th>CCCD</th>
+            <th>Ngày đến</th>
+            <th>Ngày đi</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="guestsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadGuests() {
+      const res = await fetch("/api/resident/guests");
+      const json = await res.json();
+      const tbody = document.getElementById("guestsTable");
+      tbody.innerHTML = "";
+      json.data.forEach(g => {
+        let status = '';
+        if(g.status === 'pending') status = '<span style="color:orange">Chờ duyệt</span>';
+        else if(g.status === 'approved') status = '<span style="color:green">Đã duyệt</span>';
+        else if(g.status === 'arrived') status = '<span style="color:blue">Đã đến</span>';
+        else if(g.status === 'left') status = '<span style="color:gray">Đã đi</span>';
+        else status = '<span style="color:red">Từ chối</span>';
+
+        let btn = g.status === 'pending' ? `<button class="btn-danger" onclick="delGuest('${g._id}')">Hủy</button>` : '';
+
+        tbody.innerHTML += `<tr>
+          <td>${g.guestName}</td><td>${g.cccd}</td>
+          <td>${new Date(g.visitDate).toLocaleString('vi-VN')}</td>
+          <td>${new Date(g.leaveDate).toLocaleString('vi-VN')}</td>
+          <td>${status}</td><td>${btn}</td>
+        </tr>`;
+      });
+    }
+
+    document.getElementById("guestForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = {
+        guestName: document.getElementById("gName").value,
+        cccd: document.getElementById("gCccd").value,
+        phone: document.getElementById("gPhone").value,
+        reason: document.getElementById("gReason").value,
+        visitDate: document.getElementById("gVisit").value,
+        leaveDate: document.getElementById("gLeave").value
+      };
+      const res = await fetch("/api/resident/guests", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+      if(res.ok) { alert("Đăng ký thành công!"); document.getElementById("guestForm").reset(); loadGuests(); }
+    });
+
+    async function delGuest(id) {
+      if(!confirm("Bạn muốn hủy đăng ký này?")) return;
+      const res = await fetch(`/api/resident/guests/${id}`, { method: "DELETE" });
+      if(res.ok) loadGuests();
+      else alert("Lỗi khi hủy");
+    }
+
+    window.onload = loadGuests;
+  </script>
+</body>
+</html>

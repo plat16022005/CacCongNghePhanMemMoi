@@ -23,9 +23,9 @@ let initWebRoutes = (app) => {
   router.post("/put-crud", homeController.putCRUD);
   router.get("/delete-crud", homeController.deleteCRUD);
 
-  // Thêm giao diện Đăng ký / Đăng nhập
-  router.get("/login", (req, res) => res.render("auth/login.ejs"));
-  router.get("/register", (req, res) => res.render("auth/register.ejs"));
+  // Thêm giao diện Đăng ký / Đăng nhập (Dùng React frontend)
+  router.get("/login", (req, res) => res.render("homepage.ejs", { user: null }));
+  router.get("/register", (req, res) => res.render("homepage.ejs", { user: null }));
 
   // Trang hồ sơ người dùng
   router.get(
@@ -36,6 +36,61 @@ let initWebRoutes = (app) => {
       res.render("users/profile", { user: req.user });
     }
   );
+
+  // Trang hồ sơ cư dân (Resident)
+  router.get(
+    "/resident/profile",
+    verifyTokenLoginView,
+    authorizeView("user", "admin", "manager"),
+    (req, res) => {
+      res.render("resident/profile", { user: req.user });
+    }
+  );
+
+  // Trang thông tin căn hộ (Resident)
+  router.get(
+    "/resident/apartment",
+    verifyTokenLoginView,
+    authorizeView("user", "admin", "manager"),
+    (req, res) => {
+      res.render("resident/apartment", { user: req.user });
+    }
+  );
+
+  // Trang quản lý hóa đơn (Resident)
+  router.get(
+    "/resident/invoices",
+    verifyTokenLoginView,
+    authorizeView("user", "admin", "manager"),
+    (req, res) => {
+      res.render("resident/invoices", { user: req.user });
+    }
+  );
+
+  // Trang thanh toán (Resident)
+  router.get(
+    "/resident/payment",
+    verifyTokenLoginView,
+    authorizeView("user", "admin", "manager"),
+    (req, res) => {
+      res.render("resident/payment", { user: req.user });
+    }
+  );
+
+  // Khách đến thăm
+  router.get("/resident/guests", verifyTokenLoginView, authorizeView("user", "admin", "manager"), (req, res) => res.render("resident/guests", { user: req.user }));
+
+  // Đăng ký xe
+  router.get("/resident/parking", verifyTokenLoginView, authorizeView("user", "admin", "manager"), (req, res) => res.render("resident/parking", { user: req.user }));
+
+  // Thông báo
+  router.get("/resident/notifications", verifyTokenLoginView, authorizeView("user", "admin", "manager"), (req, res) => res.render("resident/notifications", { user: req.user }));
+
+  // Đánh giá dịch vụ
+  router.get("/resident/feedbacks", verifyTokenLoginView, authorizeView("user", "admin", "manager"), (req, res) => res.render("resident/feedbacks", { user: req.user }));
+
+  // Báo cáo sự cố
+  router.get("/resident/maintenance", verifyTokenLoginView, authorizeView("user", "admin", "manager"), (req, res) => res.render("resident/maintenance", { user: req.user }));
 
   router.get(
     "/dashboard",
@@ -50,7 +105,8 @@ let initWebRoutes = (app) => {
         console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
         return res.redirect("/admin/dashboard");
       }
-      res.render("users/dashboard", { user: req.user });
+      // Dân cư truy cập sẽ được phục vụ ứng dụng React (SPA)
+      res.render("homepage.ejs", { user: req.user });
     },
   );
 
@@ -63,21 +119,13 @@ let initWebRoutes = (app) => {
     },
   );
 
+  // Catch-all cho các route con của dashboard (React SPA sẽ tự xử lý)
   router.get(
-    "/dashboard/room/:id",
+    /^\/dashboard(?:\/.*)?$/,
     verifyTokenLoginView,
     authorizeView("user"),
     (req, res) => {
-      res.render("users/roomDetail", { user: req.user, roomId: req.params.id });
-    }
-  );
-
-  router.get(
-    "/dashboard/room/:id/rent",
-    verifyTokenLoginView,
-    authorizeView("user"),
-    (req, res) => {
-      res.render("users/rentConfirm", { user: req.user, roomId: req.params.id });
+      res.render("homepage.ejs", { user: req.user });
     }
   );
 
@@ -97,6 +145,7 @@ let initWebRoutes = (app) => {
 
   app.use("/api/auth", authRoutes);
   app.use("/api/user", userRoutes);
+  app.use("/api/resident", require("./resident.routes"));
   app.use("/api/rooms", require("./room.routes"));
   app.use("/api/applications", require("./application.routes"));
   return app.use("/", router);
