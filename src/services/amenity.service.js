@@ -32,7 +32,34 @@ class AmenityService {
       throw { status: 400, message: "Thời gian bắt đầu phải trước thời gian kết thúc" };
     }
 
-    // Duplicate booking check could be added here
+    // Lôgic 1: Chặn đặt lịch nếu có nợ xấu (hóa đơn chưa thanh toán quá hạn)
+    const Room = require("../models/room");
+    const RoomInvoice = require("../models/roomInvoice");
+    const room = await Room.findOne({ tenantId: residentId });
+    if (room) {
+      const overdueInvoices = await RoomInvoice.find({ 
+          roomId: room._id, 
+          status: "unpaid",
+          dueDate: { $lt: new Date() } 
+      });
+      if (overdueInvoices.length > 0) {
+          throw { status: 403, message: "Yêu cầu bị từ chối: Căn hộ của bạn đang có hóa đơn nợ quá hạn. Vui lòng thanh toán để sử dụng tiện ích!" };
+      }
+    }
+
+    // Lôgic 2: Kiểm tra trùng lịch và quá tải (Collision & Capacity Check)
+    const existingBookings = await amenityRepo.findBookingsByAmenityIdAndDate(amenityId, data.date);
+    const overlappingBookings = existingBookings.filter(b => {
+      // Check if time ranges overlap
+      return (data.startTime < b.endTime && data.endTime > b.startTime);
+    });
+
+    const currentPeopleCount = overlappingBookings.reduce((sum, b) => sum + b.numberOfPeople, 0);
+    const capacityLimit = amenity.capacity || 10; // Default if not specified
+
+    if (currentPeopleCount + data.numberOfPeople > capacityLimit) {
+      throw { status: 400, message: `Tiện ích đã đạt giới hạn sức chứa trong khung giờ này. Sức chứa còn lại: ${Math.max(0, capacityLimit - currentPeopleCount)} người.` };
+    }
     
     return await amenityRepo.createBooking({
       residentId,

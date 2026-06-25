@@ -48,6 +48,37 @@ class SecurityIncidentService {
       }
     }
 
+    // Logic 3: Incident -> Maintenance Sync
+    // Kiểm tra các từ khóa liên quan đến sửa chữa kỹ thuật
+    const keywords = ['hỏng', 'hư', 'vỡ', 'cháy', 'nước', 'điện', 'rò rỉ', 'chập', 'thang máy', 'bơm'];
+    const lowerTitleDesc = (incident.title + " " + incident.description).toLowerCase();
+    const needsMaintenance = keywords.some(kw => lowerTitleDesc.includes(kw));
+
+    if (needsMaintenance) {
+      const MaintenanceRequest = require("../models/maintenanceRequest");
+      // Tìm một admin hoặc manager để gán làm người tạo yêu cầu, do bảo vệ không có residentId hợp lệ
+      const adminUser = await User.findOne({ role: { $in: ["admin", "manager"] } });
+      
+      if (adminUser) {
+        let category = "common_area";
+        if (lowerTitleDesc.includes("nước") || lowerTitleDesc.includes("rò rỉ")) category = "plumbing";
+        if (lowerTitleDesc.includes("điện") || lowerTitleDesc.includes("chập")) category = "electrical";
+        if (lowerTitleDesc.includes("thang máy")) category = "elevator";
+
+        let urgency = incident.severity === "critical" ? "emergency" : incident.severity === "high" ? "high" : "normal";
+
+        await MaintenanceRequest.create({
+          residentId: adminUser._id, // Repurposed for system-generated request
+          title: `[TỪ BẢO VỆ] ${incident.title}`,
+          description: `Vị trí: ${incident.location || 'Không rõ'}. Chi tiết: ${incident.description}`,
+          category: category,
+          urgency: urgency,
+          imageUrls: incident.imageUrls || [],
+          status: "pending"
+        });
+      }
+    }
+
     return incident;
   }
 

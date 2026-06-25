@@ -30,6 +30,8 @@ const startServer = async () => {
     
     // Start background jobs
     startInvoiceJob();
+    const { initCheckoutJob } = require("./jobs/checkout.job");
+    initCheckoutJob();
 
     let port = process.env.PORT || 6969;
     app.listen(port, () => {

@@ -22,6 +22,9 @@ export default function Navbar() {
           Hệ thống Tiện ích
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
+        <Link to="/rentals" className="cursor-pointer hover:text-[#e65c00] hover:opacity-100 opacity-90 transition-all flex items-center gap-1 group text-[#e65c00] font-bold">
+          Thuê Căn Hộ
+        </Link>
         <Link to="/financials" className="cursor-pointer hover:text-[#3a4a6b] hover:opacity-100 opacity-80 transition-all flex items-center gap-1 group">
           Tài chính & Minh bạch
         </Link>

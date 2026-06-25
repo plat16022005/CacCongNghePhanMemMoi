@@ -15,9 +15,19 @@ let initWebRoutes = (app) => {
   router.get("/", homeController.getHomePage);
 
   // Các trang Landing/Marketing (Render React SPA)
-  const publicPages = ["/home", "/about", "/features", "/financials", "/amenities"];
+  const publicPages = ["/home", "/about", "/features", "/financials", "/amenities", "/rentals"];
   publicPages.forEach(path => {
     router.get(path, (req, res) => res.render("homepage.ejs", { user: null }));
+  });
+
+  router.get("/api/public/apartments", async (req, res) => {
+    try {
+      const Room = require("../models/room");
+      const rooms = await Room.find({ status: { $in: ["available", "vacant"] } });
+      res.json(rooms);
+    } catch (err) {
+      res.status(500).json({ error: true, message: err.message });
+    }
   });
   router.get("/crud", homeController.getCRUD);
   router.post("/post-crud", homeController.postCRUD);
