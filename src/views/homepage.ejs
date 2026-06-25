@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ApartmentHub - Quản lý chung cư thông minh</title>
     <!-- Tải các file JS và CSS đã được build từ React (Vite) -->
-    <script type="module" crossorigin src="/assets/index-DmdxfIR3.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-C2mBMUN6.css">
+    <script type="module" crossorigin src="/assets/index-CPZkiYYP.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BF03r7fl.css">
     
     <!-- Truyền dữ liệu người dùng từ Backend EJS sang Frontend -->
+    <script id="user-data" type="application/json">
+      <%- JSON.stringify(locals.user || null) %>
+    </script>
     <script>
-      window.USER_DATA = <%- JSON.stringify(locals.user || null) %>;
+      window.USER_DATA = JSON.parse(document.getElementById('user-data').textContent);
     </script>
   </head>
   <body>

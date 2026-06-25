@@ -13,16 +13,6 @@ export default function BottomLeftCard() {
         <div className="text-2xl md:text-3xl font-normal text-[rgba(30,50,90,0.9)] tracking-tight">1.2K</div>
         <div className="text-[10px] md:text-[12px] font-normal text-[rgba(30,50,90,0.6)] uppercase tracking-wider">Căn hộ đang quản lý</div>
       </div>
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="flex items-center bg-white rounded-full pl-1.5 pr-5 py-1.5 gap-2 hover:bg-white/90 transition-colors self-start group"
-      >
-        <div className="bg-[rgba(30,50,90,0.1)] p-1 rounded-full">
-          <ArrowUpRight className="text-[rgba(30,50,90,0.9)] w-4 h-4" />
-        </div>
-        <span className="text-[14px] font-normal text-[rgba(30,50,90,0.9)]">Xem báo cáo</span>
-      </motion.button>
     </motion.div>
   )
 }

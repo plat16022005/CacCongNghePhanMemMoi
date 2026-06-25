@@ -8,7 +8,9 @@ import {
   Car, 
   Wrench, 
   MessageSquare, 
-  Settings 
+  Settings,
+  Coffee,
+  ClipboardList
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -16,12 +18,13 @@ export default function Sidebar() {
     { name: 'Tổng quan', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Hồ sơ', path: '/dashboard/profile', icon: User },
     { name: 'Căn hộ của tôi', path: '/dashboard/apartment', icon: Home },
+    { name: 'Tiện ích', path: '/dashboard/amenities', icon: Coffee },
     { name: 'Hóa đơn', path: '/dashboard/invoices', icon: FileText },
     { name: 'Khách thăm', path: '/dashboard/guests', icon: Users },
     { name: 'Đăng ký xe', path: '/dashboard/parking', icon: Car },
     { name: 'Báo cáo sự cố', path: '/dashboard/maintenance', icon: Wrench },
     { name: 'Đánh giá', path: '/dashboard/feedbacks', icon: MessageSquare },
-    { name: 'Cài đặt', path: '/dashboard/settings', icon: Settings },
+    { name: 'Khảo sát', path: '/dashboard/surveys', icon: ClipboardList }
   ];
 
   return (

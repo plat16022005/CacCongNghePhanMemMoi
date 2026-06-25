@@ -7,15 +7,33 @@ const feedbackSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
+    title: {
+      type: String,
+      required: true
+    },
     rating: {
       type: Number,
       required: true,
       min: 1,
       max: 5
     },
+    category: {
+      type: String,
+      enum: ["service", "security", "cleanliness", "staff", "maintenance", "amenity", "management", "other"],
+      default: "other"
+    },
     content: {
       type: String,
       required: true
+    },
+    status: {
+      type: String,
+      enum: ["pending", "reviewed", "resolved", "closed"],
+      default: "pending"
+    },
+    response: {
+      type: String,
+      default: ""
     }
   },
   {

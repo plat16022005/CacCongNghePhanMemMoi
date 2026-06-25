@@ -46,4 +46,16 @@ router.get("/feedbacks", residentCtrl.getFeedbacks);
 router.post("/maintenance", residentCtrl.createMaintenance);
 router.get("/maintenance", residentCtrl.getMaintenance);
 
+// Amenities
+router.get("/amenities", residentCtrl.getAmenities);
+router.get("/amenities/bookings", residentCtrl.getMyBookings);
+router.get("/amenities/:id/slots", residentCtrl.getAmenitySlots);
+router.post("/amenities/:id/book", residentCtrl.createBooking);
+router.delete("/amenities/bookings/:id", residentCtrl.cancelBooking);
+
+// Surveys
+router.get("/surveys", residentCtrl.getSurveys);
+router.get("/surveys/:id", residentCtrl.getSurveyById);
+router.post("/surveys/:id/submit", residentCtrl.submitSurvey);
+
 module.exports = router;

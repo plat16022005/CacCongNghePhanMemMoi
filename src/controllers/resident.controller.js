@@ -1,221 +1,218 @@
-const userService = require("../services/user.service");
-const Room = require("../models/room");
+const residentService = require("../services/resident.service");
+const invoiceService = require("../services/invoice.service");
+const guestService = require("../services/guest.service");
+const parkingService = require("../services/parking.service");
+const maintenanceService = require("../services/maintenance.service");
+const notificationService = require("../services/notification.service");
+const feedbackService = require("../services/feedback.service");
+const amenityService = require("../services/amenity.service");
+const surveyService = require("../services/survey.service");
 
+// --- RESIDENT PROFILE & APARTMENT ---
 exports.getProfile = async (req, res, next) => {
   try {
-    const user = await userService.getProfile(req.user.id);
-    res.status(200).json({ data: user });
-  } catch (err) {
-    if (err.status) return res.status(err.status).json({ message: err.message });
-    next(err);
-  }
+    const profile = await residentService.getProfile(req.user.id);
+    res.status(200).json({ error: false, data: profile });
+  } catch (err) { next(err); }
 };
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    const result = await userService.updateProfile(req.user.id, req.body);
-    res.status(200).json(result);
-  } catch (err) {
-    if (err.status) return res.status(err.status).json({ message: err.message });
-    next(err);
-  }
+    const profile = await residentService.updateProfile(req.user.id, req.body);
+    res.status(200).json({ error: false, data: profile });
+  } catch (err) { next(err); }
 };
 
 exports.getApartment = async (req, res, next) => {
   try {
-    // Tìm phòng mà cư dân này đang thuê (tenantId)
-    const room = await Room.findOne({ tenantId: req.user.id }).populate('invoices');
-    if (!room) {
-      return res.status(404).json({ message: "Bạn hiện chưa thuê căn hộ nào." });
-    }
-    res.status(200).json({ data: room });
-  } catch (err) {
-    next(err);
-  }
+    const apartmentRepo = require("../repositories/apartment.repository");
+    const apartment = await apartmentRepo.findByTenantId(req.user.id);
+    if (!apartment) throw { status: 404, message: "Bạn chưa thuê căn hộ nào" };
+    res.status(200).json({ error: false, data: apartment });
+  } catch (err) { next(err); }
 };
 
-const RoomInvoice = require("../models/roomInvoice");
-
+// --- INVOICES ---
 exports.getInvoices = async (req, res, next) => {
   try {
-    const { status, month, type } = req.query;
-    let query = { tenantId: req.user.id };
-    if (status) query.status = status;
-    if (month) query.month = month;
-    if (type) query.type = type;
-
-    const invoices = await RoomInvoice.find(query).sort({ createdAt: -1 });
-    res.status(200).json({ data: invoices });
-  } catch (err) {
-    next(err);
-  }
+    const invoices = await invoiceService.getInvoices(req.user.id, req.query);
+    res.status(200).json({ error: false, data: invoices, total: invoices.length });
+  } catch (err) { next(err); }
 };
 
 exports.getInvoiceById = async (req, res, next) => {
   try {
-    const invoice = await RoomInvoice.findOne({ _id: req.params.id, tenantId: req.user.id }).populate('room');
-    if (!invoice) return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
-    res.status(200).json({ data: invoice });
-  } catch (err) {
-    next(err);
-  }
+    const invoice = await invoiceService.getInvoiceById(req.params.id, req.user.id);
+    res.status(200).json({ error: false, data: invoice });
+  } catch (err) { next(err); }
 };
 
 exports.payInvoice = async (req, res, next) => {
   try {
-    const invoice = await RoomInvoice.findOne({ _id: req.params.id, tenantId: req.user.id });
-    if (!invoice) return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
-    if (invoice.status === 'paid') return res.status(400).json({ message: "Hóa đơn đã được thanh toán" });
-    
-    // Chuyển sang pending để demo
-    invoice.status = 'pending';
-    await invoice.save();
-    
-    res.status(200).json({ message: "Đã tạo phiên thanh toán demo", data: invoice });
-  } catch (err) {
-    next(err);
-  }
+    const result = await invoiceService.payInvoice(req.params.id, req.user.id);
+    res.status(200).json({ error: false, ...result });
+  } catch (err) { next(err); }
 };
 
 exports.paymentCallback = async (req, res, next) => {
   try {
-    const { invoiceId } = req.body; // Gửi kèm invoiceId trong request body cho demo callback
-    const invoice = await RoomInvoice.findOne({ _id: invoiceId, tenantId: req.user.id });
-    if (!invoice) return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
-    
-    invoice.status = 'paid';
-    await invoice.save();
-    
-    res.status(200).json({ message: "Thanh toán thành công" });
-  } catch (err) {
-    next(err);
-  }
+    const { invoiceId } = req.body;
+    await invoiceService.paymentCallback(invoiceId, req.user.id);
+    res.status(200).json({ error: false, message: "Thanh toán thành công" });
+  } catch (err) { next(err); }
 };
-
-const Guest = require("../models/guest");
-const ParkingRegistration = require("../models/parkingRegistration");
-const Notification = require("../models/notification");
 
 // --- GUESTS ---
 exports.createGuest = async (req, res, next) => {
   try {
-    const { guestName, cccd, phone, visitDate, leaveDate, reason } = req.body;
-    const newGuest = await Guest.create({
-      residentId: req.user.id,
-      guestName, cccd, phone, visitDate, leaveDate, reason
-    });
-    res.status(201).json({ message: "Đăng ký khách thành công", data: newGuest });
+    const guest = await guestService.createGuest(req.user.id, req.body);
+    res.status(201).json({ error: false, message: "Đăng ký thành công, chờ bảo vệ xác nhận", data: guest });
   } catch (err) { next(err); }
 };
 
 exports.getGuests = async (req, res, next) => {
   try {
-    const guests = await Guest.find({ residentId: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json({ data: guests });
+    const guests = await guestService.getGuests(req.user.id);
+    res.status(200).json({ error: false, data: guests });
   } catch (err) { next(err); }
 };
 
 exports.deleteGuest = async (req, res, next) => {
   try {
-    const guest = await Guest.findOne({ _id: req.params.id, residentId: req.user.id });
-    if (!guest) return res.status(404).json({ message: "Không tìm thấy đăng ký" });
-    if (guest.status !== "pending") return res.status(400).json({ message: "Chỉ có thể hủy đăng ký đang chờ duyệt" });
-    await Guest.findByIdAndDelete(guest._id);
-    res.status(200).json({ message: "Đã hủy đăng ký" });
+    await guestService.deleteGuest(req.params.id, req.user.id);
+    res.status(200).json({ error: false, message: "Đã hủy đăng ký" });
   } catch (err) { next(err); }
 };
 
 // --- PARKING ---
 exports.createParking = async (req, res, next) => {
   try {
-    const { vehicleType, licensePlate, vehicleBrand, vehicleColor } = req.body;
-    const newParking = await ParkingRegistration.create({
-      residentId: req.user.id,
-      vehicleType, licensePlate, vehicleBrand, vehicleColor
-    });
-    res.status(201).json({ message: "Đăng ký xe thành công", data: newParking });
+    const parking = await parkingService.createParking(req.user.id, req.body);
+    res.status(201).json({ error: false, data: parking });
   } catch (err) { next(err); }
 };
 
 exports.getParking = async (req, res, next) => {
   try {
-    const parkings = await ParkingRegistration.find({ residentId: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json({ data: parkings });
+    const parkings = await parkingService.getParkings(req.user.id);
+    res.status(200).json({ error: false, data: parkings });
   } catch (err) { next(err); }
 };
 
 exports.deleteParking = async (req, res, next) => {
   try {
-    const parking = await ParkingRegistration.findOne({ _id: req.params.id, residentId: req.user.id });
-    if (!parking) return res.status(404).json({ message: "Không tìm thấy đăng ký" });
-    if (parking.status !== "pending") return res.status(400).json({ message: "Chỉ có thể hủy đăng ký đang chờ duyệt" });
-    await ParkingRegistration.findByIdAndDelete(parking._id);
-    res.status(200).json({ message: "Đã hủy đăng ký" });
-  } catch (err) { next(err); }
-};
-
-// --- NOTIFICATIONS ---
-exports.getNotifications = async (req, res, next) => {
-  try {
-    const notifs = await Notification.find({
-      $or: [{ residentId: req.user.id }, { residentId: null }]
-    }).sort({ createdAt: -1 });
-    res.status(200).json({ data: notifs });
-  } catch (err) { next(err); }
-};
-
-exports.readNotification = async (req, res, next) => {
-  try {
-    const notif = await Notification.findOneAndUpdate(
-      { _id: req.params.id },
-      { isRead: true },
-      { new: true }
-    );
-    res.status(200).json({ data: notif });
-  } catch (err) { next(err); }
-};
-
-exports.readAllNotifications = async (req, res, next) => {
-  try {
-    await Notification.updateMany(
-      { $or: [{ residentId: req.user.id }, { residentId: null }], isRead: false },
-      { isRead: true }
-    );
-    res.status(200).json({ message: "Đã đánh dấu đọc tất cả" });
-  } catch (err) { next(err); }
-};
-
-const Feedback = require("../models/feedback");
-const MaintenanceRequest = require("../models/maintenanceRequest");
-
-// --- FEEDBACKS ---
-exports.createFeedback = async (req, res, next) => {
-  try {
-    const { rating, content } = req.body;
-    const fb = await Feedback.create({ residentId: req.user.id, rating, content });
-    res.status(201).json({ message: "Gửi đánh giá thành công", data: fb });
-  } catch (err) { next(err); }
-};
-
-exports.getFeedbacks = async (req, res, next) => {
-  try {
-    const fbs = await Feedback.find({ residentId: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json({ data: fbs });
+    await parkingService.deleteParking(req.params.id, req.user.id);
+    res.status(200).json({ error: false, message: "Đã hủy đăng ký thẻ xe" });
   } catch (err) { next(err); }
 };
 
 // --- MAINTENANCE ---
 exports.createMaintenance = async (req, res, next) => {
   try {
-    const { title, description } = req.body;
-    const mr = await MaintenanceRequest.create({ residentId: req.user.id, title, description });
-    res.status(201).json({ message: "Gửi báo cáo sự cố thành công", data: mr });
+    const request = await maintenanceService.createMaintenance(req.user.id, req.body);
+    res.status(201).json({ error: false, data: request });
   } catch (err) { next(err); }
 };
 
 exports.getMaintenance = async (req, res, next) => {
   try {
-    const mrs = await MaintenanceRequest.find({ residentId: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json({ data: mrs });
+    const requests = await maintenanceService.getMaintenanceRequests(req.user.id);
+    res.status(200).json({ error: false, data: requests });
+  } catch (err) { next(err); }
+};
+
+// --- NOTIFICATIONS ---
+exports.getNotifications = async (req, res, next) => {
+  try {
+    const result = await notificationService.getNotifications(req.user.id);
+    res.status(200).json({ error: false, ...result });
+  } catch (err) { next(err); }
+};
+
+exports.readNotification = async (req, res, next) => {
+  try {
+    const notif = await notificationService.readNotification(req.params.id, req.user.id);
+    res.status(200).json({ error: false, data: notif });
+  } catch (err) { next(err); }
+};
+
+exports.readAllNotifications = async (req, res, next) => {
+  try {
+    await notificationService.readAllNotifications(req.user.id);
+    res.status(200).json({ error: false, message: "Đã đánh dấu đọc tất cả" });
+  } catch (err) { next(err); }
+};
+
+// --- FEEDBACKS ---
+exports.createFeedback = async (req, res, next) => {
+  try {
+    const fb = await feedbackService.createFeedback(req.user.id, req.body);
+    res.status(201).json({ error: false, data: fb });
+  } catch (err) { next(err); }
+};
+
+exports.getFeedbacks = async (req, res, next) => {
+  try {
+    const fbs = await feedbackService.getFeedbacks(req.user.id);
+    res.status(200).json({ error: false, data: fbs });
+  } catch (err) { next(err); }
+};
+
+// --- AMENITIES ---
+exports.getAmenities = async (req, res, next) => {
+  try {
+    const amenities = await amenityService.getAmenities();
+    res.status(200).json({ error: false, data: amenities });
+  } catch (err) { next(err); }
+};
+
+exports.getAmenitySlots = async (req, res, next) => {
+  try {
+    const date = req.query.date || new Date();
+    const result = await amenityService.getAvailableSlots(req.params.id, date);
+    res.status(200).json({ error: false, ...result });
+  } catch (err) { next(err); }
+};
+
+exports.getMyBookings = async (req, res, next) => {
+  try {
+    const bookings = await amenityService.getMyBookings(req.user.id);
+    res.status(200).json({ error: false, data: bookings });
+  } catch (err) { next(err); }
+};
+
+exports.createBooking = async (req, res, next) => {
+  try {
+    const booking = await amenityService.createBooking(req.user.id, req.params.id, req.body);
+    res.status(201).json({ error: false, data: booking });
+  } catch (err) { next(err); }
+};
+
+exports.cancelBooking = async (req, res, next) => {
+  try {
+    await amenityService.cancelBooking(req.params.id, req.user.id);
+    res.status(200).json({ error: false, message: "Đã hủy lịch đặt" });
+  } catch (err) { next(err); }
+};
+
+// --- SURVEYS ---
+exports.getSurveys = async (req, res, next) => {
+  try {
+    const surveys = await surveyService.getSurveys();
+    res.status(200).json({ error: false, data: surveys });
+  } catch (err) { next(err); }
+};
+
+exports.getSurveyById = async (req, res, next) => {
+  try {
+    const survey = await surveyService.getSurveyById(req.params.id);
+    res.status(200).json({ error: false, data: survey });
+  } catch (err) { next(err); }
+};
+
+exports.submitSurvey = async (req, res, next) => {
+  try {
+    const response = await surveyService.submitSurvey(req.params.id, req.user.id, req.body.answers);
+    res.status(201).json({ error: false, message: "Gửi khảo sát thành công", data: response });
   } catch (err) { next(err); }
 };

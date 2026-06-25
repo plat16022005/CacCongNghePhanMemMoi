@@ -11,8 +11,10 @@ const roomSchema = new mongoose.Schema(
     rentalPrice: { type: Number, required: true },
     depositAmount: { type: Number, default: 0 },
     description: { type: String, default: "" },
-    status: { type: String, enum: ['available', 'reserved', 'occupied', 'maintenance'], default: "available" },
+    status: { type: String, enum: ['available', 'vacant', 'reserved', 'occupied', 'maintenance'], default: "available" },
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    block: { type: String, default: "A" },
+    ownerSince: { type: Date, default: null },
     members: [{
       name: String,
       phoneNumber: String,

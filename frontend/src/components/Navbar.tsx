@@ -1,26 +1,30 @@
 import { ChevronRight, ArrowUpRight } from 'lucide-react'
 import { motion } from 'motion/react'
 
+import { Link } from 'react-router-dom'
+
 export default function Navbar() {
   return (
     <nav className="flex items-center justify-between py-6 px-6 md:px-10 w-full relative z-10">
-      <div className="flex-1 hidden md:block" />
+      <div className="flex-1 hidden md:block">
+        <Link to="/" className="font-semibold text-xl text-[#3a4a6b] tracking-tight">ApartmentHub</Link>
+      </div>
 
-      <ul className="hidden md:flex items-center gap-8 text-[rgb(45,45,45)] font-normal text-sm">
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
+      <ul className="hidden md:flex items-center gap-8 text-[rgb(45,45,45)] font-medium text-sm">
+        <Link to="/about" className="cursor-pointer hover:text-[#3a4a6b] hover:opacity-100 opacity-80 transition-all flex items-center gap-1 group">
           Tổng quan
-        </li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Cư dân
+        </Link>
+        <Link to="/features" className="cursor-pointer hover:text-[#3a4a6b] hover:opacity-100 opacity-80 transition-all flex items-center gap-1 group">
+          Quản lý Cư dân
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        </li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Tiện ích
+        </Link>
+        <Link to="/amenities" className="cursor-pointer hover:text-[#3a4a6b] hover:opacity-100 opacity-80 transition-all flex items-center gap-1 group">
+          Hệ thống Tiện ích
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        </li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Tài chính
-        </li>
+        </Link>
+        <Link to="/financials" className="cursor-pointer hover:text-[#3a4a6b] hover:opacity-100 opacity-80 transition-all flex items-center gap-1 group">
+          Tài chính & Minh bạch
+        </Link>
       </ul>
 
       <div className="md:hidden">

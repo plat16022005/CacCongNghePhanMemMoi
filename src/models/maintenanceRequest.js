@@ -9,9 +9,30 @@ const maintenanceRequestSchema = new mongoose.Schema(
     },
     title: { type: String, required: true },
     description: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ["plumbing", "electrical", "elevator", "common_area", "other"],
+      default: "other"
+    },
+    urgency: {
+      type: String,
+      enum: ["low", "normal", "high", "emergency"],
+      default: "normal"
+    },
+    imageUrls: { type: [String], default: [] },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    completionNote: { type: String },
+    materialsUsed: [{
+      name: String,
+      quantity: Number,
+      cost: Number
+    }],
     status: {
       type: String,
-      enum: ["pending", "in_progress", "resolved"],
+      enum: ["pending", "assigned", "in_progress", "waiting_parts", "completed", "cancelled"],
       default: "pending"
     }
   },

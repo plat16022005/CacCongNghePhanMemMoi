@@ -16,9 +16,15 @@ const roomInvoiceSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    period: {
+      type: String
+    },
+    dueDate: {
+      type: Date
+    },
     type: {
       type: String,
-      enum: ["monthly", "deposit"],
+      enum: ["monthly", "deposit", "electricity", "water", "management", "parking", "other"],
       default: "monthly"
     },
     oldElec: {
@@ -69,8 +75,16 @@ const roomInvoiceSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    amount: {
+      type: Number,
+      default: 0
+    },
+    details: {
+      type: mongoose.Schema.Types.Mixed
+    },
     status: {
       type: String,
+      enum: ["draft", "unpaid", "paid", "overdue", "cancelled"],
       default: "unpaid"
     }
   },

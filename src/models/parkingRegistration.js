@@ -9,7 +9,7 @@ const parkingSchema = new mongoose.Schema(
     },
     vehicleType: {
       type: String,
-      enum: ["motorcycle", "car", "bicycle"],
+      enum: ["motorbike", "car", "bicycle"],
       required: true
     },
     licensePlate: { type: String, required: true },

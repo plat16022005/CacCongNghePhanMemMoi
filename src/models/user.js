@@ -42,6 +42,18 @@ const userSchema = new mongoose.Schema(
     block_reason: {
       type: String,
       default: ""
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "deleted"],
+      default: "active"
+    },
+    lastLogin: {
+      type: Date
+    },
+    requirePasswordChange: {
+      type: Boolean,
+      default: false
     }
   },
   {

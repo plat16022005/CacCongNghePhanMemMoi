@@ -9,7 +9,11 @@ const notificationSchema = new mongoose.Schema(
     },
     title: { type: String, required: true },
     content: { type: String, required: true },
-    type: { type: String, default: "general" },
+    type: { 
+      type: String, 
+      enum: ["invoice_reminder", "maintenance_update", "announcement", "guest_approved", "survey", "general"],
+      default: "general" 
+    },
     isRead: { type: Boolean, default: false }
   },
   {

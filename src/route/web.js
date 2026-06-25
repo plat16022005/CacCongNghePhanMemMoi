@@ -14,8 +14,11 @@ let router = express.Router();
 let initWebRoutes = (app) => {
   router.get("/", homeController.getHomePage);
 
-  router.get("/home", homeController.getHomePage);
-  router.get("/about", homeController.getAboutPage);
+  // Các trang Landing/Marketing (Render React SPA)
+  const publicPages = ["/home", "/about", "/features", "/financials", "/amenities"];
+  publicPages.forEach(path => {
+    router.get(path, (req, res) => res.render("homepage.ejs", { user: null }));
+  });
   router.get("/crud", homeController.getCRUD);
   router.post("/post-crud", homeController.postCRUD);
   router.get("/get-crud", homeController.getFindAllCrud);
@@ -92,60 +95,31 @@ let initWebRoutes = (app) => {
   // Báo cáo sự cố
   router.get("/resident/maintenance", verifyTokenLoginView, authorizeView("user", "admin", "manager"), (req, res) => res.render("resident/maintenance", { user: req.user }));
 
-  router.get(
-    "/dashboard",
-    verifyTokenLoginView,
-    authorizeView("user", "manager", "admin"),
-    (req, res) => {
-      if (req.user && req.user.role === "manager") {
-        console.log("Manager truy cập /dashboard, tự động chuyển hướng sang /manager/dashboard");
-        return res.redirect("/manager/dashboard");
-      }
-      if (req.user && req.user.role === "admin") {
-        console.log("Admin truy cập /dashboard, tự động chuyển hướng sang /admin/dashboard");
-        return res.redirect("/admin/dashboard");
-      }
-      // Dân cư truy cập sẽ được phục vụ ứng dụng React (SPA)
-      res.render("homepage.ejs", { user: req.user });
-    },
-  );
-
-  router.get(
-    "/admin/dashboard",
-    verifyTokenLoginView,
-    authorizeView("admin"),
-    (req, res) => {
-      res.render("admin/dashboard", { user: req.user });
-    },
-  );
-
-  // Catch-all cho các route con của dashboard (React SPA sẽ tự xử lý)
-  router.get(
+  // SPA Catch-all Routes
+  const spaRoutes = [
     /^\/dashboard(?:\/.*)?$/,
-    verifyTokenLoginView,
-    authorizeView("user"),
-    (req, res) => {
-      res.render("homepage.ejs", { user: req.user });
-    }
-  );
+    /^\/manager(?:\/.*)?$/,
+    /^\/admin(?:\/.*)?$/,
+    /^\/security(?:\/.*)?$/,
+    /^\/accountant(?:\/.*)?$/,
+    /^\/maintenance(?:\/.*)?$/
+  ];
 
-  // GET /manager/dashboard - Dashboard manager
-  router.get(
-    "/manager/dashboard",
-    verifyTokenLoginView,
-    authorizeView("manager"),
-    (req, res) => {
-      if (req.user && req.user.role !== "manager") {
-        console.log("Người dùng không phải manager truy cập /manager/dashboard, tự động chuyển hướng sang /dashboard");
-        return res.redirect("/dashboard");
-      }
-      res.render("manager/dashboard", { user: req.user });
-    },
-  );
+  spaRoutes.forEach(route => {
+    router.get(route, verifyTokenLoginView, (req, res) => {
+      // Role checks are handled in the React frontend
+      res.render("homepage.ejs", { user: req.user });
+    });
+  });
 
   app.use("/api/auth", authRoutes);
   app.use("/api/user", userRoutes);
   app.use("/api/resident", require("./resident.routes"));
+  app.use("/api/manager", require("./manager.routes"));
+  app.use("/api/accountant", require("./accountant.routes"));
+  app.use("/api/security", require("./security.routes"));
+  app.use("/api/maintenance", require("./maintenance.routes"));
+  app.use("/api/admin", require("./admin.routes"));
   app.use("/api/rooms", require("./room.routes"));
   app.use("/api/applications", require("./application.routes"));
   return app.use("/", router);

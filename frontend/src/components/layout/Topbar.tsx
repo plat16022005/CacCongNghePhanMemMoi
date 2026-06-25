@@ -1,4 +1,5 @@
 import { Bell, Search, Menu, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Topbar() {
   const userData = (window as any).USER_DATA;
@@ -29,10 +30,10 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">
-        <button className="relative p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors">
+        <Link to="/dashboard/notifications" className="relative p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--color-error)] rounded-full border-2 border-white"></span>
-        </button>
+        </Link>
 
         <div className="flex items-center gap-3 border-l border-[var(--color-border)] pl-4 md:pl-6">
           <div className="text-right hidden sm:block">

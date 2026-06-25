@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import viewEngine from "./config/viewEngine";
 import initWebRoutes from "./route/web";
 import connectDB from "./config/configdb";
+import startInvoiceJob from "./jobs/invoice.job";
 require("dotenv").config();
 
 let app = express();
@@ -19,13 +20,16 @@ app.use((err, req, res, next) => {
   console.error("Global Error Handler caught an error:", err);
   const status = err.status || 500;
   const message = err.message || "Có lỗi xảy ra trên máy chủ!";
-  res.status(status).json({ message });
+  res.status(status).json({ error: true, message });
 });
 
 const startServer = async () => {
   try {
     // Chờ kết nối MongoDB trước khi nhận request
     await connectDB();
+    
+    // Start background jobs
+    startInvoiceJob();
 
     let port = process.env.PORT || 6969;
     app.listen(port, () => {

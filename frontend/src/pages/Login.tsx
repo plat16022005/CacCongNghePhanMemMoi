@@ -45,10 +45,15 @@ export default function Login() {
         return;
       }
 
-      // Đăng nhập thành công, có thể dùng window.location để backend handle reload, 
-      // hoặc navigate React Router tuỳ thiết kế. Do backend quản lý session cookie và ejs,
-      // nên ta gọi window.location để EJS reload dashboard.
-      window.location.href = '/dashboard';
+      // Redirect based on role
+      let targetUrl = '/dashboard'; // default for resident
+      if (data.role === 'admin') targetUrl = '/admin';
+      else if (data.role === 'manager') targetUrl = '/manager';
+      else if (data.role === 'accountant') targetUrl = '/accountant';
+      else if (data.role === 'security') targetUrl = '/security';
+      else if (data.role === 'maintenance') targetUrl = '/maintenance';
+
+      window.location.href = targetUrl;
     } catch (err) {
       setError('Lỗi kết nối máy chủ');
       setLoading(false);
