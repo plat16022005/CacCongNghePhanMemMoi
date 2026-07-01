@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const ACCESS_TOKEN_EXPIRY = "15m";
+const ACCESS_TOKEN_EXPIRY = "30d";
 const REFRESH_TOKEN_EXPIRY = "7d";
 
 const requireEnv = (key) => {

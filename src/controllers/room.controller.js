@@ -547,6 +547,10 @@ exports.rentRoom = async (req, res, next) => {
       submittedAt: new Date().toISOString()
     };
 
+    if (members.length + 1 > 10) {
+      return res.status(400).json({ message: "Vượt quá giới hạn nhân khẩu cho phép (tối đa 10 người/phòng)" });
+    }
+
     // Tạo đơn thuê
     const application = await RentalApplication.create({
       tenantId: userId,

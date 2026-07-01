@@ -76,7 +76,7 @@ exports.login = async (req, res, next) => {
 
     res.cookie("accessToken", accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       ...cookieOptions,
@@ -99,7 +99,7 @@ exports.refresh = async (req, res, next) => {
 
     res.cookie("accessToken", newAccess, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", newRefresh, {
       ...cookieOptions,
@@ -116,7 +116,8 @@ exports.refresh = async (req, res, next) => {
 
 exports.logout = async (req, res, next) => {
   try {
-    // Không cần thao tác gì với refreshToken
+    const refreshToken = req.cookies.refreshToken;
+    await authService.logout(refreshToken);
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
     res.status(200).json({ message: "Đăng xuất thành công" });

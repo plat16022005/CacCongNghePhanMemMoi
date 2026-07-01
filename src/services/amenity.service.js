@@ -32,6 +32,19 @@ class AmenityService {
       throw { status: 400, message: "Thời gian bắt đầu phải trước thời gian kết thúc" };
     }
 
+    // Lôgic: Chặn đặt trước giờ mở cửa hoặc sau giờ đóng cửa
+    if (data.startTime < amenity.openTime || data.endTime > amenity.closeTime) {
+      throw { status: 400, message: `Tiện ích chỉ mở cửa từ ${amenity.openTime} đến ${amenity.closeTime}` };
+    }
+
+    // Lôgic: Chặn đặt quá 4 tiếng
+    const startParts = data.startTime.split(':').map(Number);
+    const endParts = data.endTime.split(':').map(Number);
+    const durationMinutes = (endParts[0] * 60 + endParts[1]) - (startParts[0] * 60 + startParts[1]);
+    if (durationMinutes > 240) {
+      throw { status: 400, message: "Không được đặt tiện ích quá 4 tiếng" };
+    }
+
     // Lôgic 1: Chặn đặt lịch nếu có nợ xấu (hóa đơn chưa thanh toán quá hạn)
     const Room = require("../models/room");
     const RoomInvoice = require("../models/roomInvoice");
@@ -47,18 +60,33 @@ class AmenityService {
       }
     }
 
-    // Lôgic 2: Kiểm tra trùng lịch và quá tải (Collision & Capacity Check)
-    const existingBookings = await amenityRepo.findBookingsByAmenityIdAndDate(amenityId, data.date);
-    const overlappingBookings = existingBookings.filter(b => {
-      // Check if time ranges overlap
-      return (data.startTime < b.endTime && data.endTime > b.startTime);
-    });
+    // Lôgic 2: Kiểm tra trùng lịch và quá tải (Collision & Capacity Check) bằng Atomic Update (AmenitySlot)
+    const AmenitySlot = require("../models/amenitySlot");
+    const capacityLimit = amenity.capacity || 10;
 
-    const currentPeopleCount = overlappingBookings.reduce((sum, b) => sum + b.numberOfPeople, 0);
-    const capacityLimit = amenity.capacity || 10; // Default if not specified
+    // Khởi tạo slot nếu chưa có (chỉ set giá trị khởi tạo khi insert)
+    await AmenitySlot.updateOne(
+      { amenityId, date: data.date, startTime: data.startTime, endTime: data.endTime },
+      { $setOnInsert: { capacity: capacityLimit, bookedCount: 0 } },
+      { upsert: true }
+    );
 
-    if (currentPeopleCount + data.numberOfPeople > capacityLimit) {
-      throw { status: 400, message: `Tiện ích đã đạt giới hạn sức chứa trong khung giờ này. Sức chứa còn lại: ${Math.max(0, capacityLimit - currentPeopleCount)} người.` };
+    // Atomic update: chỉ tăng số lượng nếu tổng số người không vượt quá capacity
+    const numberOfPeople = data.numberOfPeople || 1;
+    const updatedSlot = await AmenitySlot.findOneAndUpdate(
+      {
+        amenityId, 
+        date: data.date, 
+        startTime: data.startTime, 
+        endTime: data.endTime,
+        $expr: { $lte: [{ $add: ["$bookedCount", numberOfPeople] }, "$capacity"] }
+      },
+      { $inc: { bookedCount: numberOfPeople } },
+      { new: true }
+    );
+
+    if (!updatedSlot) {
+      throw { status: 409, message: "Tiện ích đã đạt giới hạn sức chứa trong khung giờ này. Vui lòng chọn giờ khác hoặc giảm số lượng người." };
     }
     
     return await amenityRepo.createBooking({
@@ -67,13 +95,50 @@ class AmenityService {
       date: data.date,
       startTime: data.startTime,
       endTime: data.endTime,
-      numberOfPeople: data.numberOfPeople
+      numberOfPeople: numberOfPeople,
+      amenitySlotId: updatedSlot._id
     });
   }
 
   async cancelBooking(id, residentId) {
+    const booking = await amenityRepo.findBookingByIdAndResidentId(id, residentId);
+    if (!booking) throw { status: 404, message: "Không tìm thấy lịch đặt" };
+
+    const bookingDate = new Date(booking.date);
+    const today = new Date();
+    bookingDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+
+    if (bookingDate.getTime() === today.getTime()) {
+      const [startHour, startMin] = booking.startTime.split(':').map(Number);
+      const currentTime = new Date();
+      const currentHour = currentTime.getHours();
+      const currentMin = currentTime.getMinutes();
+      
+      const diffMinutes = (startHour * 60 + startMin) - (currentHour * 60 + currentMin);
+      if (diffMinutes >= 0 && diffMinutes <= 60) {
+        throw { status: 400, message: "Không thể hủy lịch đặt sát giờ (trước 1 tiếng)" };
+      } else if (diffMinutes < 0) {
+        throw { status: 400, message: "Lịch đặt đã qua, không thể hủy" };
+      }
+    } else if (bookingDate < today) {
+       throw { status: 400, message: "Lịch đặt đã qua, không thể hủy" };
+    }
+
     const deleted = await amenityRepo.deleteBookingByIdAndResidentId(id, residentId);
-    if (!deleted) throw { status: 404, message: "Không tìm thấy lịch đặt" };
+    
+    // Giảm bookedCount trong AmenitySlot
+    const AmenitySlot = require("../models/amenitySlot");
+    await AmenitySlot.findOneAndUpdate(
+      { 
+        amenityId: booking.amenityId, 
+        date: booking.date, 
+        startTime: booking.startTime, 
+        endTime: booking.endTime 
+      },
+      { $inc: { bookedCount: -(booking.numberOfPeople || 1) } }
+    );
+
     return true;
   }
 }

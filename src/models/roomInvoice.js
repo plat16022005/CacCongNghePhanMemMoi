@@ -95,6 +95,9 @@ const roomInvoiceSchema = new mongoose.Schema(
   }
 );
 
+// Chặn trùng lặp hóa đơn cùng loại trong cùng 1 kỳ của 1 phòng ở tầng Database
+roomInvoiceSchema.index({ roomId: 1, period: 1, type: 1 }, { unique: true });
+
 // Virtual relations
 roomInvoiceSchema.virtual("room", {
   ref: "Room",

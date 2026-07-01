@@ -5,9 +5,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function Dashboard() {
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
     fetchStats();
+    fetchChartData();
   }, []);
 
   const fetchStats = async () => {
@@ -22,15 +24,26 @@ export default function Dashboard() {
     }
   };
 
-  // Mock data for Recharts, since we don't have the full aggregation in the API yet.
-  const chartData = [
-    { name: 'Tháng 1', paid: 60000000, unpaid: 10000000 },
-    { name: 'Tháng 2', paid: 65000000, unpaid: 5000000 },
-    { name: 'Tháng 3', paid: 70000000, unpaid: 8000000 },
-    { name: 'Tháng 4', paid: 68000000, unpaid: 12000000 },
-    { name: 'Tháng 5', paid: 75000000, unpaid: 4000000 },
-    { name: 'Tháng 6', paid: 85000000, unpaid: 20000000 },
-  ];
+  const fetchChartData = async () => {
+    try {
+      const res = await fetch('/api/manager/reports/revenue');
+      const json = await res.json();
+      if (json.data) {
+        // Map from { period: '2026-04', paid, unpaid } to { name: '04/2026', paid, unpaid }
+        const formatted = json.data.map((item: any) => {
+          const [year, month] = item.period.split('-');
+          return {
+            name: `Tháng ${parseInt(month)}`,
+            paid: item.paid,
+            unpaid: item.unpaid,
+          };
+        });
+        setChartData(formatted);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (loading) return <div className="p-6 text-slate-500">Đang tải dữ liệu tổng quan...</div>;
 

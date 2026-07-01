@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const residentCtrl = require("../controllers/resident.controller");
 const { editProfileRules } = require("../validations/user.validation");
+const { createGuestRules } = require("../validations/guest.validation");
+const { createParkingRules, updateParkingRules } = require("../validations/parking.validation");
+const { createMaintenanceRules } = require("../validations/maintenance.validation");
 const { validate } = require("../middlewares/validate.middleware");
 const { verifyTokenLogin, authorize } = require("../middlewares/auth.middleware");
 
@@ -24,13 +27,14 @@ router.post("/invoices/:id/pay", residentCtrl.payInvoice);
 router.post("/invoices/payment/callback", residentCtrl.paymentCallback);
 
 // Guests
-router.post("/guests", residentCtrl.createGuest);
+router.post("/guests", createGuestRules, validate, residentCtrl.createGuest);
 router.get("/guests", residentCtrl.getGuests);
 router.delete("/guests/:id", residentCtrl.deleteGuest);
 
 // Parking
-router.post("/parking", residentCtrl.createParking);
+router.post("/parking", createParkingRules, validate, residentCtrl.createParking);
 router.get("/parking", residentCtrl.getParking);
+router.patch("/parking/:id", updateParkingRules, validate, residentCtrl.updateParking);
 router.delete("/parking/:id", residentCtrl.deleteParking);
 
 // Notifications
@@ -43,7 +47,7 @@ router.post("/feedbacks", residentCtrl.createFeedback);
 router.get("/feedbacks", residentCtrl.getFeedbacks);
 
 // Maintenance
-router.post("/maintenance", residentCtrl.createMaintenance);
+router.post("/maintenance", createMaintenanceRules, validate, residentCtrl.createMaintenance);
 router.get("/maintenance", residentCtrl.getMaintenance);
 
 // Amenities

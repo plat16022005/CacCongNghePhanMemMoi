@@ -20,6 +20,14 @@ class ParkingRepository {
   async deleteById(id) {
     return await ParkingRegistration.findByIdAndDelete(id);
   }
+
+  async findByLicensePlate(licensePlate) {
+    return await ParkingRegistration.findOne({ licensePlate, status: { $ne: "rejected" } });
+  }
+
+  async updateById(id, data) {
+    return await ParkingRegistration.findByIdAndUpdate(id, data, { new: true });
+  }
 }
 
 module.exports = new ParkingRepository();

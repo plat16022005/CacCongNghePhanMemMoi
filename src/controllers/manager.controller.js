@@ -260,3 +260,33 @@ exports.rejectAmenityBooking = async (req, res, next) => {
     res.status(200).json({ message: "Đã từ chối lịch đặt", data: result });
   } catch (err) { next(err); }
 };
+
+// --- VIEWING REQUESTS ---
+exports.getViewingRequests = async (req, res, next) => {
+  try {
+    const ViewingRequest = require("../models/viewingRequest");
+    // Default fetch all, can add pagination/filters here if needed
+    const requests = await ViewingRequest.find()
+      .populate({ path: "roomId", select: "roomNumber block" })
+      .populate({ path: "handledBy", select: "name" })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.status(200).json({ data: requests });
+  } catch (err) { next(err); }
+};
+
+exports.updateViewingRequestStatus = async (req, res, next) => {
+  try {
+    const ViewingRequest = require("../models/viewingRequest");
+    const { status } = req.body;
+    const request = await ViewingRequest.findByIdAndUpdate(
+      req.params.id,
+      { status, handledBy: req.user.id },
+      { new: true }
+    );
+    if (!request) {
+      return res.status(404).json({ message: "Không tìm thấy yêu cầu" });
+    }
+    res.status(200).json({ message: "Cập nhật trạng thái thành công", data: request });
+  } catch (err) { next(err); }
+};

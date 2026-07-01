@@ -13,7 +13,7 @@ let getHomePage = async (req, res) => {
         if (!token) {
            const authService = require('../services/auth.service');
            const { newAccess, newRefresh } = await authService.refreshToken(req.cookies.refreshToken);
-           res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 15 * 60 * 1000 });
+           res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
            res.cookie("refreshToken", newRefresh, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
            token = newAccess;
         }
@@ -23,7 +23,7 @@ let getHomePage = async (req, res) => {
            try {
               const authService = require('../services/auth.service');
               const { newAccess, newRefresh } = await authService.refreshToken(req.cookies.refreshToken);
-              res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 15 * 60 * 1000 });
+              res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
               res.cookie("refreshToken", newRefresh, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
               user = jwt.verify(newAccess, process.env.ACCESS_TOKEN_SECRET);
            } catch(e) {}

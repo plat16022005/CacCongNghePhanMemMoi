@@ -9,6 +9,7 @@ import Features from './pages/public/Features'
 import PublicAmenities from './pages/public/PublicAmenities'
 import Financials from './pages/public/Financials'
 import Rentals from './pages/public/Rentals'
+import RentalDetail from './pages/public/RentalDetail'
 
 import DashboardLayout from './components/layout/DashboardLayout'
 import ResidentDashboard from './pages/resident/Dashboard'
@@ -78,6 +79,7 @@ function App() {
           <Route path="/amenities" element={<PublicAmenities />} />
           <Route path="/financials" element={<Financials />} />
           <Route path="/rentals" element={<Rentals />} />
+          <Route path="/rentals/:id" element={<RentalDetail />} />
           
           {/* Dashboard Routes for Residents */}
           <Route path="/dashboard" element={<DashboardLayout />}>

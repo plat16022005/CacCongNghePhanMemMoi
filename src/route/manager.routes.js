@@ -60,4 +60,8 @@ router.get("/amenities/:id/bookings", managerCtrl.getAmenityBookings);
 router.patch("/amenities/bookings/:id/approve", managerCtrl.approveAmenityBooking);
 router.patch("/amenities/bookings/:id/reject", managerCtrl.rejectAmenityBooking);
 
+// --- VIEWING REQUESTS ---
+router.get("/viewing-requests", managerCtrl.getViewingRequests);
+router.patch("/viewing-requests/:id", managerCtrl.updateViewingRequestStatus);
+
 module.exports = router;

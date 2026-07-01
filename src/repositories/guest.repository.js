@@ -16,6 +16,16 @@ class GuestRepository {
   async deleteById(id) {
     return await Guest.findByIdAndDelete(id);
   }
+
+  async checkDuplicateGuest(residentId, cccd, visitDate, visitTime) {
+    return await Guest.findOne({
+      residentId,
+      cccd,
+      visitDate,
+      visitTime,
+      status: { $in: ["pending", "approved"] }
+    });
+  }
 }
 
 module.exports = new GuestRepository();

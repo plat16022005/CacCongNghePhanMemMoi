@@ -1,30 +1,38 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'motion/react'
-import { Home, Bath, Bed, Maximize, MapPin, PhoneCall } from 'lucide-react'
-import Navbar from '../../components/Navbar'
+import { useEffect } from 'react';
+import { motion } from 'motion/react';
+import { Home } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import Navbar from '../../components/Navbar';
+import FilterBar from '../../components/public/FilterBar';
+import ApartmentCard from '../../components/public/ApartmentCard';
+import ApartmentCardSkeleton from '../../components/public/ApartmentCardSkeleton';
+import { useApartments } from '../../hooks/useApartments';
 
 export default function Rentals() {
-  const [apartments, setApartments] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [searchParams] = useSearchParams();
+  const { apartments, meta, loading, loadingMore, fetchApartments } = useApartments();
 
   useEffect(() => {
-    fetch('/api/public/apartments')
-      .then(res => res.json())
-      .then(data => {
-        if (!data.error) setApartments(data)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
+    const filters = Object.fromEntries(searchParams.entries());
+    fetchApartments(filters, false);
+  }, [searchParams, fetchApartments]);
+
+  const handleLoadMore = () => {
+    if (meta.page < meta.totalPages) {
+      const filters = Object.fromEntries(searchParams.entries());
+      filters.page = String(meta.page + 1);
+      fetchApartments(filters, true);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-[#f0f4f8] flex flex-col items-center">
       <div className="w-full max-w-[1536px] bg-white md:m-5 md:rounded-[3rem] overflow-hidden flex flex-col flex-1 shadow-sm relative">
         <Navbar />
         
-        <div className="flex-1 flex flex-col py-20 px-6 max-w-6xl mx-auto w-full z-10">
+        <div className="flex-1 flex flex-col py-10 px-6 max-w-7xl mx-auto w-full z-10">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -37,84 +45,50 @@ export default function Rentals() {
             </p>
           </motion.div>
 
+          <FilterBar />
+
           {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3a4a6b]"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {[...Array(8)].map((_, i) => <ApartmentCardSkeleton key={i} />)}
             </div>
           ) : apartments.length === 0 ? (
             <div className="text-center py-20 bg-[#f8fafd] rounded-[2rem] border border-[#e1e8f0]">
               <Home className="w-16 h-16 text-[#3a4a6b]/30 mx-auto mb-4" />
-              <h3 className="text-2xl font-medium text-[#3a4a6b] mb-2">Hiện chưa có căn hộ trống</h3>
-              <p className="text-[#3a4a6b]/70">Vui lòng quay lại sau hoặc liên hệ ban quản lý để được hỗ trợ.</p>
+              <h3 className="text-2xl font-medium text-[#3a4a6b] mb-2">Không tìm thấy căn hộ phù hợp</h3>
+              <p className="text-[#3a4a6b]/70">Vui lòng thử thay đổi bộ lọc hoặc quay lại sau.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {apartments.map((apt, idx) => (
-                <motion.div 
-                  key={apt._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="bg-white rounded-[2rem] border border-[#e1e8f0] overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
-                >
-                  <div className="h-48 bg-slate-100 relative">
-                    {/* Placeholder for Room Image. If apt.images exists, use it. */}
-                    <img 
-                      src={apt.images?.length > 0 ? apt.images[0] : "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                      alt={`Phòng ${apt.roomNumber}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      Sẵn sàng bàn giao
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-2xl font-bold text-[#3a4a6b] mb-1">Căn hộ {apt.roomNumber}</h3>
-                        <p className="text-sm text-[#3a4a6b]/60 flex items-center gap-1">
-                          <MapPin className="w-4 h-4" /> Block {apt.block} • Tầng {apt.floor}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-[#e65c00]">{apt.rentalPrice?.toLocaleString()}đ</p>
-                        <p className="text-xs text-[#3a4a6b]/50 uppercase tracking-wide">/ tháng</p>
-                      </div>
-                    </div>
+            <>
+              <div className="mb-4 text-[#3a4a6b] font-medium">
+                Tìm thấy {meta.total} căn hộ phù hợp
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {apartments.map((apt, idx) => (
+                  <ApartmentCard 
+                    key={apt._id} 
+                    apartment={apt} 
+                    index={idx}
+                  />
+                ))}
+                
+                {loadingMore && [...Array(4)].map((_, i) => <ApartmentCardSkeleton key={`more-${i}`} />)}
+              </div>
 
-                    <div className="grid grid-cols-3 gap-4 mb-6 border-y border-slate-100 py-4">
-                      <div className="flex flex-col items-center text-center">
-                        <Maximize className="w-5 h-5 text-[#3a4a6b]/60 mb-1" />
-                        <span className="text-sm font-medium text-[#3a4a6b]">{apt.area} m²</span>
-                      </div>
-                      <div className="flex flex-col items-center text-center border-x border-slate-100">
-                        <Bed className="w-5 h-5 text-[#3a4a6b]/60 mb-1" />
-                        <span className="text-sm font-medium text-[#3a4a6b]">{apt.bedroomCount} PN</span>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <Bath className="w-5 h-5 text-[#3a4a6b]/60 mb-1" />
-                        <span className="text-sm font-medium text-[#3a4a6b]">{apt.bathroomCount} WC</span>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-[#3a4a6b]/80 mb-6 line-clamp-2 flex-1">
-                      {apt.description || 'Căn hộ thiết kế hiện đại, ngập tràn ánh sáng tự nhiên. Tận hưởng toàn bộ tiện ích nội khu cao cấp tại ApartmentHub.'}
-                    </p>
-
-                    <button 
-                      onClick={() => alert('Vui lòng liên hệ Hotline: 0123.456.789 để đặt lịch xem phòng trực tiếp.')}
-                      className="w-full py-3 bg-[#3a4a6b] text-white rounded-xl font-medium flex justify-center items-center gap-2 hover:bg-[#2a3651] transition"
-                    >
-                      <PhoneCall className="w-5 h-5" /> Đặt lịch xem phòng
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+              {meta.page < meta.totalPages && !loadingMore && (
+                <div className="mt-12 flex justify-center">
+                  <button 
+                    onClick={handleLoadMore}
+                    className="px-8 py-3 bg-white border-2 border-[#3a4a6b] text-[#3a4a6b] rounded-xl font-medium hover:bg-[#3a4a6b] hover:text-white transition-colors"
+                  >
+                    Xem thêm
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

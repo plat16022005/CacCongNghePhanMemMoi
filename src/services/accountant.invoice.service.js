@@ -37,6 +37,10 @@ class AccountantInvoiceService {
   }
 
   async createInvoice(data) {
+    if (data.amount < 0) {
+      throw { status: 400, message: "Số tiền không được âm" };
+    }
+
     // Retrieve room to get tenantId
     const room = await Room.findById(data.apartmentId);
     if (!room) throw { status: 404, message: "Không tìm thấy căn hộ" };
@@ -70,6 +74,7 @@ class AccountantInvoiceService {
 
     let created = 0;
     let skipped = 0;
+    const invoicesToInsert = [];
 
     for (const room of rooms) {
       if (!room.tenantId) {
@@ -77,21 +82,14 @@ class AccountantInvoiceService {
         continue;
       }
 
-      // Check duplicate
-      const exists = await RoomInvoice.findOne({
-        roomId: room._id,
-        type: type,
-        period: period
-      });
-
-      if (exists) {
-        skipped++;
-        continue;
+      // Loại bỏ việc check tay từng bản ghi vì có index ở Database xử lý atomic rồi
+      if (pricePerSqm < 0) {
+        throw { status: 400, message: "Số tiền không được âm" };
       }
 
       const amount = (room.area || 0) * pricePerSqm;
       
-      const invoice = new RoomInvoice({
+      invoicesToInsert.push({
         roomId: room._id,
         tenantId: room.tenantId,
         type: type,
@@ -102,9 +100,22 @@ class AccountantInvoiceService {
         dueDate: dueDate,
         status: "unpaid"
       });
+    }
 
-      await invoice.save();
-      created++;
+    if (invoicesToInsert.length > 0) {
+      try {
+        const result = await RoomInvoice.insertMany(invoicesToInsert, { ordered: false });
+        created = result.length;
+      } catch (err) {
+        if (err.code === 11000 || err.writeErrors) {
+          const insertedCount = err.result?.nInserted ?? 0;
+          created = insertedCount;
+          skipped = invoicesToInsert.length - insertedCount;
+          console.warn(`Bulk invoice: ${insertedCount} tạo mới, ${skipped} bị trùng kỳ - đã bỏ qua`);
+        } else {
+          throw err;
+        }
+      }
     }
 
     return { created, skipped, errors: [] };

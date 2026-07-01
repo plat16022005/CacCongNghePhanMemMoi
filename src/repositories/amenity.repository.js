@@ -34,6 +34,10 @@ class AmenityRepository {
   async deleteBookingByIdAndResidentId(id, residentId) {
     return await AmenityBooking.findOneAndDelete({ _id: id, residentId });
   }
+
+  async findBookingByIdAndResidentId(id, residentId) {
+    return await AmenityBooking.findOne({ _id: id, residentId });
+  }
 }
 
 module.exports = new AmenityRepository();

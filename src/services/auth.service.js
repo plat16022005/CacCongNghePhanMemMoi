@@ -184,6 +184,11 @@ exports.login = async ({ email, password }) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken({ id: user.id });
 
+  const crypto = require("crypto");
+  const RefreshToken = require("../models/refreshToken");
+  const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+  await RefreshToken.create({ userId: user.id, tokenHash: hash });
+
   return { accessToken, refreshToken, role: user.role };
 };
 
@@ -191,10 +196,18 @@ exports.login = async ({ email, password }) => {
 exports.refreshToken = async (refreshToken) => {
   if (!refreshToken) throw { status: 401, message: "Không có refresh token" };
 
+  const crypto = require("crypto");
+  const RefreshToken = require("../models/refreshToken");
+  const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+  const storedToken = await RefreshToken.findOne({ tokenHash: hash });
+  
+  if (!storedToken) throw { status: 403, message: "Refresh token không hợp lệ hoặc đã bị thu hồi" };
+
   let decoded;
   try {
     decoded = verifyRefreshToken(refreshToken);
   } catch {
+    await RefreshToken.deleteOne({ tokenHash: hash });
     throw {
       status: 403,
       message: "Refresh token không hợp lệ hoặc đã hết hạn",
@@ -208,8 +221,21 @@ exports.refreshToken = async (refreshToken) => {
   const newAccess = generateAccessToken(payload);
   const newRefresh = generateRefreshToken({ id: user.id });
 
+  const newHash = crypto.createHash("sha256").update(newRefresh).digest("hex");
+  
+  // Rotate token: Xóa token cũ, lưu token mới
+  await RefreshToken.deleteOne({ tokenHash: hash });
+  await RefreshToken.create({ userId: user.id, tokenHash: newHash });
+
   return { newAccess, newRefresh };
 };
 
 // ─── LOGOUT ──────────────────────────────────────────────────────────────────
-exports.logout = async (refreshToken) => {};
+exports.logout = async (refreshToken) => {
+  if (refreshToken) {
+    const crypto = require("crypto");
+    const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    const RefreshToken = require("../models/refreshToken");
+    await RefreshToken.deleteOne({ tokenHash: hash });
+  }
+};

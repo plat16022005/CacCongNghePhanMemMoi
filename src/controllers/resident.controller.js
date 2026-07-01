@@ -99,6 +99,13 @@ exports.getParking = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+exports.updateParking = async (req, res, next) => {
+  try {
+    const parking = await parkingService.updateParking(req.params.id, req.user.id, req.body);
+    res.status(200).json({ error: false, data: parking, message: "Cập nhật thông tin xe thành công" });
+  } catch (err) { next(err); }
+};
+
 exports.deleteParking = async (req, res, next) => {
   try {
     await parkingService.deleteParking(req.params.id, req.user.id);

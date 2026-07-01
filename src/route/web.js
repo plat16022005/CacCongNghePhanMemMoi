@@ -20,15 +20,7 @@ let initWebRoutes = (app) => {
     router.get(path, (req, res) => res.render("homepage.ejs", { user: null }));
   });
 
-  router.get("/api/public/apartments", async (req, res) => {
-    try {
-      const Room = require("../models/room");
-      const rooms = await Room.find({ status: { $in: ["available", "vacant"] } });
-      res.json(rooms);
-    } catch (err) {
-      res.status(500).json({ error: true, message: err.message });
-    }
-  });
+  // Public APIs are now handled in public.routes.js
   router.get("/crud", homeController.getCRUD);
   router.post("/post-crud", homeController.postCRUD);
   router.get("/get-crud", homeController.getFindAllCrud);
@@ -130,6 +122,7 @@ let initWebRoutes = (app) => {
   app.use("/api/security", require("./security.routes"));
   app.use("/api/maintenance", require("./maintenance.routes"));
   app.use("/api/admin", require("./admin.routes"));
+  app.use("/api/public", require("./public.routes"));
   app.use("/api/rooms", require("./room.routes"));
   app.use("/api/applications", require("./application.routes"));
   return app.use("/", router);
